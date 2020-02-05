@@ -7,4 +7,7 @@
 
 #define EXPORT __declspec(dllexport)
 
+#define CDTP_FALSE 0
+#define CDTP_TRUE  1
+
 #endif /* CDTP_UTIL_H */

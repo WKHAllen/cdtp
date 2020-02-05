@@ -17,7 +17,7 @@
     #include <sys/socket.h>
 #endif
 
-// typedef struct
+// typedef struct _CDTPClient
 // {
 
 // } CDTPClient;
