@@ -3,7 +3,8 @@
 
 #include <stdio.h>
 
-EXPORT CDTPServer cdtp_server(void (*on_recv      )(int, void *, void *),
+EXPORT CDTPServer cdtp_server(size_t max_clients,
+                              void (*on_recv      )(int, void *, void *),
                               void (*on_connect   )(int, void *, void *),
                               void (*on_disconnect)(int, void *, void *),
                               void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg,
@@ -11,6 +12,7 @@ EXPORT CDTPServer cdtp_server(void (*on_recv      )(int, void *, void *),
 {
 #if defined(_WIN32) && !defined(CDTP_WINSOCK_INIT)
 #define CDTP_WINSOCK_INIT
+    // Initialize winsock
     WSADATA wsa;
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
     {
@@ -18,7 +20,10 @@ EXPORT CDTPServer cdtp_server(void (*on_recv      )(int, void *, void *),
         exit(EXIT_FAILURE);
     }
 #endif
+
+    // Initialize the server object
     CDTPServer server;
+    server.max_clients       = max_clients;
     server.on_recv           = on_recv;
     server.on_connect        = on_connect;
     server.on_disconnect     = on_disconnect;
@@ -30,9 +35,10 @@ EXPORT CDTPServer cdtp_server(void (*on_recv      )(int, void *, void *),
     server.daemon            = daemon;
     server.serving           = CDTP_FALSE;
 
-    // Initialize the socket
+    // Initialize the socket info
     int opt = 1;
 #ifdef _WIN32
+    // Initialize the socket
     if ((server.sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
     {
         printf("Failed to create socket: %d\n", WSAGetLastError());
@@ -43,7 +49,11 @@ EXPORT CDTPServer cdtp_server(void (*on_recv      )(int, void *, void *),
         printf("Failed to set socket option: %d\n", WSAGetLastError());
         exit(EXIT_FAILURE);
     }
+
+    // Initialize the client socket array
+    server.clients = malloc(max_clients * sizeof(SOCKET));
 #else
+    // Initialize the socket
     if ((server.sock = socket(AF_INT, SOCK_STREAM, 0)) == 0)
     {
         printf("Failed to create socket\n");
@@ -54,16 +64,26 @@ EXPORT CDTPServer cdtp_server(void (*on_recv      )(int, void *, void *),
         printf("Failed to set socket option\n");
         exit(EXIT_FAILURE);
     }
+
+    // Initialize the client socket array
+    server.clients = malloc(max_clients * sizeof(int));
 #endif
+
+    // Initialize the allocated clients array
+    server.allocated_clients = malloc(max_clients * sizeof(int));
+    for (int i = 0; i < max_clients; i++)
+        server.allocated_clients[i] = CDTP_FALSE;
+    
     return server;
 }
 
-EXPORT CDTPServer cdtp_server_default(void (*on_recv      )(int, void *, void *),
+EXPORT CDTPServer cdtp_server_default(size_t max_clients,
+                                      void (*on_recv      )(int, void *, void *),
                                       void (*on_connect   )(int, void *, void *),
                                       void (*on_disconnect)(int, void *, void *),
                                       void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg)
 {
-    return cdtp_server(on_recv, on_connect, on_disconnect,
+    return cdtp_server(max_clients, on_recv, on_connect, on_disconnect,
                        on_recv_arg, on_connect_arg, on_disconnect_arg,
                        CDTP_FALSE, CDTP_FALSE, CDTP_TRUE);
 }
@@ -115,7 +135,31 @@ EXPORT int cdtp_start_default(CDTPServer *server)
     return cdtp_start(server, INADDR_ANY, 0);
 }
 
+EXPORT void cdtp_stop(CDTPServer *server)
+{
+    server->serving = CDTP_FALSE;
+#ifdef _WIN32
+    closesocket(server->sock);
+    for (int i = 0; i < server->max_clients; i++)
+        if (server->allocated_clients[i] == CDTP_TRUE)
+            closesocket(server->clients[i]);
+#else
+    close(server->sock);
+    for (int i = 0; i < server->max_clients; i++)
+        if (server->allocated_clients[i] == CDTP_TRUE)
+            close(server->clients[i]);
+#endif
+    free(server->clients);
+    free(server->allocated_clients);
+    // TODO: complete this function
+}
+
+EXPORT int cdtp_serving(CDTPServer *server)
+{
+    return server->serving;
+}
+
 void cdtp_serve(CDTPServer *server)
 {
-
+    // TODO: implement this function
 }

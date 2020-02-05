@@ -7,6 +7,8 @@
 
 #include "util.h"
 
+#include <stdlib.h>
+
 #ifdef _WIN32
     #include <winsock2.h>
     #pragma comment(lib, "ws2_32.lib")
@@ -26,6 +28,7 @@
 
 typedef struct _CDTPServer
 {
+    size_t max_clients;
     void (*on_recv      )(int, void *, void *);
     void (*on_connect   )(int, void *, void *);
     void (*on_disconnect)(int, void *, void *);
@@ -38,18 +41,23 @@ typedef struct _CDTPServer
     int serving;
 #ifdef _WIN32
     SOCKET sock;
+    SOCKET *clients;
 #else
     int sock;
+    int *clients;
 #endif
+    int *allocated_clients;
 } CDTPServer;
 
-CDTPServer cdtp_server(void (*on_recv      )(int, void *, void *),
+CDTPServer cdtp_server(size_t max_clients,
+                       void (*on_recv      )(int, void *, void *),
                        void (*on_connect   )(int, void *, void *),
                        void (*on_disconnect)(int, void *, void *),
                        void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg,
                        int blocking, int event_blocking, int daemon);
 
-CDTPServer cdtp_server_default(void (*on_recv      )(int, void *, void *),
+CDTPServer cdtp_server_default(size_t max_clients,
+                               void (*on_recv      )(int, void *, void *),
                                void (*on_connect   )(int, void *, void *),
                                void (*on_disconnect)(int, void *, void *),
                                void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg);
@@ -60,6 +68,12 @@ int cdtp_start_port(CDTPServer *server, const int port);
 
 int cdtp_start_default(CDTPServer *server);
 
+void cdtp_stop(CDTPServer *server);
+
+int cdtp_serving(CDTPServer *server);
+
 void cdtp_serve(CDTPServer *server);
+
+// TODO: add more functions
 
 #endif /* CDTP_SERVER_H */
