@@ -89,7 +89,7 @@ EXPORT CDTPServer cdtp_server_default(size_t max_clients,
                        CDTP_FALSE, CDTP_FALSE, CDTP_TRUE, err);
 }
 
-EXPORT int cdtp_start(CDTPServer *server, char *host, int port)
+EXPORT int cdtp_server_start(CDTPServer *server, char *host, int port)
 {
     // Make sure the server is not already serving
     if (server->serving == CDTP_TRUE)
@@ -124,9 +124,9 @@ EXPORT int cdtp_start(CDTPServer *server, char *host, int port)
 }
 
 #ifdef _WIN32
-EXPORT int cdtp_start_host(CDTPServer *server, ULONG host, int port)
+EXPORT int cdtp_server_start_host(CDTPServer *server, ULONG host, int port)
 #else
-EXPORT int cdtp_start_host(CDTPServer *server, in_addr_t host, int port)
+EXPORT int cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port)
 #endif
 {
     // Make sure the server is not already serving
@@ -161,17 +161,17 @@ EXPORT int cdtp_start_host(CDTPServer *server, in_addr_t host, int port)
     return CDTP_SERVER_SUCCESS;
 }
 
-EXPORT int cdtp_start_default_host(CDTPServer *server, int port)
+EXPORT int cdtp_server_start_default_host(CDTPServer *server, int port)
 {
     return cdtp_start(server, INADDR_ANY, port);
 }
 
-EXPORT int cdtp_start_default(CDTPServer *server)
+EXPORT int cdtp_server_start_default(CDTPServer *server)
 {
     return cdtp_start(server, INADDR_ANY, 0);
 }
 
-EXPORT void cdtp_stop(CDTPServer *server)
+EXPORT void cdtp_server_stop(CDTPServer *server)
 {
     server->serving = CDTP_FALSE;
 #ifdef _WIN32
@@ -190,12 +190,12 @@ EXPORT void cdtp_stop(CDTPServer *server)
     // TODO: complete this function
 }
 
-EXPORT int cdtp_serving(CDTPServer *server)
+EXPORT int cdtp_server_serving(CDTPServer *server)
 {
     return server->serving;
 }
 
-void cdtp_serve(CDTPServer *server)
+void cdtp_server_serve(CDTPServer *server)
 {
     // TODO: implement this function
 }

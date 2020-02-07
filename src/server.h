@@ -56,23 +56,23 @@ CDTPServer cdtp_server_default(size_t max_clients,
                                void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg,
                                int *err);
 
-int cdtp_start(CDTPServer *server, char *host, int port);
+int cdtp_server_start(CDTPServer *server, char *host, int port);
 
 #ifdef _WIN32
-int cdtp_start_host(CDTPServer *server, ULONG host, int port);
+int cdtp_server_start_host(CDTPServer *server, ULONG host, int port);
 #else
-int cdtp_start_host(CDTPServer *server, in_addr_t host, int port);
+int cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port);
 #endif
 
-int cdtp_start_default_host(CDTPServer *server, int port);
+int cdtp_server_start_default_host(CDTPServer *server, int port);
 
-int cdtp_start_default(CDTPServer *server);
+int cdtp_server_start_default(CDTPServer *server);
 
-void cdtp_stop(CDTPServer *server);
+void cdtp_server_stop(CDTPServer *server);
 
-int cdtp_serving(CDTPServer *server);
+int cdtp_server_serving(CDTPServer *server);
 
-void cdtp_serve(CDTPServer *server);
+void cdtp_server_serve(CDTPServer *server);
 
 // TODO: add more functions
 
