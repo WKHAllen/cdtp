@@ -75,7 +75,11 @@ CDTPServer cdtp_server_default(size_t max_clients,
 
 int cdtp_start(CDTPServer *server, char *host, int port);
 
+#ifdef _WIN32
+int cdtp_start_host(CDTPServer *server, ULONG host, int port);
+#else
 int cdtp_start_host(CDTPServer *server, in_addr_t host, int port);
+#endif
 
 int cdtp_start_default_host(CDTPServer *server, int port);
 

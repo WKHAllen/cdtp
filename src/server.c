@@ -126,7 +126,11 @@ EXPORT int cdtp_start(CDTPServer *server, char *host, int port)
     return CDTP_SERVER_SUCCESS;
 }
 
+#ifdef _WIN32
+EXPORT int cdtp_start_host(CDTPServer *server, ULONG host, int port)
+#else
 EXPORT int cdtp_start_host(CDTPServer *server, in_addr_t host, int port)
+#endif
 {
     // Make sure the server is not already serving
     if (server->serving == CDTP_TRUE)
