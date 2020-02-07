@@ -16,6 +16,7 @@ int cdtp_init(void)
         return 0;
 #endif
     }
+    return 0;
 }
 
 void cdtp_exit(void)
@@ -25,8 +26,6 @@ void cdtp_exit(void)
         CDTP_EXIT = CDTP_TRUE;
 #ifdef _WIN32
         WSACleanup();
-#else
-        return 0;
 #endif
     }
 }

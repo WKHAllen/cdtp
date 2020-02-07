@@ -10,17 +10,6 @@ EXPORT CDTPServer cdtp_server(size_t max_clients,
 {
     CDTPServer server;
 
-    if (CDTP_INIT != CDTP_TRUE)
-    {
-        // Initialize the library
-        int return_code = cdtp_init();
-        if (return_code != 0)
-        {
-            *err = CDTP_SERVER_WINSOCK_INIT_FAILED;
-            return server;
-        }
-    }
-
     // Initialize the server object
     server.max_clients       = max_clients;
     server.on_recv           = on_recv;
@@ -33,6 +22,17 @@ EXPORT CDTPServer cdtp_server(size_t max_clients,
     server.event_blocking    = event_blocking;
     server.daemon            = daemon;
     server.serving           = CDTP_FALSE;
+
+    // Initialize the library
+    if (CDTP_INIT != CDTP_TRUE)
+    {
+        int return_code = cdtp_init();
+        if (return_code != 0)
+        {
+            *err = CDTP_SERVER_WINSOCK_INIT_FAILED;
+            return server;
+        }
+    }
 
     // Initialize the socket info
     int opt = 1;
