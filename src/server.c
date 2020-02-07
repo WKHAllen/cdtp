@@ -113,7 +113,7 @@ EXPORT int cdtp_server_start(CDTPServer *server, char *host, int port)
     // Serve
     if (server->blocking)
     {
-        cdtp_serve(server);
+        cdtp_server_serve(server);
     }
     else
     {
@@ -151,7 +151,7 @@ EXPORT int cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port)
     // Serve
     if (server->blocking)
     {
-        cdtp_serve(server);
+        cdtp_server_serve(server);
     }
     else
     {
@@ -163,12 +163,12 @@ EXPORT int cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port)
 
 EXPORT int cdtp_server_start_default_host(CDTPServer *server, int port)
 {
-    return cdtp_start(server, INADDR_ANY, port);
+    return cdtp_server_start(server, INADDR_ANY, port);
 }
 
 EXPORT int cdtp_server_start_default(CDTPServer *server)
 {
-    return cdtp_start(server, INADDR_ANY, 0);
+    return cdtp_server_start(server, INADDR_ANY, 0);
 }
 
 EXPORT void cdtp_server_stop(CDTPServer *server)
