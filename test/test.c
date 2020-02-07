@@ -1,5 +1,6 @@
 #include "../bin/include/cdtp.h"
 #include <stdio.h>
+#include <assert.h>
 
 void tmp(int a, void *b, void *c)
 {
@@ -12,6 +13,7 @@ int main(int argc, char **argv)
 
     int err;
     CDTPServer server = cdtp_server_default(16, tmp, tmp, tmp, NULL, NULL, NULL, &err);
+    assert(err == CDTP_SERVER_SUCCESS);
 
     printf("Successfully passed all tests\n");
     return 0;

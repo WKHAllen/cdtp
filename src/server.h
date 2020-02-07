@@ -6,22 +6,7 @@
 #define CDTP_SERVER_H
 
 #include "util.h"
-
-#include <stdlib.h>
 #include <stddef.h>
-
-#ifdef _WIN32
-    #include <winsock2.h>
-    #pragma comment(lib, "ws2_32.lib")
-    #ifdef CDTP_WINSOCK_INIT
-        #undef CDTP_WINSOCK_INIT
-    #endif
-#else
-    #include <unistd.h>
-    #include <sys/socket.h>
-    #include <netinet/in.h>
-    #include <arpa/inet.h>
-#endif
 
 #define CDTP_LISTEN_BACKLOG 3
 
@@ -91,4 +76,4 @@ void cdtp_serve(CDTPServer *server);
 
 // TODO: add more functions
 
-#endif /* CDTP_SERVER_H */
+#endif // CDTP_SERVER_H

@@ -20,4 +20,4 @@ extern "C" {
 }
 #endif
 
-#endif /* CDTP_H */
+#endif // CDTP_H

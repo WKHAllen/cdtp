@@ -1,4 +1,3 @@
-#include "util.h"
 #include "server.h"
 
 EXPORT CDTPServer cdtp_server(size_t max_clients,
@@ -11,16 +10,16 @@ EXPORT CDTPServer cdtp_server(size_t max_clients,
 {
     CDTPServer server;
 
-#if defined(_WIN32) && !defined(CDTP_WINSOCK_INIT)
-#define CDTP_WINSOCK_INIT
-    // Initialize winsock
-    WSADATA wsa;
-    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
+    if (CDTP_INIT != CDTP_TRUE)
     {
-        *err = CDTP_SERVER_WINSOCK_INIT_FAILED;
-        return server;
+        // Initialize the library
+        int return_code = cdtp_init();
+        if (return_code != 0)
+        {
+            *err = CDTP_SERVER_WINSOCK_INIT_FAILED;
+            return server;
+        }
     }
-#endif
 
     // Initialize the server object
     server.max_clients       = max_clients;
