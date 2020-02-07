@@ -8,21 +8,23 @@ EXPORT CDTPServer cdtp_server(size_t max_clients,
                               void (*on_connect   )(int, void *, void *),
                               void (*on_disconnect)(int, void *, void *),
                               void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg,
-                              int blocking, int event_blocking, int daemon)
+                              int blocking, int event_blocking, int daemon,
+                              int *err)
 {
+    CDTPServer server;
+
 #if defined(_WIN32) && !defined(CDTP_WINSOCK_INIT)
 #define CDTP_WINSOCK_INIT
     // Initialize winsock
     WSADATA wsa;
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
     {
-        printf("Failed to initialize winsock: %d\n", WSAGetLastError());
-        exit(EXIT_FAILURE);
+        *err = CDTP_SERVER_WINSOCK_INIT_FAILED;
+        return server;
     }
 #endif
 
     // Initialize the server object
-    CDTPServer server;
     server.max_clients       = max_clients;
     server.on_recv           = on_recv;
     server.on_connect        = on_connect;
@@ -41,28 +43,28 @@ EXPORT CDTPServer cdtp_server(size_t max_clients,
     // Initialize the socket
     if ((server.sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
     {
-        printf("Failed to create socket: %d\n", WSAGetLastError());
-        exit(EXIT_FAILURE);
+        *err = CDTP_SERVER_SOCK_INIT_FAILED;
+        return server;
     }
     if (setsockopt(server.sock, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) == SOCKET_ERROR)
     {
-        printf("Failed to set socket option: %d\n", WSAGetLastError());
-        exit(EXIT_FAILURE);
+        *err = CDTP_SERVER_SETSOCKOPT_FAILED;
+        return server;
     }
 
     // Initialize the client socket array
     server.clients = malloc(max_clients * sizeof(SOCKET));
 #else
     // Initialize the socket
-    if ((server.sock = socket(AF_INT, SOCK_STREAM, 0)) == 0)
+    if ((server.sock = socket(AF_INET, SOCK_STREAM, 0)) == 0)
     {
-        printf("Failed to create socket\n");
-        exit(EXIT_FAILURE);
+        *err = CDTP_SERVER_SOCK_INIT_FAILED;
+        return server;
     }
     if (setsockopt(server.sock, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
     {
-        printf("Failed to set socket option\n");
-        exit(EXIT_FAILURE);
+        *err = CDTP_SERVER_SETSOCKOPT_FAILED;
+        return server;
     }
 
     // Initialize the client socket array
@@ -74,6 +76,7 @@ EXPORT CDTPServer cdtp_server(size_t max_clients,
     for (int i = 0; i < max_clients; i++)
         server.allocated_clients[i] = CDTP_FALSE;
     
+    *err = CDTP_SERVER_SUCCESS;
     return server;
 }
 
@@ -81,14 +84,15 @@ EXPORT CDTPServer cdtp_server_default(size_t max_clients,
                                       void (*on_recv      )(int, void *, void *),
                                       void (*on_connect   )(int, void *, void *),
                                       void (*on_disconnect)(int, void *, void *),
-                                      void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg)
+                                      void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg,
+                                      int *err)
 {
     return cdtp_server(max_clients, on_recv, on_connect, on_disconnect,
                        on_recv_arg, on_connect_arg, on_disconnect_arg,
-                       CDTP_FALSE, CDTP_FALSE, CDTP_TRUE);
+                       CDTP_FALSE, CDTP_FALSE, CDTP_TRUE, err);
 }
 
-EXPORT int cdtp_start(CDTPServer *server, const char *host, const int port)
+EXPORT int cdtp_start(CDTPServer *server, char *host, int port)
 {
     // Make sure the server is not already serving
     if (server->serving == CDTP_TRUE)
@@ -98,10 +102,7 @@ EXPORT int cdtp_start(CDTPServer *server, const char *host, const int port)
     // Set the server address
     struct sockaddr_in address;
     address.sin_family = AF_INET;
-    if (host == INADDR_ANY)
-        address.sin_addr.s_addr = host;
-    else
-        address.sin_addr.s_addr = inet_addr(host);
+    address.sin_addr.s_addr = inet_addr(host);
     address.sin_port = htons(port);
     
     // Bind the address to the server
@@ -125,7 +126,41 @@ EXPORT int cdtp_start(CDTPServer *server, const char *host, const int port)
     return CDTP_SERVER_SUCCESS;
 }
 
-EXPORT int cdtp_start_port(CDTPServer *server, const int port)
+EXPORT int cdtp_start_host(CDTPServer *server, in_addr_t host, int port)
+{
+    // Make sure the server is not already serving
+    if (server->serving == CDTP_TRUE)
+        return CDTP_SERVER_ALREADY_SERVING;
+    server->serving = CDTP_TRUE;
+
+    // Set the server address
+    struct sockaddr_in address;
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = host;
+    address.sin_port = htons(port);
+    
+    // Bind the address to the server
+    if (bind(server->sock, (struct sockaddr *)&address, sizeof(address)) < 0)
+        return CDTP_SERVER_BIND_FAILED;
+
+    // Listen for connections
+    if (listen(server->sock, CDTP_LISTEN_BACKLOG) < 0)
+        return CDTP_SERVER_LISTEN_FAILED;
+
+    // Serve
+    if (server->blocking)
+    {
+        cdtp_serve(server);
+    }
+    else
+    {
+        // TODO: call `cdtp_serve` using thread
+    }
+    
+    return CDTP_SERVER_SUCCESS;
+}
+
+EXPORT int cdtp_start_default_host(CDTPServer *server, int port)
 {
     return cdtp_start(server, INADDR_ANY, port);
 }
