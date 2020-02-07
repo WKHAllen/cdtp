@@ -8,6 +8,7 @@
 #include "util.h"
 
 #include <stdlib.h>
+#include <stddef.h>
 
 #ifdef _WIN32
     #include <winsock2.h>
@@ -17,11 +18,8 @@
     #endif
 #else
     #include <unistd.h>
-    #include <stdio.h>
     #include <sys/socket.h>
-    #include <stdlib.h>
     #include <netinet/in.h>
-    #include <string.h>
     #include <arpa/inet.h>
 #endif
 

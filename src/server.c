@@ -1,8 +1,6 @@
 #include "util.h"
 #include "server.h"
 
-#include <stdio.h>
-
 EXPORT CDTPServer cdtp_server(size_t max_clients,
                               void (*on_recv      )(int, void *, void *),
                               void (*on_connect   )(int, void *, void *),
