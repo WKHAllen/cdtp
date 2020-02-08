@@ -36,7 +36,7 @@ EXPORT CDTPServer *cdtp_server(size_t max_clients,
     }
 
     // Initialize the server socket
-    server->sock = malloc(sizeof(*server->sock));
+    server->sock = malloc(sizeof(*(server->sock)));
 
     // Initialize the socket info
     int opt = 1;
@@ -67,13 +67,13 @@ EXPORT CDTPServer *cdtp_server(size_t max_clients,
 #endif
 
     // Initialize the client socket array
-    server->clients = malloc(max_clients * sizeof(*server->clients));
+    server->clients = malloc(max_clients * sizeof(*(server->clients)));
 
     // Initialize the allocated clients array
-    server->allocated_clients = malloc(max_clients * sizeof(*server->allocated_clients));
+    server->allocated_clients = malloc(max_clients * sizeof(*(server->allocated_clients)));
     for (int i = 0; i < max_clients; i++)
         server->allocated_clients[i] = CDTP_FALSE;
-    
+
     *err = CDTP_SERVER_SUCCESS;
     return server;
 }
@@ -103,7 +103,7 @@ EXPORT int cdtp_server_start(CDTPServer *server, char *host, int port)
     server->sock->address.sin_port = htons(port);
 
     // Bind the address to the server
-    if (bind(server->sock->sock, (struct sockaddr *)&server->sock->address, sizeof(server->sock->address)) < 0)
+    if (bind(server->sock->sock, (struct sockaddr *)&(server->sock->address), sizeof(server->sock->address)) < 0)
         return CDTP_SERVER_BIND_FAILED;
 
     // Listen for connections
@@ -119,7 +119,7 @@ EXPORT int cdtp_server_start(CDTPServer *server, char *host, int port)
     {
         // TODO: call `cdtp_serve` using thread
     }
-    
+
     return CDTP_SERVER_SUCCESS;
 }
 
@@ -140,7 +140,7 @@ EXPORT int cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port)
     server->sock->address.sin_port = htons(port);
 
     // Bind the address to the server
-    if (bind(server->sock->sock, (struct sockaddr *)&server->sock->address, sizeof(server->sock->address)) < 0)
+    if (bind(server->sock->sock, (struct sockaddr *)&(server->sock->address), sizeof(server->sock->address)) < 0)
         return CDTP_SERVER_BIND_FAILED;
 
     // Listen for connections
@@ -156,7 +156,7 @@ EXPORT int cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port)
     {
         // TODO: call `cdtp_serve` using thread
     }
-    
+
     return CDTP_SERVER_SUCCESS;
 }
 
@@ -187,6 +187,7 @@ EXPORT void cdtp_server_stop(CDTPServer *server)
     free(server->sock);
     free(server->clients);
     free(server->allocated_clients);
+    free(server);
     // TODO: complete this function
 }
 
