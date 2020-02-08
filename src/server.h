@@ -20,6 +20,17 @@
 #define CDTP_SERVER_BIND_FAILED         5
 #define CDTP_SERVER_LISTEN_FAILED       6
 
+// Socket type
+typedef struct _CDTPSocket
+{
+#ifdef _WIN32
+    SOCKET sock;
+#else
+    int sock;
+#endif
+    struct sockaddr_in address;
+} CDTPSocket;
+
 // Socket server type
 typedef struct _CDTPServer
 {
@@ -35,13 +46,8 @@ typedef struct _CDTPServer
     int daemon;
     int serving;
     int num_clients;
-#ifdef _WIN32
-    SOCKET sock;
-    SOCKET *clients;
-#else
-    int sock;
-    int *clients;
-#endif
+    CDTPSocket *sock;
+    CDTPSocket **clients;
     int *allocated_clients;
 } CDTPServer;
 

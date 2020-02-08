@@ -35,42 +35,42 @@ EXPORT CDTPServer cdtp_server(size_t max_clients,
         }
     }
 
+    // Initialize the server socket
+    server.sock = malloc(sizeof(*server.sock));
+
     // Initialize the socket info
     int opt = 1;
 #ifdef _WIN32
     // Initialize the socket
-    if ((server.sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
+    if ((server.sock->sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
     {
         *err = CDTP_SERVER_SOCK_INIT_FAILED;
         return server;
     }
-    if (setsockopt(server.sock, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) == SOCKET_ERROR)
+    if (setsockopt(server.sock->sock, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) == SOCKET_ERROR)
     {
         *err = CDTP_SERVER_SETSOCKOPT_FAILED;
         return server;
     }
-
-    // Initialize the client socket array
-    server.clients = malloc(max_clients * sizeof(SOCKET));
 #else
     // Initialize the socket
-    if ((server.sock = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+    if ((server.sock->sock = socket(AF_INET, SOCK_STREAM, 0)) == 0)
     {
         *err = CDTP_SERVER_SOCK_INIT_FAILED;
         return server;
     }
-    if (setsockopt(server.sock, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
+    if (setsockopt(server.sock->sock, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
     {
         *err = CDTP_SERVER_SETSOCKOPT_FAILED;
         return server;
     }
-
-    // Initialize the client socket array
-    server.clients = malloc(max_clients * sizeof(int));
 #endif
 
+    // Initialize the client socket array
+    server.clients = malloc(max_clients * sizeof(*server.clients));
+
     // Initialize the allocated clients array
-    server.allocated_clients = malloc(max_clients * sizeof(int));
+    server.allocated_clients = malloc(max_clients * sizeof(*server.allocated_clients));
     for (int i = 0; i < max_clients; i++)
         server.allocated_clients[i] = CDTP_FALSE;
     
@@ -98,17 +98,16 @@ EXPORT int cdtp_server_start(CDTPServer *server, char *host, int port)
     server->serving = CDTP_TRUE;
 
     // Set the server address
-    struct sockaddr_in address;
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = inet_addr(host);
-    address.sin_port = htons(port);
-    
+    server->sock->address.sin_family = AF_INET;
+    server->sock->address.sin_addr.s_addr = inet_addr(host);
+    server->sock->address.sin_port = htons(port);
+
     // Bind the address to the server
-    if (bind(server->sock, (struct sockaddr *)&address, sizeof(address)) < 0)
+    if (bind(server->sock->sock, (struct sockaddr *)&server->sock->address, sizeof(server->sock->address)) < 0)
         return CDTP_SERVER_BIND_FAILED;
 
     // Listen for connections
-    if (listen(server->sock, CDTP_LISTEN_BACKLOG) < 0)
+    if (listen(server->sock->sock, CDTP_LISTEN_BACKLOG) < 0)
         return CDTP_SERVER_LISTEN_FAILED;
 
     // Serve
@@ -136,17 +135,16 @@ EXPORT int cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port)
     server->serving = CDTP_TRUE;
 
     // Set the server address
-    struct sockaddr_in address;
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = host;
-    address.sin_port = htons(port);
-    
+    server->sock->address.sin_family = AF_INET;
+    server->sock->address.sin_addr.s_addr = host;
+    server->sock->address.sin_port = htons(port);
+
     // Bind the address to the server
-    if (bind(server->sock, (struct sockaddr *)&address, sizeof(address)) < 0)
+    if (bind(server->sock->sock, (struct sockaddr *)&server->sock->address, sizeof(server->sock->address)) < 0)
         return CDTP_SERVER_BIND_FAILED;
 
     // Listen for connections
-    if (listen(server->sock, CDTP_LISTEN_BACKLOG) < 0)
+    if (listen(server->sock->sock, CDTP_LISTEN_BACKLOG) < 0)
         return CDTP_SERVER_LISTEN_FAILED;
 
     // Serve
@@ -176,16 +174,17 @@ EXPORT void cdtp_server_stop(CDTPServer *server)
 {
     server->serving = CDTP_FALSE;
 #ifdef _WIN32
-    closesocket(server->sock);
+    closesocket(server->sock->sock);
     for (int i = 0; i < server->max_clients; i++)
         if (server->allocated_clients[i] == CDTP_TRUE)
-            closesocket(server->clients[i]);
+            closesocket(server->clients[i]->sock);
 #else
-    close(server->sock);
+    close(server->sock->sock);
     for (int i = 0; i < server->max_clients; i++)
         if (server->allocated_clients[i] == CDTP_TRUE)
-            close(server->clients[i]);
+            close(server->clients[i]->sock);
 #endif
+    free(server->sock);
     free(server->clients);
     free(server->allocated_clients);
     // TODO: complete this function
