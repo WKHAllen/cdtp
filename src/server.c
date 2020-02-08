@@ -1,5 +1,36 @@
 #include "server.h"
 
+// Socket type
+struct CDTPSocket
+{
+#ifdef _WIN32
+    SOCKET sock;
+#else
+    int sock;
+#endif
+    struct sockaddr_in address;
+};
+
+// Socket server type
+struct CDTPServer
+{
+    size_t max_clients;
+    void (*on_recv      )(int, void *, void *);
+    void (*on_connect   )(int, void *, void *);
+    void (*on_disconnect)(int, void *, void *);
+    void *on_recv_arg;
+    void *on_connect_arg;
+    void *on_disconnect_arg;
+    int blocking;
+    int event_blocking;
+    int daemon;
+    int serving;
+    int num_clients;
+    CDTPSocket *sock;
+    CDTPSocket **clients;
+    int *allocated_clients;
+};
+
 EXPORT CDTPServer *cdtp_server(size_t max_clients,
                               void (*on_recv      )(int, void *, void *),
                               void (*on_connect   )(int, void *, void *),

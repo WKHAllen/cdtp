@@ -7,9 +7,6 @@
 
 #include "util.h"
 
-// typedef struct _CDTPClient
-// {
-
-// } CDTPClient;
+typedef struct CDTPClient CDTPClient;
 
 #endif // CDTP_CLIENT_H

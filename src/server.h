@@ -20,36 +20,9 @@
 #define CDTP_SERVER_BIND_FAILED         5
 #define CDTP_SERVER_LISTEN_FAILED       6
 
-// Socket type
-typedef struct _CDTPSocket
-{
-#ifdef _WIN32
-    SOCKET sock;
-#else
-    int sock;
-#endif
-    struct sockaddr_in address;
-} CDTPSocket;
-
-// Socket server type
-typedef struct _CDTPServer
-{
-    size_t max_clients;
-    void (*on_recv      )(int, void *, void *);
-    void (*on_connect   )(int, void *, void *);
-    void (*on_disconnect)(int, void *, void *);
-    void *on_recv_arg;
-    void *on_connect_arg;
-    void *on_disconnect_arg;
-    int blocking;
-    int event_blocking;
-    int daemon;
-    int serving;
-    int num_clients;
-    CDTPSocket *sock;
-    CDTPSocket **clients;
-    int *allocated_clients;
-} CDTPServer;
+// Type definitions
+typedef struct CDTPSocket CDTPSocket;
+typedef struct CDTPServer CDTPServer;
 
 /* 
  * Server creation/initialization
