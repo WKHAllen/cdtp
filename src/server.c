@@ -1,6 +1,6 @@
 #include "server.h"
 
-EXPORT CDTPServer cdtp_server(size_t max_clients,
+EXPORT CDTPServer *cdtp_server(size_t max_clients,
                               void (*on_recv      )(int, void *, void *),
                               void (*on_connect   )(int, void *, void *),
                               void (*on_disconnect)(int, void *, void *),
@@ -8,21 +8,21 @@ EXPORT CDTPServer cdtp_server(size_t max_clients,
                               int blocking, int event_blocking, int daemon,
                               int *err)
 {
-    CDTPServer server;
+    CDTPServer *server = malloc(sizeof(*server));
 
     // Initialize the server object
-    server.max_clients       = max_clients;
-    server.on_recv           = on_recv;
-    server.on_connect        = on_connect;
-    server.on_disconnect     = on_disconnect;
-    server.on_recv_arg       = on_recv_arg;
-    server.on_connect_arg    = on_connect_arg;
-    server.on_disconnect_arg = on_disconnect_arg;
-    server.blocking          = blocking;
-    server.event_blocking    = event_blocking;
-    server.daemon            = daemon;
-    server.serving           = CDTP_FALSE;
-    server.num_clients       = 0;
+    server->max_clients       = max_clients;
+    server->on_recv           = on_recv;
+    server->on_connect        = on_connect;
+    server->on_disconnect     = on_disconnect;
+    server->on_recv_arg       = on_recv_arg;
+    server->on_connect_arg    = on_connect_arg;
+    server->on_disconnect_arg = on_disconnect_arg;
+    server->blocking          = blocking;
+    server->event_blocking    = event_blocking;
+    server->daemon            = daemon;
+    server->serving           = CDTP_FALSE;
+    server->num_clients       = 0;
 
     // Initialize the library
     if (CDTP_INIT != CDTP_TRUE)
@@ -36,30 +36,30 @@ EXPORT CDTPServer cdtp_server(size_t max_clients,
     }
 
     // Initialize the server socket
-    server.sock = malloc(sizeof(*server.sock));
+    server->sock = malloc(sizeof(*server->sock));
 
     // Initialize the socket info
     int opt = 1;
 #ifdef _WIN32
     // Initialize the socket
-    if ((server.sock->sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
+    if ((server->sock->sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
     {
         *err = CDTP_SERVER_SOCK_INIT_FAILED;
         return server;
     }
-    if (setsockopt(server.sock->sock, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) == SOCKET_ERROR)
+    if (setsockopt(server->sock->sock, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) == SOCKET_ERROR)
     {
         *err = CDTP_SERVER_SETSOCKOPT_FAILED;
         return server;
     }
 #else
     // Initialize the socket
-    if ((server.sock->sock = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+    if ((server->sock->sock = socket(AF_INET, SOCK_STREAM, 0)) == 0)
     {
         *err = CDTP_SERVER_SOCK_INIT_FAILED;
         return server;
     }
-    if (setsockopt(server.sock->sock, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
+    if (setsockopt(server->sock->sock, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
     {
         *err = CDTP_SERVER_SETSOCKOPT_FAILED;
         return server;
@@ -67,18 +67,18 @@ EXPORT CDTPServer cdtp_server(size_t max_clients,
 #endif
 
     // Initialize the client socket array
-    server.clients = malloc(max_clients * sizeof(*server.clients));
+    server->clients = malloc(max_clients * sizeof(*server->clients));
 
     // Initialize the allocated clients array
-    server.allocated_clients = malloc(max_clients * sizeof(*server.allocated_clients));
+    server->allocated_clients = malloc(max_clients * sizeof(*server->allocated_clients));
     for (int i = 0; i < max_clients; i++)
-        server.allocated_clients[i] = CDTP_FALSE;
+        server->allocated_clients[i] = CDTP_FALSE;
     
     *err = CDTP_SERVER_SUCCESS;
     return server;
 }
 
-EXPORT CDTPServer cdtp_server_default(size_t max_clients,
+EXPORT CDTPServer *cdtp_server_default(size_t max_clients,
                                       void (*on_recv      )(int, void *, void *),
                                       void (*on_connect   )(int, void *, void *),
                                       void (*on_disconnect)(int, void *, void *),

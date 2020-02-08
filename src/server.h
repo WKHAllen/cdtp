@@ -66,7 +66,7 @@ typedef struct _CDTPServer
  * daemon:              whether or not the threads used are daemons
  * err:                 the return code, should an error occur
  */ 
-CDTPServer cdtp_server(size_t max_clients,
+CDTPServer *cdtp_server(size_t max_clients,
                        void (*on_recv      )(int, void *, void *),
                        void (*on_connect   )(int, void *, void *),
                        void (*on_disconnect)(int, void *, void *),
@@ -88,7 +88,7 @@ CDTPServer cdtp_server(size_t max_clients,
  * 
  * blocking and event blocking are set to false, daemon is set to true
  */
-CDTPServer cdtp_server_default(size_t max_clients,
+CDTPServer *cdtp_server_default(size_t max_clients,
                                void (*on_recv      )(int, void *, void *),
                                void (*on_connect   )(int, void *, void *),
                                void (*on_disconnect)(int, void *, void *),
