@@ -74,6 +74,8 @@ CDTPServer *cdtp_server_default(size_t max_clients,
  * server: the server object
  * host:   the host as a string
  * port:   the port as an integer
+ * 
+ * Returns an error code
  */
 int cdtp_server_start(CDTPServer *server, char *host, int port);
 
@@ -83,6 +85,8 @@ int cdtp_server_start(CDTPServer *server, char *host, int port);
  * server: the server object
  * host:   the host in the socket-library-provided format
  * port:   the port as an integer
+ * 
+ * Returns an error code
  */
 #ifdef _WIN32
 int cdtp_server_start_host(CDTPServer *server, ULONG host, int port);
@@ -96,16 +100,48 @@ int cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port);
  * server: the server object
  * port:   the port as an integer
  * 
+ * Returns an error code
+ * 
  * host is set to INADDR_ANY
  */
 int cdtp_server_start_default_host(CDTPServer *server, int port);
+
+/*
+ * Start a server with the default port
+ * 
+ * server: the server object
+ * host:   the host as a string
+ * 
+ * Returns an error code
+ * 
+ * port is set to CDTP_PORT
+ */
+int cdtp_server_start_default_port(CDTPServer *server, char *host);
+
+/*
+ * Start a server with a non-string host and the default port
+ * 
+ * server: the server object
+ * host:   the host in the socket-library-provided format
+ * 
+ * Returns an error code
+ * 
+ * port is set to CDTP_PORT
+ */
+#ifdef _WIN32
+int cdtp_server_start_host_default_port(CDTPServer *server, ULONG host);
+#else
+int cdtp_server_start_host_default_port(CDTPServer *server, in_addr_t host);
+#endif
 
 /*
  * Start a server with the default host and an unused port
  * 
  * server: the server object
  * 
- * host is set to INADDR_ANY, port is set to 0
+ * Returns an error code
+ * 
+ * host is set to INADDR_ANY, port is set to CDTP_PORT
  */
 int cdtp_server_start_default(CDTPServer *server);
 
@@ -122,6 +158,22 @@ void cdtp_server_stop(CDTPServer *server);
  * server: the server object
  */
 int cdtp_server_serving(CDTPServer *server);
+
+/*
+ * Get the server address
+ * 
+ * server: the server object
+ */
+struct sockaddr_in cdtp_server_addr(CDTPServer *server);
+
+/*
+ * Get the server ip address
+ * 
+ * server: the server object
+ * 
+ * The returned value's memory will need to be freed after use
+ */
+char *cdtp_server_ip(CDTPServer *server);
 
 /*
  * Server serve function

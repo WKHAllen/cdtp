@@ -73,7 +73,7 @@ EXPORT CDTPServer *cdtp_server(size_t max_clients,
     int opt = 1;
 #ifdef _WIN32
     // Initialize the socket
-    if ((server->sock->sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
+    if ((server->sock->sock = socket(CDTP_ADDRESS_FAMILY, SOCK_STREAM, 0)) == INVALID_SOCKET)
     {
         *err = CDTP_SERVER_SOCK_INIT_FAILED;
         return server;
@@ -85,7 +85,7 @@ EXPORT CDTPServer *cdtp_server(size_t max_clients,
     }
 #else
     // Initialize the socket
-    if ((server->sock->sock = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+    if ((server->sock->sock = socket(CDTP_ADDRESS_FAMILY, SOCK_STREAM, 0)) == 0)
     {
         *err = CDTP_SERVER_SOCK_INIT_FAILED;
         return server;
@@ -129,7 +129,7 @@ EXPORT int cdtp_server_start(CDTPServer *server, char *host, int port)
     server->serving = CDTP_TRUE;
 
     // Set the server address
-    server->sock->address.sin_family = AF_INET;
+    server->sock->address.sin_family = CDTP_ADDRESS_FAMILY;
     server->sock->address.sin_addr.s_addr = inet_addr(host);
     server->sock->address.sin_port = htons(port);
 
@@ -148,7 +148,7 @@ EXPORT int cdtp_server_start(CDTPServer *server, char *host, int port)
     }
     else
     {
-        // TODO: call `cdtp_serve` using thread
+        // TODO: call `_cdtp_server_serve` using thread
     }
 
     return CDTP_SERVER_SUCCESS;
@@ -166,7 +166,7 @@ EXPORT int cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port)
     server->serving = CDTP_TRUE;
 
     // Set the server address
-    server->sock->address.sin_family = AF_INET;
+    server->sock->address.sin_family = CDTP_ADDRESS_FAMILY;
     server->sock->address.sin_addr.s_addr = host;
     server->sock->address.sin_port = htons(port);
 
@@ -185,7 +185,7 @@ EXPORT int cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port)
     }
     else
     {
-        // TODO: call `cdtp_serve` using thread
+        // TODO: call `_cdtp_server_serve` using thread
     }
 
     return CDTP_SERVER_SUCCESS;
@@ -196,35 +196,65 @@ EXPORT int cdtp_server_start_default_host(CDTPServer *server, int port)
     return cdtp_server_start_host(server, INADDR_ANY, port);
 }
 
+EXPORT int cdtp_server_start_default_port(CDTPServer *server, char *host)
+{
+    return cdtp_server_start(server, host, CDTP_PORT);
+}
+
+#ifdef _WIN32
+EXPORT int cdtp_server_start_host_default_port(CDTPServer *server, ULONG host)
+#else
+EXPORT int cdtp_server_start_host_default_port(CDTPServer *server, in_addr_t host)
+#endif
+{
+    return cdtp_server_start_host(server, host, CDTP_PORT);
+}
+
 EXPORT int cdtp_server_start_default(CDTPServer *server)
 {
-    return cdtp_server_start_host(server, INADDR_ANY, 0);
+    return cdtp_server_start_host(server, INADDR_ANY, CDTP_PORT);
 }
 
 EXPORT void cdtp_server_stop(CDTPServer *server)
 {
     server->serving = CDTP_FALSE;
 #ifdef _WIN32
-    closesocket(server->sock->sock);
     for (int i = 0; i < server->max_clients; i++)
         if (server->allocated_clients[i] == CDTP_TRUE)
             closesocket(server->clients[i]->sock);
+    closesocket(server->sock->sock);
 #else
-    close(server->sock->sock);
     for (int i = 0; i < server->max_clients; i++)
         if (server->allocated_clients[i] == CDTP_TRUE)
             close(server->clients[i]->sock);
+    close(server->sock->sock);
 #endif
     free(server->sock);
     free(server->clients);
     free(server->allocated_clients);
     free(server);
-    // TODO: complete this function
 }
 
 EXPORT int cdtp_server_serving(CDTPServer *server)
 {
     return server->serving;
+}
+
+EXPORT struct sockaddr_in cdtp_server_addr(CDTPServer *server)
+{
+    return server->sock->address;
+}
+
+EXPORT char *cdtp_server_ip(CDTPServer *server)
+{
+    char *addr = malloc(CDTP_ADDRSTRLEN * sizeof(char));
+#ifdef _WIN32
+    int addrlen = CDTP_ADDRSTRLEN;
+    WSAAddressToString((LPSOCKADDR)&(server->sock->address), sizeof(server->sock->address), NULL, addr, (LPDWORD)&addrlen);
+#else
+    inet_ntop(CDTP_ADDRESS_FAMILY, &(server->sock->address), addr, CDTP_ADDRSTRLEN);
+#endif
+    return addr;
 }
 
 void _cdtp_server_serve(CDTPServer *server)
