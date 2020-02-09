@@ -245,16 +245,32 @@ EXPORT struct sockaddr_in cdtp_server_addr(CDTPServer *server)
     return server->sock->address;
 }
 
-EXPORT char *cdtp_server_ip(CDTPServer *server)
+EXPORT char *cdtp_server_host(CDTPServer *server)
 {
-    char *addr = malloc(CDTP_ADDRSTRLEN * sizeof(char));
 #ifdef _WIN32
-    int addrlen = CDTP_ADDRSTRLEN;
+    // + 6 because WSAAddressToString copies the port as well
+    int addrlen = CDTP_ADDRSTRLEN + 6;
+    char *addr = malloc(addrlen * sizeof(char));
     WSAAddressToString((LPSOCKADDR)&(server->sock->address), sizeof(server->sock->address), NULL, addr, (LPDWORD)&addrlen);
+    // Remove the port
+    for (int i = 0; i < CDTP_ADDRSTRLEN && addr[i] != '\0'; i++)
+    {
+        if (addr[i] == ':')
+        {
+            addr[i] = '\0';
+            break;
+        }
+    }
 #else
+    char *addr = malloc(CDTP_ADDRSTRLEN * sizeof(char));
     inet_ntop(CDTP_ADDRESS_FAMILY, &(server->sock->address), addr, CDTP_ADDRSTRLEN);
 #endif
     return addr;
+}
+
+EXPORT int cdtp_server_port(CDTPServer *server)
+{
+    return ntohs(server->sock->address.sin_port);
 }
 
 void _cdtp_server_serve(CDTPServer *server)

@@ -173,7 +173,14 @@ struct sockaddr_in cdtp_server_addr(CDTPServer *server);
  * 
  * The returned value's memory will need to be freed after use
  */
-char *cdtp_server_ip(CDTPServer *server);
+char *cdtp_server_host(CDTPServer *server);
+
+/*
+ * Get the server port
+ * 
+ * server: the server object
+ */
+int cdtp_server_port(CDTPServer *server);
 
 /*
  * Server serve function
