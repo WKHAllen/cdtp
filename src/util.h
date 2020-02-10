@@ -32,6 +32,17 @@
 #define CDTP_FALSE 0
 #define CDTP_TRUE  1
 
+// CDTP error codes
+#define CDTP_SUCCESS                    0
+#define CDTP_SERVER_WINSOCK_INIT_FAILED 1
+#define CDTP_SERVER_SOCK_INIT_FAILED    2
+#define CDTP_SERVER_SETSOCKOPT_FAILED   3
+#define CDTP_SERVER_ALREADY_SERVING     4
+#define CDTP_SERVER_ADDRESS_FAILED      5
+#define CDTP_SERVER_BIND_FAILED         6
+#define CDTP_SERVER_LISTEN_FAILED       7
+#define CDTP_SERVER_STOP_FAILED         8
+
 // Global address family to use
 #ifndef CDTP_ADDRESS_FAMILY
     #define CDTP_ADDRESS_FAMILY AF_INET
@@ -57,10 +68,30 @@
 extern int CDTP_INIT;
 extern int CDTP_EXIT;
 
+// Error code for CDTP
+extern int CDTP_ERROR;
+// Error code for the layer underneath CDTP
+extern int CDTP_ERROR_UNDER;
+
 // Initialize the library
-int cdtp_init(void);
+int _cdtp_init(void);
 
 // Exit the library
-void cdtp_exit(void);
+void _cdtp_exit(void);
+
+// Check if an error has occurred
+int cdtp_error(void);
+
+// Get the CDTP error code
+int cdtp_get_error(void);
+
+// Get the underlying layer error code
+int cdtp_get_underlying_error(void);
+
+// Set the errors
+void _cdtp_set_error(int cdtp_err, int underlying_err);
+
+// Set the errors using typical underlying layer error notifying methods
+void _cdtp_set_err(int cdtp_err);
 
 #endif // CDTP_UTIL_H

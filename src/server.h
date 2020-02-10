@@ -12,17 +12,6 @@
 // Socket server listen backlog
 #define CDTP_LISTEN_BACKLOG 3
 
-// Socket server initialization return codes
-#define CDTP_SERVER_SUCCESS             0
-#define CDTP_SERVER_WINSOCK_INIT_FAILED 1
-#define CDTP_SERVER_SOCK_INIT_FAILED    2
-#define CDTP_SERVER_SETSOCKOPT_FAILED   3
-#define CDTP_SERVER_ALREADY_SERVING     4
-#define CDTP_SERVER_ADDRESS_FAILED      5
-#define CDTP_SERVER_BIND_FAILED         6
-#define CDTP_SERVER_LISTEN_FAILED       7
-#define CDTP_SERVER_STOP_FAILED         8
-
 // Type definitions
 typedef struct CDTPSocket CDTPSocket;
 typedef struct CDTPServer CDTPServer;
@@ -40,15 +29,13 @@ typedef struct CDTPServer CDTPServer;
  * blocking:            whether or not the cdtp_server_start function and related functions will block
  * event_blocking:      whether or not on_recv, on_connect, and on_disconnect will block
  * daemon:              whether or not the threads used are daemons
- * err:                 the return code, should an error occur
  */ 
 CDTPServer *cdtp_server(size_t max_clients,
                        void (*on_recv      )(int, void *, void *),
                        void (*on_connect   )(int, void *, void *),
                        void (*on_disconnect)(int, void *, void *),
                        void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg,
-                       int blocking, int event_blocking, int daemon,
-                       int *err);
+                       int blocking, int event_blocking, int daemon);
 
 /*
  * Server creation/initialization, with default blocking and daemon parameters
@@ -60,7 +47,6 @@ CDTPServer *cdtp_server(size_t max_clients,
  * on_recv_arg:         an value that will be passed to the on_recv function
  * on_connect_arg:      an value that will be passed to the on_connect function
  * on_disconnect_arg:   an value that will be passed to the on_disconnect function
- * err:                 the return code, should an error occur
  * 
  * blocking and event blocking are set to false, daemon is set to true
  */
@@ -68,8 +54,7 @@ CDTPServer *cdtp_server_default(size_t max_clients,
                                void (*on_recv      )(int, void *, void *),
                                void (*on_connect   )(int, void *, void *),
                                void (*on_disconnect)(int, void *, void *),
-                               void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg,
-                               int *err);
+                               void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg);
 
 /*
  * Start a server
@@ -77,11 +62,10 @@ CDTPServer *cdtp_server_default(size_t max_clients,
  * server: the server object
  * host:   the host as a string
  * port:   the port as an integer
- * err:    the return code, should an error occur
  * 
  * Returns an error code
  */
-int cdtp_server_start(CDTPServer *server, char *host, int port, int *err);
+void cdtp_server_start(CDTPServer *server, char *host, int port);
 
 /*
  * Start a server with a non-string host
@@ -89,14 +73,13 @@ int cdtp_server_start(CDTPServer *server, char *host, int port, int *err);
  * server: the server object
  * host:   the host in the socket-library-provided format
  * port:   the port as an integer
- * err:    the return code, should an error occur
  * 
  * Returns an error code
  */
 #ifdef _WIN32
-int cdtp_server_start_host(CDTPServer *server, ULONG host, int port, int *err);
+void cdtp_server_start_host(CDTPServer *server, ULONG host, int port);
 #else
-int cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port, int *err);
+void cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port);
 #endif
 
 /*
@@ -104,62 +87,58 @@ int cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port, int *er
  * 
  * server: the server object
  * port:   the port as an integer
- * err:    the return code, should an error occur
  * 
  * Returns an error code
  * 
  * host is set to INADDR_ANY
  */
-int cdtp_server_start_default_host(CDTPServer *server, int port, int *err);
+void cdtp_server_start_default_host(CDTPServer *server, int port);
 
 /*
  * Start a server with the default port
  * 
  * server: the server object
  * host:   the host as a string
- * err:    the return code, should an error occur
  * 
  * Returns an error code
  * 
  * port is set to CDTP_PORT
  */
-int cdtp_server_start_default_port(CDTPServer *server, char *host, int *err);
+void cdtp_server_start_default_port(CDTPServer *server, char *host);
 
 /*
  * Start a server with a non-string host and the default port
  * 
  * server: the server object
  * host:   the host in the socket-library-provided format
- * err:    the return code, should an error occur
  * 
  * Returns an error code
  * 
  * port is set to CDTP_PORT
  */
 #ifdef _WIN32
-int cdtp_server_start_host_default_port(CDTPServer *server, ULONG host, int *err);
+void cdtp_server_start_host_default_port(CDTPServer *server, ULONG host);
 #else
-int cdtp_server_start_host_default_port(CDTPServer *server, in_addr_t host, int *err);
+void cdtp_server_start_host_default_port(CDTPServer *server, in_addr_t host);
 #endif
 
 /*
  * Start a server with the default host and an unused port
  * 
  * server: the server object
- * err:    the return code, should an error occur
  * 
  * Returns an error code
  * 
  * host is set to INADDR_ANY, port is set to CDTP_PORT
  */
-int cdtp_server_start_default(CDTPServer *server, int *err);
+void cdtp_server_start_default(CDTPServer *server);
 
 /*
  * Stop the server, disconnect all clients, and free up memory
  * 
  * server: the server object
  */
-int cdtp_server_stop(CDTPServer *server, int *err);
+void cdtp_server_stop(CDTPServer *server);
 
 /*
  * Check if the server is serving
@@ -182,7 +161,7 @@ struct sockaddr_in cdtp_server_addr(CDTPServer *server);
  * 
  * The returned value's memory will need to be freed after use
  */
-char *cdtp_server_host(CDTPServer *server, int *err);
+char *cdtp_server_host(CDTPServer *server);
 
 /*
  * Get the server port

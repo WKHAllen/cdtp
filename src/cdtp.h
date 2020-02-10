@@ -1,9 +1,12 @@
 /*
  * C Data Transfer Protocol
  * 
- * A networking library written in C.
+ * A cross platform networking library written in C.
  * 
  * Author: Will Allen
+ * 
+ * All functions beginning with an underscore are not exported, and cannot be
+ * used from outside the library.
  */
 
 #pragma once
@@ -14,6 +17,7 @@
 extern "C" {
 #endif
 
+#include "util.h"
 #include "server.h"
 #include "client.h"
 
