@@ -6,8 +6,8 @@
 #ifndef CDTP_UTIL_H
 #define CDTP_UTIL_H
 
-#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef _WIN32
     #include <WinSock2.h>

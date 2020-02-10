@@ -120,6 +120,10 @@ EXPORT CDTPServer *cdtp_server_default(size_t max_clients,
 
 EXPORT void cdtp_server_start(CDTPServer *server, char *host, int port)
 {
+    // Change 'localhost' to '127.0.0.1'
+    if (strcmp(host, "localhost") == 0)
+        host = "127.0.0.1";
+
     // Make sure the server is not already serving
     if (server->serving == CDTP_TRUE)
     {
