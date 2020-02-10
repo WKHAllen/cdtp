@@ -265,24 +265,49 @@ EXPORT int cdtp_server_start_default(CDTPServer *server, int *err)
     return cdtp_server_start_host(server, INADDR_ANY, CDTP_PORT, err);
 }
 
-EXPORT void cdtp_server_stop(CDTPServer *server)
+EXPORT int cdtp_server_stop(CDTPServer *server, int *err)
 {
     server->serving = CDTP_FALSE;
 #ifdef _WIN32
     for (int i = 0; i < server->max_clients; i++)
+    {
         if (server->allocated_clients[i] == CDTP_TRUE)
-            closesocket(server->clients[i]->sock);
-    closesocket(server->sock->sock);
+        {
+            if (closesocket(server->clients[i]->sock) != 0)
+            {
+                *err = WSAGetLastError();
+                return CDTP_SERVER_STOP_FAILED;
+            }
+        }
+    }
+    if (closesocket(server->sock->sock) != 0)
+    {
+        *err = WSAGetLastError();
+        return CDTP_SERVER_STOP_FAILED;
+    }
 #else
     for (int i = 0; i < server->max_clients; i++)
+    {
         if (server->allocated_clients[i] == CDTP_TRUE)
-            close(server->clients[i]->sock);
-    close(server->sock->sock);
+        {
+            if (close(server->clients[i]->sock) != 0)
+            {
+                *err = errno;
+                return CDTP_SERVER_STOP_FAILED;
+            }
+        }
+    }
+    if (close(server->sock->sock) != 0)
+    {
+        *err = errno;
+        return CDTP_SERVER_STOP_FAILED;
+    }
 #endif
     free(server->sock);
     free(server->clients);
     free(server->allocated_clients);
     free(server);
+    return CDTP_SERVER_SUCCESS;
 }
 
 EXPORT int cdtp_server_serving(CDTPServer *server)
@@ -295,12 +320,16 @@ EXPORT struct sockaddr_in cdtp_server_addr(CDTPServer *server)
     return server->sock->address;
 }
 
-EXPORT char *cdtp_server_host(CDTPServer *server)
+EXPORT char *cdtp_server_host(CDTPServer *server, int *err)
 {
 #ifdef _WIN32
     int addrlen = CDTP_ADDRSTRLEN;
     char *addr = malloc(addrlen * sizeof(char));
-    WSAAddressToString((LPSOCKADDR)&(server->sock->address), sizeof(server->sock->address), NULL, addr, (LPDWORD)&addrlen);
+    if (WSAAddressToString((LPSOCKADDR)&(server->sock->address), sizeof(server->sock->address), NULL, addr, (LPDWORD)&addrlen) != 0)
+    {
+        *err = CDTP_SERVER_ADDRESS_FAILED; // WSAGetLastError()
+        return "";
+    }
     // Remove the port
     for (int i = 0; i < CDTP_ADDRSTRLEN && addr[i] != '\0'; i++)
     {
@@ -312,7 +341,11 @@ EXPORT char *cdtp_server_host(CDTPServer *server)
     }
 #else
     char *addr = malloc(CDTP_ADDRSTRLEN * sizeof(char));
-    inet_ntop(CDTP_ADDRESS_FAMILY, &(server->sock->address), addr, CDTP_ADDRSTRLEN);
+    if (inet_ntop(CDTP_ADDRESS_FAMILY, &(server->sock->address), addr, CDTP_ADDRSTRLEN) == NULL)
+    {
+        *err = CDTP_SERVER_ADDRESS_FAILED; // errno
+        return "";
+    }
 #endif
     return addr;
 }

@@ -27,12 +27,22 @@ int main(int argc, char **argv)
         printf("OS Error:   %d\n", err);
         exit(EXIT_FAILURE);
     }
-    char *ip_address = cdtp_server_host(server);
+    char *ip_address = cdtp_server_host(server, &err);
+    if (err != CDTP_SERVER_SUCCESS)
+    {
+        printf("CDTP Error: %d\n", err);
+        exit(EXIT_FAILURE);
+    }
     int port = cdtp_server_port(server);
     printf("IP address: %s\n", ip_address);
     printf("Port:       %d\n", port);
     free(ip_address);
-    cdtp_server_stop(server);
+    cdtp_server_stop(server, &err);
+    if (err != CDTP_SERVER_SUCCESS)
+    {
+        printf("CDTP Error: %d\n", err);
+        exit(EXIT_FAILURE);
+    }
 
     printf("Successfully passed all tests\n");
     return 0;

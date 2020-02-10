@@ -20,6 +20,7 @@
 #define CDTP_SERVER_ADDRESS_FAILED      5
 #define CDTP_SERVER_BIND_FAILED         6
 #define CDTP_SERVER_LISTEN_FAILED       7
+#define CDTP_SERVER_STOP_FAILED         8
 
 // Type definitions
 typedef struct CDTPSocket CDTPSocket;
@@ -157,7 +158,7 @@ int cdtp_server_start_default(CDTPServer *server, int *err);
  * 
  * server: the server object
  */
-void cdtp_server_stop(CDTPServer *server);
+int cdtp_server_stop(CDTPServer *server, int *err);
 
 /*
  * Check if the server is serving
@@ -180,7 +181,7 @@ struct sockaddr_in cdtp_server_addr(CDTPServer *server);
  * 
  * The returned value's memory will need to be freed after use
  */
-char *cdtp_server_host(CDTPServer *server);
+char *cdtp_server_host(CDTPServer *server, int *err);
 
 /*
  * Get the server port

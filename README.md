@@ -1,2 +1,3 @@
 # cdtp
-A networking library written in C
+
+A cross platform networking library written in C.
