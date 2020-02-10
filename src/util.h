@@ -33,15 +33,18 @@
 #define CDTP_TRUE  1
 
 // CDTP error codes
-#define CDTP_SUCCESS                    0
-#define CDTP_SERVER_WINSOCK_INIT_FAILED 1
-#define CDTP_SERVER_SOCK_INIT_FAILED    2
-#define CDTP_SERVER_SETSOCKOPT_FAILED   3
-#define CDTP_SERVER_ALREADY_SERVING     4
-#define CDTP_SERVER_ADDRESS_FAILED      5
-#define CDTP_SERVER_BIND_FAILED         6
-#define CDTP_SERVER_LISTEN_FAILED       7
-#define CDTP_SERVER_STOP_FAILED         8
+#define CDTP_SUCCESS                     0
+#define CDTP_SERVER_WINSOCK_INIT_FAILED  1
+#define CDTP_SERVER_SOCK_INIT_FAILED     2
+#define CDTP_SERVER_SETSOCKOPT_FAILED    3
+#define CDTP_SERVER_CANNOT_RESTART       4
+#define CDTP_SERVER_ALREADY_SERVING      5
+#define CDTP_SERVER_ADDRESS_FAILED       6
+#define CDTP_SERVER_BIND_FAILED          7
+#define CDTP_SERVER_LISTEN_FAILED        8
+#define CDTP_SERVER_STOP_FAILED          9
+#define CDTP_CLIENT_DOES_NOT_EXIT       10
+#define CDTP_CLIENT_REMOVE_FAILED       11
 
 // Global address family to use
 #ifndef CDTP_ADDRESS_FAMILY

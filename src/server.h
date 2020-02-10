@@ -177,6 +177,13 @@ int cdtp_server_port(CDTPServer *server);
  */
 void _cdtp_server_serve(CDTPServer *server);
 
+/*
+ * Remove a client by ID
+ * 
+ * server: the server object
+ */
+void cdtp_server_remove_client(CDTPServer *server, int client_id);
+
 // TODO: add more functions
 
 #endif // CDTP_SERVER_H

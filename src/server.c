@@ -25,6 +25,7 @@ struct CDTPServer
     int event_blocking;
     int daemon;
     int serving;
+    int done;
     int num_clients;
     CDTPSocket *sock;
     CDTPSocket **clients;
@@ -52,6 +53,7 @@ EXPORT CDTPServer *cdtp_server(size_t max_clients,
     server->event_blocking    = event_blocking;
     server->daemon            = daemon;
     server->serving           = CDTP_FALSE;
+    server->done              = CDTP_FALSE;
     server->num_clients       = 0;
 
     // Initialize the library
@@ -124,6 +126,13 @@ EXPORT void cdtp_server_start(CDTPServer *server, char *host, int port)
     if (strcmp(host, "localhost") == 0)
         host = "127.0.0.1";
 
+    // Make sure the server has not been run before
+    if (server->done == CDTP_TRUE)
+    {
+        _cdtp_set_error(CDTP_SERVER_CANNOT_RESTART, 0);
+        return;
+    }
+
     // Make sure the server is not already serving
     if (server->serving == CDTP_TRUE)
     {
@@ -181,6 +190,13 @@ EXPORT void cdtp_server_start_host(CDTPServer *server, ULONG host, int port)
 EXPORT void cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port)
 #endif
 {
+    // Make sure the server has not been run before
+    if (server->done == CDTP_TRUE)
+    {
+        _cdtp_set_error(CDTP_SERVER_CANNOT_RESTART, 0);
+        return;
+    }
+
     // Make sure the server is not already serving
     if (server->serving == CDTP_TRUE)
     {
@@ -248,16 +264,12 @@ EXPORT void cdtp_server_stop(CDTPServer *server)
     server->serving = CDTP_FALSE;
 #ifdef _WIN32
     for (int i = 0; i < server->max_clients; i++)
-    {
         if (server->allocated_clients[i] == CDTP_TRUE)
-        {
             if (closesocket(server->clients[i]->sock) != 0)
             {
                 _cdtp_set_err(CDTP_SERVER_STOP_FAILED);
                 return;
             }
-        }
-    }
     if (closesocket(server->sock->sock) != 0)
     {
         _cdtp_set_err(CDTP_SERVER_STOP_FAILED);
@@ -265,16 +277,12 @@ EXPORT void cdtp_server_stop(CDTPServer *server)
     }
 #else
     for (int i = 0; i < server->max_clients; i++)
-    {
         if (server->allocated_clients[i] == CDTP_TRUE)
-        {
             if (close(server->clients[i]->sock) != 0)
             {
                 _cdtp_set_err(CDTP_SERVER_STOP_FAILED);
                 return;
             }
-        }
-    }
     if (close(server->sock->sock) != 0)
     {
         _cdtp_set_err(CDTP_SERVER_STOP_FAILED);
@@ -285,6 +293,7 @@ EXPORT void cdtp_server_stop(CDTPServer *server)
     free(server->clients);
     free(server->allocated_clients);
     free(server);
+    server->done = CDTP_TRUE;
 }
 
 EXPORT int cdtp_server_serving(CDTPServer *server)
@@ -335,4 +344,23 @@ EXPORT int cdtp_server_port(CDTPServer *server)
 void _cdtp_server_serve(CDTPServer *server)
 {
     // TODO: implement this function
+}
+
+EXPORT void cdtp_server_remove_client(CDTPServer *server, int client_id)
+{
+    if (client_id < 0 || client_id >= server->max_clients || server->allocated_clients[client_id] != CDTP_TRUE)
+    {
+        _cdtp_set_error(CDTP_CLIENT_DOES_NOT_EXIT, 0);
+        return;
+    }
+#ifdef _WIN32
+    if (closesocket(server->clients[client_id]->sock) != 0)
+#else
+    if (close(server->clients[client_id]->sock) != 0)
+#endif
+    {
+        _cdtp_set_err(CDTP_CLIENT_REMOVE_FAILED);
+        return;
+    }
+    server->allocated_clients[client_id] = CDTP_FALSE;
 }
