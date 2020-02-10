@@ -129,8 +129,13 @@ EXPORT int cdtp_server_start(CDTPServer *server, char *host, int port)
     server->serving = CDTP_TRUE;
 
     // Set the server address
+#ifdef _WIN32
+    int addrlen = CDTP_ADDRSTRLEN;
+    WSAStringToAddress(host, CDTP_ADDRESS_FAMILY, NULL, (LPSOCKADDR)&(server->sock->address), &addrlen);
+#else
+    inet_pton(CDTP_ADDRESS_FAMILY, host, &(server->sock->address));
+#endif
     server->sock->address.sin_family = CDTP_ADDRESS_FAMILY;
-    server->sock->address.sin_addr.s_addr = inet_addr(host);
     server->sock->address.sin_port = htons(port);
 
     // Bind the address to the server
@@ -248,8 +253,7 @@ EXPORT struct sockaddr_in cdtp_server_addr(CDTPServer *server)
 EXPORT char *cdtp_server_host(CDTPServer *server)
 {
 #ifdef _WIN32
-    // + 6 because WSAAddressToString copies the port as well
-    int addrlen = CDTP_ADDRSTRLEN + 6;
+    int addrlen = CDTP_ADDRSTRLEN;
     char *addr = malloc(addrlen * sizeof(char));
     WSAAddressToString((LPSOCKADDR)&(server->sock->address), sizeof(server->sock->address), NULL, addr, (LPDWORD)&addrlen);
     // Remove the port

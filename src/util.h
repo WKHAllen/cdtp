@@ -10,6 +10,7 @@
 
 #ifdef _WIN32
     #include <WinSock2.h>
+    #include <WS2tcpip.h>
     #pragma comment(lib, "Ws2_32.lib")
 #else
     #include <unistd.h>
@@ -35,16 +36,14 @@
 #endif
 
 // INET and INET6 address string length
-#if !defined(INET_ADDRSTRLEN) || !defined(INET6_ADDRSTRLEN)
-    #define INET_ADDRSTRLEN  16
-    #define INET6_ADDRSTRLEN 46
-#endif
+#define CDTP_INET_ADDRSTRLEN  22
+#define CDTP_INET6_ADDRSTRLEN 65
 
 // Global address string length
 #if (CDTP_ADDRESS_FAMILY == AF_INET)
-    #define CDTP_ADDRSTRLEN INET_ADDRSTRLEN
+    #define CDTP_ADDRSTRLEN CDTP_INET_ADDRSTRLEN
 #elif (CDTP_ADDRESS_FAMILY == AF_INET6)
-    #define CDTP_ADDRSTRLEN INET6_ADDRSTRLEN
+    #define CDTP_ADDRSTRLEN CDTP_INET6_ADDRSTRLEN
 #endif
 
 // Default CDTP port
