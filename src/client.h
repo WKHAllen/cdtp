@@ -2,6 +2,7 @@
  * Client types and functions for cdtp
  */
 
+#pragma once
 #ifndef CDTP_CLIENT_H
 #define CDTP_CLIENT_H
 

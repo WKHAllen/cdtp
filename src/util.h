@@ -2,6 +2,7 @@
  * Utility functions and definitions for cdtp
  */
 
+#pragma once
 #ifndef CDTP_UTIL_H
 #define CDTP_UTIL_H
 

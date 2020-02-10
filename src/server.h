@@ -2,6 +2,7 @@
  * Server types and functions for cdtp
  */
 
+#pragma once
 #ifndef CDTP_SERVER_H
 #define CDTP_SERVER_H
 

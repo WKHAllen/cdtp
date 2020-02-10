@@ -6,6 +6,7 @@
  * Author: Will Allen
  */
 
+#pragma once
 #ifndef CDTP_H
 #define CDTP_H
 
