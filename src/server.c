@@ -139,8 +139,8 @@ EXPORT int cdtp_server_start(CDTPServer *server, char *host, int port, int *err)
         return CDTP_SERVER_ADDRESS_FAILED;
     }
 #else
-    err_code = inet_pton(CDTP_ADDRESS_FAMILY, host, &(server->sock->address))
-    if (err_code != -1)
+    err_code = inet_pton(CDTP_ADDRESS_FAMILY, host, &(server->sock->address));
+    if (err_code != 1)
     {
         *err = err_code;
         return CDTP_SERVER_ADDRESS_FAILED;

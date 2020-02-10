@@ -11,11 +11,22 @@ int main(int argc, char **argv)
 {
     printf("Running tests...\n");
 
+    int ret;
     int err;
     CDTPServer *server = cdtp_server_default(16, tmp, tmp, tmp, NULL, NULL, NULL, &err);
-    assert(err == CDTP_SERVER_SUCCESS);
+    if (err != CDTP_SERVER_SUCCESS)
+    {
+        printf("CDTP Error: %d\n", err);
+        exit(EXIT_FAILURE);
+    }
     char *host = "127.0.0.1";
-    assert(cdtp_server_start_default_port(server, host, &err) == CDTP_SERVER_SUCCESS);
+    ret = cdtp_server_start_default_port(server, host, &err);
+    if (ret != CDTP_SERVER_SUCCESS)
+    {
+        printf("CDTP Error: %d\n", ret);
+        printf("OS Error:   %d\n", err);
+        exit(EXIT_FAILURE);
+    }
     char *ip_address = cdtp_server_host(server);
     int port = cdtp_server_port(server);
     printf("IP address: %s\n", ip_address);
