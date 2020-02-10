@@ -15,7 +15,7 @@ int main(int argc, char **argv)
     CDTPServer *server = cdtp_server_default(16, tmp, tmp, tmp, NULL, NULL, NULL, &err);
     assert(err == CDTP_SERVER_SUCCESS);
     char *host = "127.0.0.1";
-    assert(cdtp_server_start_default_port(server, host) == CDTP_SERVER_SUCCESS);
+    assert(cdtp_server_start_default_port(server, host, &err) == CDTP_SERVER_SUCCESS);
     char *ip_address = cdtp_server_host(server);
     int port = cdtp_server_port(server);
     printf("IP address: %s\n", ip_address);

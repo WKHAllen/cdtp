@@ -121,8 +121,10 @@ EXPORT CDTPServer *cdtp_server_default(size_t max_clients,
                        CDTP_FALSE, CDTP_FALSE, CDTP_TRUE, err);
 }
 
-EXPORT int cdtp_server_start(CDTPServer *server, char *host, int port)
+EXPORT int cdtp_server_start(CDTPServer *server, char *host, int port, int *err)
 {
+    int err_code;
+
     // Make sure the server is not already serving
     if (server->serving == CDTP_TRUE)
         return CDTP_SERVER_ALREADY_SERVING;
@@ -131,20 +133,45 @@ EXPORT int cdtp_server_start(CDTPServer *server, char *host, int port)
     // Set the server address
 #ifdef _WIN32
     int addrlen = CDTP_ADDRSTRLEN;
-    WSAStringToAddress(host, CDTP_ADDRESS_FAMILY, NULL, (LPSOCKADDR)&(server->sock->address), &addrlen);
+    if (WSAStringToAddress(host, CDTP_ADDRESS_FAMILY, NULL, (LPSOCKADDR)&(server->sock->address), &addrlen) != 0)
+    {
+        *err = WSAGetLastError();
+        return CDTP_SERVER_ADDRESS_FAILED;
+    }
 #else
-    inet_pton(CDTP_ADDRESS_FAMILY, host, &(server->sock->address));
+    err_code = inet_pton(CDTP_ADDRESS_FAMILY, host, &(server->sock->address))
+    if (err_code != -1)
+    {
+        *err = err_code;
+        return CDTP_SERVER_ADDRESS_FAILED;
+    }
 #endif
     server->sock->address.sin_family = CDTP_ADDRESS_FAMILY;
     server->sock->address.sin_port = htons(port);
 
     // Bind the address to the server
-    if (bind(server->sock->sock, (struct sockaddr *)&(server->sock->address), sizeof(server->sock->address)) < 0)
+    err_code = bind(server->sock->sock, (struct sockaddr *)&(server->sock->address), sizeof(server->sock->address));
+    if (err_code < 0)
+    {
+#ifdef _WIN32
+        *err = WSAGetLastError();
+#else
+        *err = err_code;
+#endif
         return CDTP_SERVER_BIND_FAILED;
+    }
 
     // Listen for connections
-    if (listen(server->sock->sock, CDTP_LISTEN_BACKLOG) < 0)
+    err_code = listen(server->sock->sock, CDTP_LISTEN_BACKLOG);
+    if (err_code < 0)
+    {
+#ifdef _WIN32
+        *err = WSAGetLastError();
+#else
+        *err = err_code;
+#endif
         return CDTP_SERVER_LISTEN_FAILED;
+    }
 
     // Serve
     if (server->blocking)
@@ -160,11 +187,13 @@ EXPORT int cdtp_server_start(CDTPServer *server, char *host, int port)
 }
 
 #ifdef _WIN32
-EXPORT int cdtp_server_start_host(CDTPServer *server, ULONG host, int port)
+EXPORT int cdtp_server_start_host(CDTPServer *server, ULONG host, int port, int *err)
 #else
-EXPORT int cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port)
+EXPORT int cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port, int *err)
 #endif
 {
+    int err_code;
+
     // Make sure the server is not already serving
     if (server->serving == CDTP_TRUE)
         return CDTP_SERVER_ALREADY_SERVING;
@@ -176,12 +205,28 @@ EXPORT int cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port)
     server->sock->address.sin_port = htons(port);
 
     // Bind the address to the server
-    if (bind(server->sock->sock, (struct sockaddr *)&(server->sock->address), sizeof(server->sock->address)) < 0)
+    err_code = bind(server->sock->sock, (struct sockaddr *)&(server->sock->address), sizeof(server->sock->address));
+    if (err_code < 0)
+    {
+#ifdef _WIN32
+        *err = WSAGetLastError();
+#else
+        *err = err_code;
+#endif
         return CDTP_SERVER_BIND_FAILED;
+    }
 
     // Listen for connections
-    if (listen(server->sock->sock, CDTP_LISTEN_BACKLOG) < 0)
+    err_code = listen(server->sock->sock, CDTP_LISTEN_BACKLOG);
+    if (err_code < 0)
+    {
+#ifdef _WIN32
+        *err = WSAGetLastError();
+#else
+        *err = err_code;
+#endif
         return CDTP_SERVER_LISTEN_FAILED;
+    }
 
     // Serve
     if (server->blocking)
@@ -196,28 +241,28 @@ EXPORT int cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port)
     return CDTP_SERVER_SUCCESS;
 }
 
-EXPORT int cdtp_server_start_default_host(CDTPServer *server, int port)
+EXPORT int cdtp_server_start_default_host(CDTPServer *server, int port, int *err)
 {
-    return cdtp_server_start_host(server, INADDR_ANY, port);
+    return cdtp_server_start_host(server, INADDR_ANY, port, err);
 }
 
-EXPORT int cdtp_server_start_default_port(CDTPServer *server, char *host)
+EXPORT int cdtp_server_start_default_port(CDTPServer *server, char *host, int *err)
 {
-    return cdtp_server_start(server, host, CDTP_PORT);
+    return cdtp_server_start(server, host, CDTP_PORT, err);
 }
 
 #ifdef _WIN32
-EXPORT int cdtp_server_start_host_default_port(CDTPServer *server, ULONG host)
+EXPORT int cdtp_server_start_host_default_port(CDTPServer *server, ULONG host, int *err)
 #else
-EXPORT int cdtp_server_start_host_default_port(CDTPServer *server, in_addr_t host)
+EXPORT int cdtp_server_start_host_default_port(CDTPServer *server, in_addr_t host, int *err)
 #endif
 {
-    return cdtp_server_start_host(server, host, CDTP_PORT);
+    return cdtp_server_start_host(server, host, CDTP_PORT, err);
 }
 
-EXPORT int cdtp_server_start_default(CDTPServer *server)
+EXPORT int cdtp_server_start_default(CDTPServer *server, int *err)
 {
-    return cdtp_server_start_host(server, INADDR_ANY, CDTP_PORT);
+    return cdtp_server_start_host(server, INADDR_ANY, CDTP_PORT, err);
 }
 
 EXPORT void cdtp_server_stop(CDTPServer *server)

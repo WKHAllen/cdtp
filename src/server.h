@@ -17,8 +17,9 @@
 #define CDTP_SERVER_SOCK_INIT_FAILED    2
 #define CDTP_SERVER_SETSOCKOPT_FAILED   3
 #define CDTP_SERVER_ALREADY_SERVING     4
-#define CDTP_SERVER_BIND_FAILED         5
-#define CDTP_SERVER_LISTEN_FAILED       6
+#define CDTP_SERVER_ADDRESS_FAILED      5
+#define CDTP_SERVER_BIND_FAILED         6
+#define CDTP_SERVER_LISTEN_FAILED       7
 
 // Type definitions
 typedef struct CDTPSocket CDTPSocket;
@@ -74,10 +75,11 @@ CDTPServer *cdtp_server_default(size_t max_clients,
  * server: the server object
  * host:   the host as a string
  * port:   the port as an integer
+ * err:    the return code, should an error occur
  * 
  * Returns an error code
  */
-int cdtp_server_start(CDTPServer *server, char *host, int port);
+int cdtp_server_start(CDTPServer *server, char *host, int port, int *err);
 
 /*
  * Start a server with a non-string host
@@ -85,13 +87,14 @@ int cdtp_server_start(CDTPServer *server, char *host, int port);
  * server: the server object
  * host:   the host in the socket-library-provided format
  * port:   the port as an integer
+ * err:    the return code, should an error occur
  * 
  * Returns an error code
  */
 #ifdef _WIN32
-int cdtp_server_start_host(CDTPServer *server, ULONG host, int port);
+int cdtp_server_start_host(CDTPServer *server, ULONG host, int port, int *err);
 #else
-int cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port);
+int cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port, int *err);
 #endif
 
 /*
@@ -99,51 +102,55 @@ int cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port);
  * 
  * server: the server object
  * port:   the port as an integer
+ * err:    the return code, should an error occur
  * 
  * Returns an error code
  * 
  * host is set to INADDR_ANY
  */
-int cdtp_server_start_default_host(CDTPServer *server, int port);
+int cdtp_server_start_default_host(CDTPServer *server, int port, int *err);
 
 /*
  * Start a server with the default port
  * 
  * server: the server object
  * host:   the host as a string
+ * err:    the return code, should an error occur
  * 
  * Returns an error code
  * 
  * port is set to CDTP_PORT
  */
-int cdtp_server_start_default_port(CDTPServer *server, char *host);
+int cdtp_server_start_default_port(CDTPServer *server, char *host, int *err);
 
 /*
  * Start a server with a non-string host and the default port
  * 
  * server: the server object
  * host:   the host in the socket-library-provided format
+ * err:    the return code, should an error occur
  * 
  * Returns an error code
  * 
  * port is set to CDTP_PORT
  */
 #ifdef _WIN32
-int cdtp_server_start_host_default_port(CDTPServer *server, ULONG host);
+int cdtp_server_start_host_default_port(CDTPServer *server, ULONG host, int *err);
 #else
-int cdtp_server_start_host_default_port(CDTPServer *server, in_addr_t host);
+int cdtp_server_start_host_default_port(CDTPServer *server, in_addr_t host, int *err);
 #endif
 
 /*
  * Start a server with the default host and an unused port
  * 
  * server: the server object
+ * err:    the return code, should an error occur
  * 
  * Returns an error code
  * 
  * host is set to INADDR_ANY, port is set to CDTP_PORT
  */
-int cdtp_server_start_default(CDTPServer *server);
+int cdtp_server_start_default(CDTPServer *server, int *err);
 
 /*
  * Stop the server, disconnect all clients, and free up memory
