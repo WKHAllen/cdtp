@@ -10,6 +10,7 @@
 #include <string.h>
 
 #ifdef _WIN32
+    #include <Windows.h>
     #include <WinSock2.h>
     #include <WS2tcpip.h>
     #pragma comment(lib, "Ws2_32.lib")
@@ -46,6 +47,7 @@
 #define CDTP_SERVER_STOP_FAILED         10
 #define CDTP_CLIENT_DOES_NOT_EXIT       11
 #define CDTP_CLIENT_REMOVE_FAILED       12
+#define CDTP_THREAD_START_FAILED        13
 
 // Global address family to use
 #ifndef CDTP_ADDRESS_FAMILY

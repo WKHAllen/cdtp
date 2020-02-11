@@ -7,6 +7,7 @@
 #define CDTP_SERVER_H
 
 #include "util.h"
+#include "threading.h"
 #include <stddef.h>
 
 // Socket server listen backlog

@@ -7,6 +7,7 @@
 #define CDTP_CLIENT_H
 
 #include "util.h"
+#include "threading.h"
 
 typedef struct CDTPClient CDTPClient;
 
