@@ -171,6 +171,38 @@ char *cdtp_server_host(CDTPServer *server);
 int cdtp_server_port(CDTPServer *server);
 
 /*
+ * Remove a client by ID
+ * 
+ * server:    the server object
+ * client_id: the ID of the client to be removed
+ */
+void cdtp_server_remove_client(CDTPServer *server, int client_id);
+
+/*
+ * Send data to a client
+ * 
+ * server:    the server object
+ * data:      the data to send
+ * client_id: the ID of the client to send the data to
+ */
+void cdtp_server_send(CDTPServer *server, void *data, int client_id);
+
+/*
+ * Send data to all clients
+ * 
+ * server:    the server object
+ * data:      the data to send
+ */
+void cdtp_server_send_all(CDTPServer *server, void *data);
+
+/*
+ * Call the serve function
+ * 
+ * server: server object
+ */
+void _cdtp_server_call_serve(CDTPServer *server);
+
+/*
  * Server serve function
  * 
  * server: the server object
@@ -178,12 +210,28 @@ int cdtp_server_port(CDTPServer *server);
 void _cdtp_server_serve(CDTPServer *server);
 
 /*
- * Remove a client by ID
+ * Call the on_recv function
  * 
- * server: the server object
+ * server:    the server object
+ * client_id: the ID of the client who sent the data
+ * data:      the received data
  */
-void cdtp_server_remove_client(CDTPServer *server, int client_id);
+void _cdtp_server_call_on_recv(CDTPServer *server, int client_id, void *data);
 
-// TODO: add more functions
+/*
+ * Call the on_connect function
+ * 
+ * server:    the server object
+ * client_id: the ID of the client who connected
+ */
+void _cdtp_server_call_on_connect(CDTPServer *server, int client_id);
+
+/*
+ * Call the on_disconnect function
+ * 
+ * server:    the server object
+ * client_id: the ID of the client who disconnected
+ */
+void _cdtp_server_call_on_disconnect(CDTPServer *server, int client_id);
 
 #endif // CDTP_SERVER_H

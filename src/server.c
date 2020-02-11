@@ -174,14 +174,7 @@ EXPORT void cdtp_server_start(CDTPServer *server, char *host, int port)
     }
 
     // Serve
-    if (server->blocking)
-    {
-        _cdtp_server_serve(server);
-    }
-    else
-    {
-        // TODO: call `_cdtp_server_serve` using thread
-    }
+    _cdtp_server_call_serve(server);
 }
 
 #ifdef _WIN32
@@ -225,14 +218,7 @@ EXPORT void cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port)
     }
 
     // Serve
-    if (server->blocking)
-    {
-        _cdtp_server_serve(server);
-    }
-    else
-    {
-        // TODO: call `_cdtp_server_serve` using thread
-    }
+    _cdtp_server_call_serve(server);
 }
 
 EXPORT void cdtp_server_start_default_host(CDTPServer *server, int port)
@@ -341,11 +327,6 @@ EXPORT int cdtp_server_port(CDTPServer *server)
     return ntohs(server->sock->address.sin_port);
 }
 
-void _cdtp_server_serve(CDTPServer *server)
-{
-    // TODO: implement this function
-}
-
 EXPORT void cdtp_server_remove_client(CDTPServer *server, int client_id)
 {
     if (client_id < 0 || client_id >= server->max_clients || server->allocated_clients[client_id] != CDTP_TRUE)
@@ -363,4 +344,44 @@ EXPORT void cdtp_server_remove_client(CDTPServer *server, int client_id)
         return;
     }
     server->allocated_clients[client_id] = CDTP_FALSE;
+}
+
+EXPORT void cdtp_server_send(CDTPServer *server, void *data, int client_id)
+{
+    // TODO: implement this function
+}
+
+EXPORT void cdtp_server_send_all(CDTPServer *server, void *data)
+{
+    // TODO: implement this function
+}
+
+void _cdtp_server_call_serve(CDTPServer *server)
+{
+    if (server->blocking)
+        _cdtp_server_serve(server);
+    else
+    {
+        // TODO: call `_cdtp_server_serve` using thread
+    }
+}
+
+void _cdtp_server_serve(CDTPServer *server)
+{
+    // TODO: implement this function
+}
+
+void _cdtp_server_call_on_recv(CDTPServer *server, int client_id, void *data)
+{
+    // TODO: implement this function
+}
+
+void _cdtp_server_call_on_connect(CDTPServer *server, int client_id)
+{
+    // TODO: implement this function
+}
+
+void _cdtp_server_call_on_disconnect(CDTPServer *server, int client_id)
+{
+    // TODO: implement this function
 }
