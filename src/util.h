@@ -50,7 +50,7 @@ typedef struct CDTPClient CDTPClient;
 #define CDTP_SERVER_BIND_FAILED          8
 #define CDTP_SERVER_LISTEN_FAILED        9
 #define CDTP_SERVER_STOP_FAILED         10
-#define CDTP_CLIENT_DOES_NOT_EXIT       11
+#define CDTP_CLIENT_DOES_NOT_EXIST      11
 #define CDTP_CLIENT_REMOVE_FAILED       12
 #define CDTP_THREAD_START_FAILED        13
 
@@ -84,6 +84,11 @@ extern int CDTP_ERROR;
 // Error code for the layer underneath CDTP
 extern int CDTP_ERROR_UNDER;
 
+// Registered function to handle errors
+extern int CDTP_ON_ERROR_REGISTERED;
+extern void (*CDTP_ON_ERROR)(int, int, void *);
+extern void *CDTP_ON_ERROR_ARG;
+
 // Initialize the library
 int _cdtp_init(void);
 
@@ -104,5 +109,11 @@ void _cdtp_set_error(int cdtp_err, int underlying_err);
 
 // Set the errors using typical underlying layer error notifying methods
 void _cdtp_set_err(int cdtp_err);
+
+// Register a function to run when an error occurs
+void cdtp_on_error(void (*on_error)(int, int, void *), void *arg);
+
+// Unregister error function
+void cdtp_on_error_nothing(void);
 
 #endif // CDTP_UTIL_H

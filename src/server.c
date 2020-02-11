@@ -351,7 +351,7 @@ EXPORT void cdtp_server_remove_client(CDTPServer *server, int client_id)
 
     if (client_id < 0 || client_id >= server->max_clients || server->allocated_clients[client_id] != CDTP_TRUE)
     {
-        _cdtp_set_error(CDTP_CLIENT_DOES_NOT_EXIT, 0);
+        _cdtp_set_error(CDTP_CLIENT_DOES_NOT_EXIST, 0);
         return;
     }
 #ifdef _WIN32
