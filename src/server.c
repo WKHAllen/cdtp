@@ -16,8 +16,8 @@ struct CDTPServer
 {
     size_t max_clients;
     void (*on_recv      )(int, void *, void *);
-    void (*on_connect   )(int, void *, void *);
-    void (*on_disconnect)(int, void *, void *);
+    void (*on_connect   )(int, void *);
+    void (*on_disconnect)(int, void *);
     void *on_recv_arg;
     void *on_connect_arg;
     void *on_disconnect_arg;
@@ -34,8 +34,8 @@ struct CDTPServer
 
 EXPORT CDTPServer *cdtp_server(size_t max_clients,
                               void (*on_recv      )(int, void *, void *),
-                              void (*on_connect   )(int, void *, void *),
-                              void (*on_disconnect)(int, void *, void *),
+                              void (*on_connect   )(int, void *),
+                              void (*on_disconnect)(int, void *),
                               void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg,
                               int blocking, int event_blocking, int daemon)
 {
@@ -111,8 +111,8 @@ EXPORT CDTPServer *cdtp_server(size_t max_clients,
 
 EXPORT CDTPServer *cdtp_server_default(size_t max_clients,
                                       void (*on_recv      )(int, void *, void *),
-                                      void (*on_connect   )(int, void *, void *),
-                                      void (*on_disconnect)(int, void *, void *),
+                                      void (*on_connect   )(int, void *),
+                                      void (*on_disconnect)(int, void *),
                                       void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg)
 {
     return cdtp_server(max_clients, on_recv, on_connect, on_disconnect,
@@ -366,7 +366,7 @@ EXPORT void cdtp_server_remove_client(CDTPServer *server, int client_id)
     server->allocated_clients[client_id] = CDTP_FALSE;
 }
 
-EXPORT void cdtp_server_send(CDTPServer *server, void *data, int client_id)
+EXPORT void cdtp_server_send(CDTPServer *server, int client_id, void *data)
 {
     // Make sure the server is running
     if (server->serving != CDTP_TRUE)
@@ -387,12 +387,14 @@ EXPORT void cdtp_server_send_all(CDTPServer *server, void *data)
         return;
     }
 
-    // TODO: implement this function
+    for (int i = 0; i < server->max_clients; i++)
+        if (server->allocated_clients[i] == CDTP_TRUE)
+            cdtp_server_send(server, i, data);
 }
 
 void _cdtp_server_call_serve(CDTPServer *server)
 {
-    if (server->blocking)
+    if (server->blocking == CDTP_TRUE)
         _cdtp_server_serve(server);
     else
     {
@@ -407,15 +409,30 @@ void _cdtp_server_serve(CDTPServer *server)
 
 void _cdtp_server_call_on_recv(CDTPServer *server, int client_id, void *data)
 {
-    // TODO: implement this function
+    if (server->event_blocking == CDTP_TRUE)
+        (*(server->on_recv))(client_id, data, server->on_recv_arg);
+    else
+    {
+        // TODO: call `server->on_recv` using thread
+    }
 }
 
 void _cdtp_server_call_on_connect(CDTPServer *server, int client_id)
 {
-    // TODO: implement this function
+    if (server->event_blocking == CDTP_TRUE)
+        (*(server->on_connect))(client_id, server->on_connect_arg);
+    else
+    {
+        // TODO: call `server->on_connect` using thread
+    }
 }
 
 void _cdtp_server_call_on_disconnect(CDTPServer *server, int client_id)
 {
-    // TODO: implement this function
+    if (server->event_blocking == CDTP_TRUE)
+        (*(server->on_disconnect))(client_id, server->on_disconnect_arg);
+    else
+    {
+        // TODO: call `server->on_disconnect` using thread
+    }
 }

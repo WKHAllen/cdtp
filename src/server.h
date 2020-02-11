@@ -32,8 +32,8 @@ typedef struct CDTPServer CDTPServer;
  */ 
 CDTPServer *cdtp_server(size_t max_clients,
                        void (*on_recv      )(int, void *, void *),
-                       void (*on_connect   )(int, void *, void *),
-                       void (*on_disconnect)(int, void *, void *),
+                       void (*on_connect   )(int, void *),
+                       void (*on_disconnect)(int, void *),
                        void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg,
                        int blocking, int event_blocking, int daemon);
 
@@ -52,8 +52,8 @@ CDTPServer *cdtp_server(size_t max_clients,
  */
 CDTPServer *cdtp_server_default(size_t max_clients,
                                void (*on_recv      )(int, void *, void *),
-                               void (*on_connect   )(int, void *, void *),
-                               void (*on_disconnect)(int, void *, void *),
+                               void (*on_connect   )(int, void *),
+                               void (*on_disconnect)(int, void *),
                                void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg);
 
 /*
@@ -182,10 +182,10 @@ void cdtp_server_remove_client(CDTPServer *server, int client_id);
  * Send data to a client
  * 
  * server:    the server object
- * data:      the data to send
  * client_id: the ID of the client to send the data to
+ * data:      the data to send
  */
-void cdtp_server_send(CDTPServer *server, void *data, int client_id);
+void cdtp_server_send(CDTPServer *server, int client_id, void *data);
 
 /*
  * Send data to all clients

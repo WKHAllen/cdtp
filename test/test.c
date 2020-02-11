@@ -2,9 +2,19 @@
 #include <stdio.h>
 #include <assert.h>
 
-void tmp(int a, void *b, void *c)
+void on_recv(int client_id, void *data, void *arg)
 {
-    printf("tmp function called\n");
+    printf("Received data from client #%d: %s\n", client_id, *(char **)data);
+}
+
+void on_connect(int client_id, void *arg)
+{
+    printf("Client #%d connected\n", client_id);
+}
+
+void on_disconnect(int client_id, void *arg)
+{
+    printf("Client #%d disconnected\n", client_id);
 }
 
 void check_err(void)
@@ -22,7 +32,7 @@ int main(int argc, char **argv)
     printf("Running tests...\n");
 
     // Server initialization
-    CDTPServer *server = cdtp_server_default(16, tmp, tmp, tmp, NULL, NULL, NULL);
+    CDTPServer *server = cdtp_server_default(16, on_recv, on_connect, on_disconnect, NULL, NULL, NULL);
     check_err();
 
     // Server start
