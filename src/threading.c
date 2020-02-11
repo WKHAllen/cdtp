@@ -26,7 +26,7 @@ DWORD WINAPI _cdtp_event_thread(LPVOID func_info)
 void *_cdtp_event_thread(void *func_info)
 #endif
 {
-    CDTPEventFunc *event_func_info = *(CDTPEventFunc **)func_info;
+    CDTPEventFunc *event_func_info = (CDTPEventFunc *)func_info;
 
     // Find out which function to call
     if (strcmp(event_func_info->name, "on_recv_server") == 0)
@@ -52,7 +52,7 @@ void *_cdtp_event_thread(void *func_info)
 void _cdtp_start_event_thread(CDTPEventFunc *func_info)
 {
 #ifdef _WIN32
-    HANDLE thread = CreateThread(NULL, 0, _cdtp_event_thread, &func_info, 0, NULL);
+    HANDLE thread = CreateThread(NULL, 0, _cdtp_event_thread, func_info, 0, NULL);
     if (thread == NULL)
     {
         _cdtp_set_error(CDTP_THREAD_START_FAILED, GetLastError());
@@ -60,7 +60,7 @@ void _cdtp_start_event_thread(CDTPEventFunc *func_info)
     }
 #else
     pthread_t thread;
-    int return_code = pthread_create(&thread, NULL, _cdtp_event_thread, &func_info);
+    int return_code = pthread_create(&thread, NULL, _cdtp_event_thread, func_info);
     if (return_code != 0)
     {
         _cdtp_set_error(CDTP_THREAD_START_FAILED, return_code);
@@ -119,13 +119,15 @@ void _cdtp_start_thread_on_disconnected(void (*func)(void *), void *arg)
     _cdtp_start_event_thread(func_info);
 }
 
+#include <stdio.h>
+
 #ifdef _WIN32
 DWORD WINAPI _cdtp_serve_thread(LPVOID func_info)
 #else
 void *_cdtp_serve_thread(void *func_info)
 #endif
 {
-    CDTPServeFunc *serve_func_info = *(CDTPServeFunc **)func_info;
+    CDTPServeFunc *serve_func_info = (CDTPServeFunc *)func_info;
 
     // Call the function
     (*serve_func_info->func)(serve_func_info->server);
@@ -148,7 +150,7 @@ void _cdtp_start_serve_thread(void (*func)(CDTPServer *), CDTPServer *server)
 
     // Start the thread
 #ifdef _WIN32
-    HANDLE thread = CreateThread(NULL, 0, _cdtp_serve_thread, &func_info, 0, NULL);
+    HANDLE thread = CreateThread(NULL, 0, _cdtp_serve_thread, func_info, 0, NULL);
     if (thread == NULL)
     {
         _cdtp_set_error(CDTP_THREAD_START_FAILED, GetLastError());
@@ -156,7 +158,7 @@ void _cdtp_start_serve_thread(void (*func)(CDTPServer *), CDTPServer *server)
     }
 #else
     pthread_t thread;
-    int return_code = pthread_create(&thread, NULL, _cdtp_serve_thread, &func_info);
+    int return_code = pthread_create(&thread, NULL, _cdtp_serve_thread, func_info);
     if (return_code != 0)
     {
         _cdtp_set_error(CDTP_THREAD_START_FAILED, return_code);

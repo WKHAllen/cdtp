@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     CDTPServer *server = cdtp_server(16,
                                      on_recv, on_connect, on_disconnect,
                                      NULL, NULL, NULL,
-                                     CDTP_TRUE, CDTP_TRUE, CDTP_TRUE);
+                                     CDTP_FALSE, CDTP_FALSE, CDTP_TRUE);
 
     // Server start
     char *host = "127.0.0.1";
