@@ -6,6 +6,7 @@
 #ifndef CDTP_UTIL_H
 #define CDTP_UTIL_H
 
+// Includes
 #include <stdlib.h>
 #include <string.h>
 
@@ -21,6 +22,10 @@
     #include <arpa/inet.h>
     #include <errno.h>
 #endif
+
+// Public type definitions
+typedef struct CDTPServer CDTPServer;
+typedef struct CDTPClient CDTPClient;
 
 // Export functions
 #ifdef _WIN32

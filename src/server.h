@@ -10,12 +10,11 @@
 #include "threading.h"
 #include <stddef.h>
 
-// Socket server listen backlog
-#define CDTP_LISTEN_BACKLOG 3
-
 // Type definitions
 typedef struct CDTPSocket CDTPSocket;
-typedef struct CDTPServer CDTPServer;
+
+// Socket server listen backlog
+#define CDTP_LISTEN_BACKLOG 3
 
 /* 
  * Server creation/initialization
@@ -196,43 +195,19 @@ void cdtp_server_send(CDTPServer *server, int client_id, void *data);
  */
 void cdtp_server_send_all(CDTPServer *server, void *data);
 
-/*
- * Call the serve function
- * 
- * server: server object
- */
+// Call the serve function
 void _cdtp_server_call_serve(CDTPServer *server);
 
-/*
- * Server serve function
- * 
- * server: the server object
- */
+// Server serve function
 void _cdtp_server_serve(CDTPServer *server);
 
-/*
- * Call the on_recv function
- * 
- * server:    the server object
- * client_id: the ID of the client who sent the data
- * data:      the received data
- */
+// Call the on_recv function
 void _cdtp_server_call_on_recv(CDTPServer *server, int client_id, void *data);
 
-/*
- * Call the on_connect function
- * 
- * server:    the server object
- * client_id: the ID of the client who connected
- */
+// Call the on_connect function
 void _cdtp_server_call_on_connect(CDTPServer *server, int client_id);
 
-/*
- * Call the on_disconnect function
- * 
- * server:    the server object
- * client_id: the ID of the client who disconnected
- */
+// Call the on_disconnect function
 void _cdtp_server_call_on_disconnect(CDTPServer *server, int client_id);
 
 #endif // CDTP_SERVER_H
