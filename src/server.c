@@ -294,9 +294,16 @@ EXPORT struct sockaddr_in cdtp_server_addr(CDTPServer *server)
 
 EXPORT char *cdtp_server_host(CDTPServer *server)
 {
+    // Make sure the server is running
+    if (server->serving != CDTP_TRUE)
+    {
+        _cdtp_set_error(CDTP_SERVER_NOT_SERVING, 0);
+        return "";
+    }
+
+    char *addr = malloc(CDTP_ADDRSTRLEN * sizeof(char));
 #ifdef _WIN32
     int addrlen = CDTP_ADDRSTRLEN;
-    char *addr = malloc(addrlen * sizeof(char));
     if (WSAAddressToString((LPSOCKADDR)&(server->sock->address), sizeof(server->sock->address), NULL, addr, (LPDWORD)&addrlen) != 0)
     {
         _cdtp_set_err(CDTP_SERVER_ADDRESS_FAILED);
@@ -312,7 +319,6 @@ EXPORT char *cdtp_server_host(CDTPServer *server)
         }
     }
 #else
-    char *addr = malloc(CDTP_ADDRSTRLEN * sizeof(char));
     if (inet_ntop(CDTP_ADDRESS_FAMILY, &(server->sock->address), addr, CDTP_ADDRSTRLEN) == NULL)
     {
         _cdtp_set_err(CDTP_SERVER_ADDRESS_FAILED);
@@ -324,11 +330,25 @@ EXPORT char *cdtp_server_host(CDTPServer *server)
 
 EXPORT int cdtp_server_port(CDTPServer *server)
 {
+    // Make sure the server is running
+    if (server->serving != CDTP_TRUE)
+    {
+        _cdtp_set_error(CDTP_SERVER_NOT_SERVING, 0);
+        return 0;
+    }
+
     return ntohs(server->sock->address.sin_port);
 }
 
 EXPORT void cdtp_server_remove_client(CDTPServer *server, int client_id)
 {
+    // Make sure the server is running
+    if (server->serving != CDTP_TRUE)
+    {
+        _cdtp_set_error(CDTP_SERVER_NOT_SERVING, 0);
+        return;
+    }
+
     if (client_id < 0 || client_id >= server->max_clients || server->allocated_clients[client_id] != CDTP_TRUE)
     {
         _cdtp_set_error(CDTP_CLIENT_DOES_NOT_EXIT, 0);
@@ -348,11 +368,25 @@ EXPORT void cdtp_server_remove_client(CDTPServer *server, int client_id)
 
 EXPORT void cdtp_server_send(CDTPServer *server, void *data, int client_id)
 {
+    // Make sure the server is running
+    if (server->serving != CDTP_TRUE)
+    {
+        _cdtp_set_error(CDTP_SERVER_NOT_SERVING, 0);
+        return;
+    }
+
     // TODO: implement this function
 }
 
 EXPORT void cdtp_server_send_all(CDTPServer *server, void *data)
 {
+    // Make sure the server is running
+    if (server->serving != CDTP_TRUE)
+    {
+        _cdtp_set_error(CDTP_SERVER_NOT_SERVING, 0);
+        return;
+    }
+
     // TODO: implement this function
 }
 
