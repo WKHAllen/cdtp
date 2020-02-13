@@ -30,11 +30,11 @@ typedef struct CDTPSocket CDTPSocket;
  * event_blocking:      whether or not on_recv, on_connect, and on_disconnect will block
  */ 
 CDTPServer *cdtp_server(size_t max_clients,
-                       void (*on_recv      )(int, void *, void *),
-                       void (*on_connect   )(int, void *),
-                       void (*on_disconnect)(int, void *),
-                       void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg,
-                       int blocking, int event_blocking);
+                        void (*on_recv      )(int, void *, void *),
+                        void (*on_connect   )(int, void *),
+                        void (*on_disconnect)(int, void *),
+                        void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg,
+                        int blocking, int event_blocking);
 
 /*
  * Server creation/initialization, with default blocking parameters
@@ -50,10 +50,10 @@ CDTPServer *cdtp_server(size_t max_clients,
  * blocking and event blocking are set to false
  */
 CDTPServer *cdtp_server_default(size_t max_clients,
-                               void (*on_recv      )(int, void *, void *),
-                               void (*on_connect   )(int, void *),
-                               void (*on_disconnect)(int, void *),
-                               void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg);
+                                void (*on_recv      )(int, void *, void *),
+                                void (*on_connect   )(int, void *),
+                                void (*on_disconnect)(int, void *),
+                                void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg);
 
 /*
  * Start a server
