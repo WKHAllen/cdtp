@@ -23,7 +23,6 @@ struct CDTPServer
     void *on_disconnect_arg;
     int blocking;
     int event_blocking;
-    int daemon;
     int serving;
     int done;
     int num_clients;
@@ -37,7 +36,7 @@ EXPORT CDTPServer *cdtp_server(size_t max_clients,
                               void (*on_connect   )(int, void *),
                               void (*on_disconnect)(int, void *),
                               void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg,
-                              int blocking, int event_blocking, int daemon)
+                              int blocking, int event_blocking)
 {
     CDTPServer *server = malloc(sizeof(*server));
 
@@ -51,7 +50,6 @@ EXPORT CDTPServer *cdtp_server(size_t max_clients,
     server->on_disconnect_arg = on_disconnect_arg;
     server->blocking          = blocking;
     server->event_blocking    = event_blocking;
-    server->daemon            = daemon;
     server->serving           = CDTP_FALSE;
     server->done              = CDTP_FALSE;
     server->num_clients       = 0;
@@ -117,7 +115,7 @@ EXPORT CDTPServer *cdtp_server_default(size_t max_clients,
 {
     return cdtp_server(max_clients, on_recv, on_connect, on_disconnect,
                        on_recv_arg, on_connect_arg, on_disconnect_arg,
-                       CDTP_FALSE, CDTP_FALSE, CDTP_TRUE);
+                       CDTP_FALSE, CDTP_FALSE);
 }
 
 EXPORT void cdtp_server_start(CDTPServer *server, char *host, int port)

@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     CDTPServer *server = cdtp_server(16,
                                      on_recv, on_connect, on_disconnect,
                                      NULL, NULL, NULL,
-                                     CDTP_FALSE, CDTP_FALSE, CDTP_TRUE);
+                                     CDTP_FALSE, CDTP_FALSE);
 
     // Server start
     char *host = "127.0.0.1";
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     free(ip_address);
 
     // Unregister error event
-    cdtp_on_error_nothing();
+    cdtp_on_error_clear();
 
     // Test that the client does not exist
     cdtp_server_remove_client(server, 0);

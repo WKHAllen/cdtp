@@ -114,6 +114,6 @@ void _cdtp_set_err(int cdtp_err);
 void cdtp_on_error(void (*on_error)(int, int, void *), void *arg);
 
 // Unregister error function
-void cdtp_on_error_nothing(void);
+void cdtp_on_error_clear(void);
 
 #endif // CDTP_UTIL_H

@@ -85,7 +85,7 @@ EXPORT void cdtp_on_error(void (*on_error)(int, int, void *), void *arg)
     CDTP_ON_ERROR_ARG = arg;
 }
 
-EXPORT void cdtp_on_error_nothing(void)
+EXPORT void cdtp_on_error_clear(void)
 {
     CDTP_ON_ERROR_REGISTERED = CDTP_FALSE;
 }

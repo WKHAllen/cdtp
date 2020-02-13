@@ -28,17 +28,16 @@ typedef struct CDTPSocket CDTPSocket;
  * on_disconnect_arg:   an value that will be passed to the on_disconnect function
  * blocking:            whether or not the cdtp_server_start function and related functions will block
  * event_blocking:      whether or not on_recv, on_connect, and on_disconnect will block
- * daemon:              whether or not the threads used are daemons
  */ 
 CDTPServer *cdtp_server(size_t max_clients,
                        void (*on_recv      )(int, void *, void *),
                        void (*on_connect   )(int, void *),
                        void (*on_disconnect)(int, void *),
                        void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg,
-                       int blocking, int event_blocking, int daemon);
+                       int blocking, int event_blocking);
 
 /*
- * Server creation/initialization, with default blocking and daemon parameters
+ * Server creation/initialization, with default blocking parameters
  * 
  * max_clients:         the maximum number of clients the server will allow
  * on_recv:             pointer to a function that will be called when a packet is received
@@ -48,7 +47,7 @@ CDTPServer *cdtp_server(size_t max_clients,
  * on_connect_arg:      an value that will be passed to the on_connect function
  * on_disconnect_arg:   an value that will be passed to the on_disconnect function
  * 
- * blocking and event blocking are set to false, daemon is set to true
+ * blocking and event blocking are set to false
  */
 CDTPServer *cdtp_server_default(size_t max_clients,
                                void (*on_recv      )(int, void *, void *),
