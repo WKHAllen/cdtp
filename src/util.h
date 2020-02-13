@@ -95,13 +95,19 @@ int _cdtp_init(void);
 // Exit the library
 void _cdtp_exit(void);
 
-// Check if an error has occurred
+/*
+ * Check if an error has occurred
+ */
 int cdtp_error(void);
 
-// Get the CDTP error code
+/*
+ * Get the CDTP error code
+ */
 int cdtp_get_error(void);
 
-// Get the underlying layer error code
+/*
+ * Get the underlying layer error code
+ */
 int cdtp_get_underlying_error(void);
 
 // Set the errors
@@ -110,10 +116,17 @@ void _cdtp_set_error(int cdtp_err, int underlying_err);
 // Set the errors using typical underlying layer error notifying methods
 void _cdtp_set_err(int cdtp_err);
 
-// Register a function to run when an error occurs
+/*
+ * Register a function to run when an error occurs
+ * 
+ * on_error: pointer to a function that will be called when an error occurs
+ * arg:      a value that will be passed to the on_error function
+ */
 void cdtp_on_error(void (*on_error)(int, int, void *), void *arg);
 
-// Unregister error function
+/*
+ * Unregister the on_error function
+ */
 void cdtp_on_error_clear(void);
 
 #endif // CDTP_UTIL_H

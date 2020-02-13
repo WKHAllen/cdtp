@@ -23,9 +23,9 @@ typedef struct CDTPSocket CDTPSocket;
  * on_recv:             pointer to a function that will be called when a packet is received
  * on_connect:          pointer to a function that will be called when a client connects
  * on_disconnect:       pointer to a function that will be called when a client disconnects
- * on_recv_arg:         an value that will be passed to the on_recv function
- * on_connect_arg:      an value that will be passed to the on_connect function
- * on_disconnect_arg:   an value that will be passed to the on_disconnect function
+ * on_recv_arg:         a value that will be passed to the on_recv function
+ * on_connect_arg:      a value that will be passed to the on_connect function
+ * on_disconnect_arg:   a value that will be passed to the on_disconnect function
  * blocking:            whether or not the cdtp_server_start function and related functions will block
  * event_blocking:      whether or not on_recv, on_connect, and on_disconnect will block
  */ 
@@ -43,9 +43,9 @@ CDTPServer *cdtp_server(size_t max_clients,
  * on_recv:             pointer to a function that will be called when a packet is received
  * on_connect:          pointer to a function that will be called when a client connects
  * on_disconnect:       pointer to a function that will be called when a client disconnects
- * on_recv_arg:         an value that will be passed to the on_recv function
- * on_connect_arg:      an value that will be passed to the on_connect function
- * on_disconnect_arg:   an value that will be passed to the on_disconnect function
+ * on_recv_arg:         a value that will be passed to the on_recv function
+ * on_connect_arg:      a value that will be passed to the on_connect function
+ * on_disconnect_arg:   a value that will be passed to the on_disconnect function
  * 
  * blocking and event blocking are set to false
  */

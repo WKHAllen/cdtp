@@ -13,7 +13,7 @@ Errors can occur in libraries CDTP depends on. Because of this, CDTP provides se
 ### cdtp_error
 
 ```c
-int cdtp_error(void)
+int cdtp_error(void);
 ```
 
 Check if an error has occurred. Returns `CDTP_FALSE` (0) or `CDTP_TRUE` (1). If a function has been registered using `cdtp_on_error`, this error will not be set. When this function is called, the set error will be cleared.
@@ -21,7 +21,7 @@ Check if an error has occurred. Returns `CDTP_FALSE` (0) or `CDTP_TRUE` (1). If 
 ### cdtp_get_error
 
 ```c
-int cdtp_get_error(void)
+int cdtp_get_error(void);
 ```
 
 Get the CDTP error code. CDTP error codes are defined in [`util.h`](/src/util.h). If a function has been registered using `cdtp_on_error`, this error will not be set.
@@ -29,7 +29,7 @@ Get the CDTP error code. CDTP error codes are defined in [`util.h`](/src/util.h)
 ### cdtp_get_underlying_error
 
 ```c
-int cdtp_get_underlying_error(void)
+int cdtp_get_underlying_error(void);
 ```
 
 Get the underlying error code. Errors that show up here will be related to sockets, threads, etc. Some CDTP errors (i.e. `CDTP_SERVER_CANNOT_RESTART` and `CDTP_SERVER_ALREADY_SERVING`) will not set this error value.
@@ -37,7 +37,7 @@ Get the underlying error code. Errors that show up here will be related to socke
 ### cdtp_on_error
 
 ```c
-void cdtp_on_error(void (*on_error)(int, int, void *), void *arg)
+void cdtp_on_error(void (*on_error)(int, int, void *), void *arg);
 ```
 
 Register a function to be called if an error occurs. The function takes two arguments. The first argument is a function take three arguments: an integer representing the CDTP error, an integer representing the underlying error, and a void pointer. The second argument is a void pointer to a variable that will be passed to the function provided as the first argument. When a function has been registered, errors will not be set, and the `cdtp_get_error` function will only return `CDTP_SUCCESS`.
@@ -45,7 +45,7 @@ Register a function to be called if an error occurs. The function takes two argu
 ### cdtp_on_error_clear
 
 ```c
-void cdtp_on_error_clear(void)
+void cdtp_on_error_clear(void);
 ```
 
 Unregister a function set by `cdtp_on_error`.
@@ -108,7 +108,7 @@ After creating a server, the next step is starting it. To do this, you again hav
 #### cdtp_server_start
 
 ```c
-void cdtp_server_start(CDTPServer *server, char *host, int port)
+void cdtp_server_start(CDTPServer *server, char *host, int port);
 ```
 
 Start a CDTP server, given a host IP address and integer port. `host` can be either an IPv4 or IPv6 address. `port` must be an unused port between 1 and 65535.
@@ -116,7 +116,7 @@ Start a CDTP server, given a host IP address and integer port. `host` can be eit
 #### cdtp_server_start_host
 
 ```c
-void cdtp_server_start_host(CDTPServer *server, ULONG host, int port);
+void cdtp_server_start_host(CDTPServer *server, ULONG     host, int port);
 void cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port);
 ```
 
@@ -125,7 +125,7 @@ Start a CDTP server. `host` is an unsigned long (i.e. `INADDR_ANY`) on Windows, 
 #### cdtp_server_start_default_host
 
 ```c
-void cdtp_server_start_default_host(CDTPServer *server, int port)
+void cdtp_server_start_default_host(CDTPServer *server, int port);
 ```
 
 Start a CDTP server, specifying the port. The host will be set to `INADDR_ANY`.
@@ -133,7 +133,7 @@ Start a CDTP server, specifying the port. The host will be set to `INADDR_ANY`.
 #### cdtp_server_start_default_port
 
 ```c
-void cdtp_server_start_default_port(CDTPServer *server, char *host)
+void cdtp_server_start_default_port(CDTPServer *server, char *host);
 ```
 
 Start a CDTP server, specifying the host as a string. The port will default to `CDTP_PORT` (29275).
@@ -141,8 +141,8 @@ Start a CDTP server, specifying the host as a string. The port will default to `
 #### cdtp_server_start_host_default_port
 
 ```c
-void cdtp_server_start_host_default_port(CDTPServer *server, ULONG host)
-void cdtp_server_start_host_default_port(CDTPServer *server, in_addr_t host)
+void cdtp_server_start_host_default_port(CDTPServer *server, ULONG     host);
+void cdtp_server_start_host_default_port(CDTPServer *server, in_addr_t host);
 ```
 
 Start a CDTP server. `host` is an unsigned long (i.e. `INADDR_ANY`) on Windows, and an in_addr_t structure elsewhere. The port will default to `CDTP_PORT` (29275).
@@ -150,7 +150,7 @@ Start a CDTP server. `host` is an unsigned long (i.e. `INADDR_ANY`) on Windows, 
 #### cdt_server_start_default
 
 ```c
-void cdtp_server_start_default(CDTPServer *server)
+void cdtp_server_start_default(CDTPServer *server);
 ```
 
 Start a CDTP server using the default options. The host will be `INADDR_ANY` and port will be `CDTP_PORT` (29275).
@@ -162,7 +162,7 @@ When one needs a server to stop serving, one can use the following function to s
 #### cdtp_server_stop
 
 ```c
-void cdtp_server_stop(CDTPServer *server)
+void cdtp_server_stop(CDTPServer *server);
 ```
 
 Stop a CDTP server.
@@ -174,7 +174,7 @@ CDTP provides two functions for sending data to clients.
 #### cdtp_server_send
 
 ```c
-void cdtp_server_send(CDTPServer *server, int client_id, void *data)
+void cdtp_server_send(CDTPServer *server, int client_id, void *data);
 ```
 
 Send data to a client, providing the client's ID and a void pointer to the data.
@@ -182,7 +182,7 @@ Send data to a client, providing the client's ID and a void pointer to the data.
 #### cdtp_server_send_all
 
 ```c
-void cdtp_server_send_all(CDTPServer *server, void *data)
+void cdtp_server_send_all(CDTPServer *server, void *data);
 ```
 
 Send data to all clients, providing a void pointer to the data.
@@ -194,7 +194,7 @@ A few other server functions are made available for various purposes.
 #### cdtp_server_serving
 
 ```c
-int cdtp_server_serving(CDTPServer *server)
+int cdtp_server_serving(CDTPServer *server);
 ```
 
 Check if the server is serving. Returns `CDTP_FALSE` (0) or `CDTP_TRUE` (1).
@@ -202,7 +202,7 @@ Check if the server is serving. Returns `CDTP_FALSE` (0) or `CDTP_TRUE` (1).
 #### cdtp_server_addr
 
 ```c
-struct sockaddr_in cdtp_server_addr(CDTPServer *server)
+struct sockaddr_in cdtp_server_addr(CDTPServer *server);
 ```
 
 Get the server address as a sockaddr_in structure.
@@ -210,7 +210,7 @@ Get the server address as a sockaddr_in structure.
 #### cdtp_server_host
 
 ```c
-char *cdtp_server_host(CDTPServer *server)
+char *cdtp_server_host(CDTPServer *server);
 ```
 
 Get the server IP address as a string. `free()` will need to be called on the string after it has been used.
@@ -218,7 +218,7 @@ Get the server IP address as a string. `free()` will need to be called on the st
 #### cdtp_server_port
 
 ```c
-int cdtp_server_port(CDTPServer *server)
+int cdtp_server_port(CDTPServer *server);
 ```
 
 Get the port the server is running on.
@@ -226,7 +226,7 @@ Get the port the server is running on.
 #### cdtp_server_remove_client
 
 ```c
-void cdtp_server_remove_client(CDTPServer *server, int client_id)
+void cdtp_server_remove_client(CDTPServer *server, int client_id);
 ```
 
 Disconnect a client, providing the client's ID.
