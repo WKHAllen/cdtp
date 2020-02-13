@@ -141,7 +141,11 @@ void *_cdtp_serve_thread(void *func_info)
 #endif
 }
 
-void _cdtp_start_serve_thread(void (*func)(CDTPServer *), CDTPServer *server)
+#ifdef _WIN32
+HANDLE _cdtp_start_serve_thread(void (*func)(CDTPServer *), CDTPServer *server)
+#else
+pthread_t _cdtp_start_serve_thread(void (*func)(CDTPServer *), CDTPServer *server)
+#endif
 {
     // Set function information
     CDTPServeFunc *func_info = malloc(sizeof(*func_info));
@@ -154,7 +158,7 @@ void _cdtp_start_serve_thread(void (*func)(CDTPServer *), CDTPServer *server)
     if (thread == NULL)
     {
         _cdtp_set_error(CDTP_THREAD_START_FAILED, GetLastError());
-        return;
+        return NULL;
     }
 #else
     pthread_t thread;
@@ -165,4 +169,7 @@ void _cdtp_start_serve_thread(void (*func)(CDTPServer *), CDTPServer *server)
         return;
     }
 #endif
+
+    // Return the thread
+    return thread;
 }

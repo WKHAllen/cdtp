@@ -50,9 +50,11 @@ typedef struct CDTPClient CDTPClient;
 #define CDTP_SERVER_BIND_FAILED          8
 #define CDTP_SERVER_LISTEN_FAILED        9
 #define CDTP_SERVER_STOP_FAILED         10
-#define CDTP_CLIENT_DOES_NOT_EXIST      11
-#define CDTP_CLIENT_REMOVE_FAILED       12
-#define CDTP_THREAD_START_FAILED        13
+#define CDTP_SERVE_THREAD_NOT_CLOSING   11
+#define CDTP_CLIENT_DOES_NOT_EXIST      12
+#define CDTP_CLIENT_REMOVE_FAILED       13
+#define CDTP_THREAD_START_FAILED        14
+
 
 // Global address family to use
 #ifndef CDTP_ADDRESS_FAMILY

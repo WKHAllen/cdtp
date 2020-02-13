@@ -54,7 +54,11 @@ void *_cdtp_serve_thread(void *func_info);
 #endif
 
 // Call the serve function using a thread
-void _cdtp_start_serve_thread(void (*func)(CDTPServer *), CDTPServer *server);
+#ifdef _WIN32
+HANDLE _cdtp_start_serve_thread(void (*func)(CDTPServer *), CDTPServer *server);
+#else
+pthread_t _cdtp_start_serve_thread(void (*func)(CDTPServer *), CDTPServer *server);
+#endif
 
 // TODO: function to start client handle thread
 

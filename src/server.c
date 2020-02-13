@@ -29,6 +29,11 @@ struct CDTPServer
     CDTPSocket *sock;
     CDTPSocket **clients;
     int *allocated_clients;
+#ifdef _WIN32
+    HANDLE serve_thread;
+#else
+    pthread_t serve_thread;
+#endif
 };
 
 EXPORT CDTPServer *cdtp_server(size_t max_clients,
@@ -246,6 +251,8 @@ EXPORT void cdtp_server_start_default(CDTPServer *server)
 EXPORT void cdtp_server_stop(CDTPServer *server)
 {
     server->serving = CDTP_FALSE;
+
+    // Close sockets
 #ifdef _WIN32
     for (int i = 0; i < server->max_clients; i++)
         if (server->allocated_clients[i] == CDTP_TRUE)
@@ -273,11 +280,29 @@ EXPORT void cdtp_server_stop(CDTPServer *server)
         return;
     }
 #endif
+
+    // Free memory
     free(server->sock);
     free(server->clients);
     free(server->allocated_clients);
     free(server);
     server->done = CDTP_TRUE;
+
+    // Wait for threads to exit
+#ifdef _WIN32
+    if (WaitForSingleObject(server->serve_thread, INFINITE) == WAIT_FAILED)
+    {
+        _cdtp_set_error(CDTP_SERVE_THREAD_NOT_CLOSING, GetLastError());
+        return;
+    }
+#else
+    int err_code = pthread_join(server->serve_thread, NULL);
+    if (err_code != 0)
+    {
+        _cdtp_set_error(CDTP_SERVE_THREAD_NOT_CLOSING, err_code);
+        return;
+    }
+#endif
 }
 
 EXPORT int cdtp_server_serving(CDTPServer *server)
@@ -395,7 +420,7 @@ void _cdtp_server_call_serve(CDTPServer *server)
     if (server->blocking == CDTP_TRUE)
         _cdtp_server_serve(server);
     else
-        _cdtp_start_serve_thread(_cdtp_server_serve, server);
+        server->serve_thread = _cdtp_start_serve_thread(_cdtp_server_serve, server);
 }
 
 void _cdtp_server_serve(CDTPServer *server)
