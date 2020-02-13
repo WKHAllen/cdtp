@@ -166,7 +166,7 @@ pthread_t _cdtp_start_serve_thread(void (*func)(CDTPServer *), CDTPServer *serve
     if (return_code != 0)
     {
         _cdtp_set_error(CDTP_THREAD_START_FAILED, return_code);
-        return;
+        return 0;
     }
 #endif
 
