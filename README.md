@@ -174,18 +174,18 @@ CDTP provides two functions for sending data to clients.
 #### cdtp_server_send
 
 ```c
-void cdtp_server_send(CDTPServer *server, int client_id, void *data);
+void cdtp_server_send(CDTPServer *server, int client_id, void *data, size_t data_size);
 ```
 
-Send data to a client, providing the client's ID and a void pointer to the data.
+Send data to a client, providing the client's ID, a void pointer to the data, and the size of the data.
 
 #### cdtp_server_send_all
 
 ```c
-void cdtp_server_send_all(CDTPServer *server, void *data);
+void cdtp_server_send_all(CDTPServer *server, void *data, size_t data_size);
 ```
 
-Send data to all clients, providing a void pointer to the data.
+Send data to all clients, providing a void pointer to the data and the size of the data.
 
 ### Other server functions
 
