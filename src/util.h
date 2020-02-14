@@ -136,12 +136,15 @@ void cdtp_on_error(void (*on_error)(int, int, void *), void *arg);
 void cdtp_on_error_clear(void);
 
 // Convert decimal to ascii
-char *_cdtp_dec_to_ascii(long dec);
+char *_cdtp_dec_to_ascii(size_t dec);
 
 // Convert ascii to decimal
-long _cdtp_ascii_to_dec(char *ascii);
+size_t _cdtp_ascii_to_dec(char *ascii);
 
-// Build a message
-char *_cdtp_build_message(void *data, size_t data_size);
+// Construct a message
+char *_cdtp_construct_message(void *data, size_t data_size);
+
+// Deconstruct a message
+void *_cdtp_deconstruct_message(char *message, size_t *data_size);
 
 #endif // CDTP_UTIL_H

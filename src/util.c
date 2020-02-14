@@ -90,7 +90,7 @@ EXPORT void cdtp_on_error_clear(void)
     CDTP_ON_ERROR_REGISTERED = CDTP_FALSE;
 }
 
-char *_cdtp_dec_to_ascii(long dec)
+char *_cdtp_dec_to_ascii(size_t dec)
 {
     char *ascii = malloc(CDTP_LENSIZE * sizeof(char));
     for (int i = 0; i < CDTP_LENSIZE; i++)
@@ -98,15 +98,15 @@ char *_cdtp_dec_to_ascii(long dec)
     return ascii;
 }
 
-long _cdtp_ascii_to_dec(char *ascii)
+size_t _cdtp_ascii_to_dec(char *ascii)
 {
-    long dec = 0;
+    size_t dec = 0;
     for (int i = 0; i < CDTP_LENSIZE; i++)
         dec += ascii[i] * pow(256, CDTP_LENSIZE - i - 1);
     return dec;
 }
 
-char *_cdtp_build_message(void *data, size_t data_size)
+char *_cdtp_construct_message(void *data, size_t data_size)
 {
     // data_size should not be greater than 256 ^ CDTP_LENSIZE (or in this case, a tebibyte)
     char *data_str = (char *)data;
@@ -115,7 +115,17 @@ char *_cdtp_build_message(void *data, size_t data_size)
     for (int i = 0; i < CDTP_LENSIZE; i++)
         message[i] = size[i];
     for (int i = 0; i < data_size; i++)
-        message[i + 5] = data_str[i];
+        message[i + CDTP_LENSIZE] = data_str[i];
     free(size);
     return message;
+}
+
+void *_cdtp_deconstruct_message(char *message, size_t *data_size)
+{
+    // only the first CDTP_LENSIZE bytes of message will be read as the size
+    *data_size = _cdtp_ascii_to_dec(message);
+    char *data = malloc(*data_size * sizeof(char));
+    for (int i = 0; i < *data_size; i++)
+        data[i] = message[i + CDTP_LENSIZE];
+    return (void *)data;
 }

@@ -398,7 +398,7 @@ EXPORT void cdtp_server_send(CDTPServer *server, int client_id, void *data, size
         return;
     }
 
-    char *message = _cdtp_build_message(data, data_size);
+    char *message = _cdtp_construct_message(data, data_size);
     if (send(server->clients[client_id]->sock, message, CDTP_LENSIZE + data_size, 0) < 0)
         _cdtp_set_err(CDTP_SERVER_SEND_FAILED);
     free(message);
@@ -413,7 +413,7 @@ EXPORT void cdtp_server_send_all(CDTPServer *server, void *data, size_t data_siz
         return;
     }
 
-    char *message = _cdtp_build_message(data, data_size);
+    char *message = _cdtp_construct_message(data, data_size);
 
     for (int i = 0; i < server->max_clients; i++)
         if (server->allocated_clients[i] == CDTP_TRUE)
