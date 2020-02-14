@@ -184,7 +184,7 @@ void cdtp_server_remove_client(CDTPServer *server, int client_id);
  * client_id: the ID of the client to send the data to
  * data:      the data to send
  */
-void cdtp_server_send(CDTPServer *server, int client_id, void *data);
+void cdtp_server_send(CDTPServer *server, int client_id, void *data, size_t data_len);
 
 /*
  * Send data to all clients
@@ -192,7 +192,7 @@ void cdtp_server_send(CDTPServer *server, int client_id, void *data);
  * server:    the server object
  * data:      the data to send
  */
-void cdtp_server_send_all(CDTPServer *server, void *data);
+void cdtp_server_send_all(CDTPServer *server, void *data, size_t data_len);
 
 // Call the serve function
 void _cdtp_server_call_serve(CDTPServer *server);

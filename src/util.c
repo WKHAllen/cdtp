@@ -89,3 +89,28 @@ EXPORT void cdtp_on_error_clear(void)
 {
     CDTP_ON_ERROR_REGISTERED = CDTP_FALSE;
 }
+
+char *_cdtp_dec_to_ascii(long dec)
+{
+    char *ascii = malloc(CDTP_LENSIZE * sizeof(char));
+    for (int i = 0; i < CDTP_LENSIZE; i++)
+        ascii[i] = dec / pow(256, CDTP_LENSIZE - i - 1);
+    return ascii;
+}
+
+long _cdtp_ascii_to_dec(char *ascii)
+{
+    long dec = 0;
+    for (int i = 0; i < CDTP_LENSIZE; i++)
+        dec += ascii[i] * pow(256, CDTP_LENSIZE - i - 1);
+    return dec;
+}
+
+char *_cdtp_build_message(void *data, size_t data_size)
+{
+    char *message = malloc((CDTP_LENSIZE + data_size) * sizeof(char));
+
+    // TODO: finish this function
+    
+    return message;
+}

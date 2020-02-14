@@ -389,7 +389,7 @@ EXPORT void cdtp_server_remove_client(CDTPServer *server, int client_id)
     server->allocated_clients[client_id] = CDTP_FALSE;
 }
 
-EXPORT void cdtp_server_send(CDTPServer *server, int client_id, void *data)
+EXPORT void cdtp_server_send(CDTPServer *server, int client_id, void *data, size_t data_size)
 {
     // Make sure the server is running
     if (server->serving != CDTP_TRUE)
@@ -398,10 +398,13 @@ EXPORT void cdtp_server_send(CDTPServer *server, int client_id, void *data)
         return;
     }
 
-    // TODO: implement this function
+    char *message = _cdtp_build_message(data, data_size);
+    if (send(server->clients[client_id]->sock, message, CDTP_LENSIZE + data_size, 0) < 0)
+        _cdtp_set_err(CDTP_SERVER_SEND_FAILED);
+    free(message);
 }
 
-EXPORT void cdtp_server_send_all(CDTPServer *server, void *data)
+EXPORT void cdtp_server_send_all(CDTPServer *server, void *data, size_t data_size)
 {
     // Make sure the server is running
     if (server->serving != CDTP_TRUE)
@@ -409,10 +412,15 @@ EXPORT void cdtp_server_send_all(CDTPServer *server, void *data)
         _cdtp_set_error(CDTP_SERVER_NOT_SERVING, 0);
         return;
     }
+
+    char *message = _cdtp_build_message(data, data_size);
 
     for (int i = 0; i < server->max_clients; i++)
         if (server->allocated_clients[i] == CDTP_TRUE)
-            cdtp_server_send(server, i, data);
+            if (send(server->clients[i]->sock, message, CDTP_LENSIZE + data_size, 0) < 0)
+                _cdtp_set_err(CDTP_SERVER_SEND_FAILED);
+
+    free(message);
 }
 
 void _cdtp_server_call_serve(CDTPServer *server)

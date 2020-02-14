@@ -9,6 +9,7 @@
 // Includes
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #ifdef _WIN32
     #include <Windows.h>
@@ -53,8 +54,8 @@ typedef struct CDTPClient CDTPClient;
 #define CDTP_SERVE_THREAD_NOT_CLOSING   11
 #define CDTP_CLIENT_DOES_NOT_EXIST      12
 #define CDTP_CLIENT_REMOVE_FAILED       13
-#define CDTP_THREAD_START_FAILED        14
-
+#define CDTP_SERVER_SEND_FAILED         14
+#define CDTP_THREAD_START_FAILED        15
 
 // Global address family to use
 #ifndef CDTP_ADDRESS_FAMILY
@@ -76,6 +77,9 @@ typedef struct CDTPClient CDTPClient;
 #ifndef CDTP_PORT
     #define CDTP_PORT 29275
 #endif
+
+// Length of the size portion of each message
+#define CDTP_LENSIZE 5
 
 // Keep track of whether or not the library has been initialized and exited
 extern int CDTP_INIT;
@@ -130,5 +134,14 @@ void cdtp_on_error(void (*on_error)(int, int, void *), void *arg);
  * Unregister the on_error function
  */
 void cdtp_on_error_clear(void);
+
+// Convert decimal to ascii
+char *_cdtp_dec_to_ascii(long dec);
+
+// Convert ascii to decimal
+long _cdtp_ascii_to_dec(char *ascii);
+
+// Build a message
+char *_cdtp_build_message(void *data, size_t data_size);
 
 #endif // CDTP_UTIL_H
