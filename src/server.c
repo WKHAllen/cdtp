@@ -495,7 +495,7 @@ void _cdtp_server_serve(CDTPServer *server)
                 int recv_code = recv(server->clients[i]->sock, size_buffer, CDTP_LENSIZE, 0);
                 if (recv_code == SOCKET_ERROR)
 #else
-                int recv_code = read(server->clients[i]->sock, size_buffer, CDTP_LENSIZE, 0);
+                int recv_code = read(server->clients[i]->sock, size_buffer, CDTP_LENSIZE);
                 if (recv_code == 0)
 #endif
                     _cdtp_server_disconnect_sock(server, i);
@@ -507,7 +507,7 @@ void _cdtp_server_serve(CDTPServer *server)
                     recv_code = recv(server->clients[i]->sock, size_buffer, msg_size, 0);
                     if (recv_code == SOCKET_ERROR)
 #else
-                    recv_code = read(server->clients[i]->sock, size_buffer, msg_size, 0);
+                    recv_code = read(server->clients[i]->sock, size_buffer, msg_size);
                     if (recv_code == 0)
 #endif
                         _cdtp_server_disconnect_sock(server, i);
@@ -569,7 +569,11 @@ void _cdtp_server_send_status(int client_sock, int status_code)
 
 void _cdtp_server_disconnect_sock(CDTPServer *server, int client_id)
 {
+#ifdef _WIN32
     closesocket(server->clients[client_id]->sock);
+#else
+    close(server->clients[client_id]->sock);
+#endif
     server->allocated_clients[client_id] = CDTP_FALSE;
     free(server->clients[client_id]);
     server->num_clients--;

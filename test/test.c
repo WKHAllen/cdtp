@@ -4,7 +4,7 @@
 
 void on_recv(int client_id, void *data, size_t data_len, void *arg)
 {
-    printf("Received data from client #%d: %s (size %d)\n", client_id, *(char **)data, data_len);
+    printf("Received data from client #%d: %s (size %ld)\n", client_id, (char *)data, data_len);
 }
 
 void on_connect(int client_id, void *arg)
