@@ -24,10 +24,6 @@
     #include <errno.h>
 #endif
 
-// Public type definitions
-typedef struct CDTPServer CDTPServer;
-typedef struct CDTPClient CDTPClient;
-
 // Export functions
 #ifdef _WIN32
     #define EXPORT __declspec(dllexport)
@@ -56,6 +52,10 @@ typedef struct CDTPClient CDTPClient;
 #define CDTP_CLIENT_REMOVE_FAILED       13
 #define CDTP_SERVER_SEND_FAILED         14
 #define CDTP_THREAD_START_FAILED        15
+#define CDTP_SELECT_FAILED              16
+#define CDTP_SOCKET_ACCEPT_FAILED       17
+#define CDTP_STATUS_SEND_FAILED         18
+#define CDTP_SERVER_FULL                19
 
 // Global address family to use
 #ifndef CDTP_ADDRESS_FAMILY

@@ -17,6 +17,7 @@
 extern "C" {
 #endif
 
+#include "defs.h"
 #include "util.h"
 #include "server.h"
 #include "client.h"

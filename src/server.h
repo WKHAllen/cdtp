@@ -6,15 +6,16 @@
 #ifndef CDTP_SERVER_H
 #define CDTP_SERVER_H
 
+#include "defs.h"
 #include "util.h"
 #include "threading.h"
 #include <stddef.h>
 
-// Type definitions
-typedef struct CDTPSocket CDTPSocket;
-
 // Socket server listen backlog
 #define CDTP_LISTEN_BACKLOG 3
+
+// Server max clients indicator
+#define CDTP_MAX_CLIENTS_REACHED (-1)
 
 /* 
  * Server creation/initialization
@@ -208,5 +209,15 @@ void _cdtp_server_call_on_connect(CDTPServer *server, int client_id);
 
 // Call the on_disconnect function
 void _cdtp_server_call_on_disconnect(CDTPServer *server, int client_id);
+
+// Get the first available client ID
+int _cdtp_server_new_client_id(CDTPServer *server);
+
+// Send a client a status code
+#ifdef _WIN32
+void _cdtp_server_send_status(SOCKET client_sock, int status_code);
+#else
+void _cdtp_server_send_status(int client_sock, int status_code);
+#endif
 
 #endif // CDTP_SERVER_H

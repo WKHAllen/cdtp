@@ -119,8 +119,6 @@ void _cdtp_start_thread_on_disconnected(void (*func)(void *), void *arg)
     _cdtp_start_event_thread(func_info);
 }
 
-#include <stdio.h>
-
 #ifdef _WIN32
 DWORD WINAPI _cdtp_serve_thread(LPVOID func_info)
 #else

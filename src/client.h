@@ -6,7 +6,7 @@
 #ifndef CDTP_CLIENT_H
 #define CDTP_CLIENT_H
 
-// Includes
+#include "defs.h"
 #include "util.h"
 #include "threading.h"
 
