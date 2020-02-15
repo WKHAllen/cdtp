@@ -32,7 +32,7 @@ void *_cdtp_event_thread(void *func_info);
 void _cdtp_start_event_thread(CDTPEventFunc *func_info);
 
 // Call on_recv (server)
-void _cdtp_start_thread_on_recv_server(void (*func)(int, void *, void *), int client_id, void *data, void *arg);
+void _cdtp_start_thread_on_recv_server(void (*func)(int, void *, size_t, void *), int client_id, void *data, size_t data_len, void *arg);
 
 // Call on_connect (server)
 void _cdtp_start_thread_on_connect(void (*func)(int, void *), int client_id, void *arg);

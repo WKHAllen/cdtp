@@ -31,7 +31,7 @@
  * event_blocking:      whether or not on_recv, on_connect, and on_disconnect will block
  */ 
 CDTPServer *cdtp_server(size_t max_clients,
-                        void (*on_recv      )(int, void *, void *),
+                        void (*on_recv      )(int, void *, size_t, void *),
                         void (*on_connect   )(int, void *),
                         void (*on_disconnect)(int, void *),
                         void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg,
@@ -51,7 +51,7 @@ CDTPServer *cdtp_server(size_t max_clients,
  * blocking and event blocking are set to false
  */
 CDTPServer *cdtp_server_default(size_t max_clients,
-                                void (*on_recv      )(int, void *, void *),
+                                void (*on_recv      )(int, void *, size_t, void *),
                                 void (*on_connect   )(int, void *),
                                 void (*on_disconnect)(int, void *),
                                 void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg);
@@ -202,7 +202,7 @@ void _cdtp_server_call_serve(CDTPServer *server);
 void _cdtp_server_serve(CDTPServer *server);
 
 // Call the on_recv function
-void _cdtp_server_call_on_recv(CDTPServer *server, int client_id, void *data);
+void _cdtp_server_call_on_recv(CDTPServer *server, int client_id, void *data, size_t data_len);
 
 // Call the on_connect function
 void _cdtp_server_call_on_connect(CDTPServer *server, int client_id);
@@ -219,5 +219,8 @@ void _cdtp_server_send_status(SOCKET client_sock, int status_code);
 #else
 void _cdtp_server_send_status(int client_sock, int status_code);
 #endif
+
+// Disconnect a socket
+void _cdtp_server_disconnect_sock(CDTPServer *server, int client_id);
 
 #endif // CDTP_SERVER_H

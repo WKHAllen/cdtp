@@ -23,7 +23,7 @@ typedef struct CDTPSocket
 typedef struct CDTPServer
 {
     size_t max_clients;
-    void (*on_recv      )(int, void *, void *);
+    void (*on_recv      )(int, void *, size_t, void *);
     void (*on_connect   )(int, void *);
     void (*on_disconnect)(int, void *);
     void *on_recv_arg;

@@ -1,7 +1,7 @@
 #include "server.h"
 
 EXPORT CDTPServer *cdtp_server(size_t max_clients,
-                               void (*on_recv      )(int, void *, void *),
+                               void (*on_recv      )(int, void *, size_t, void *),
                                void (*on_connect   )(int, void *),
                                void (*on_disconnect)(int, void *),
                                void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg,
@@ -77,7 +77,7 @@ EXPORT CDTPServer *cdtp_server(size_t max_clients,
 }
 
 EXPORT CDTPServer *cdtp_server_default(size_t max_clients,
-                                       void (*on_recv      )(int, void *, void *),
+                                       void (*on_recv      )(int, void *, size_t, void *),
                                        void (*on_connect   )(int, void *),
                                        void (*on_disconnect)(int, void *),
                                        void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg)
@@ -408,6 +408,8 @@ void _cdtp_server_serve(CDTPServer *server)
     int new_sock;
     int max_sd = server->sock->sock;
 #endif
+    char size_buffer[CDTP_LENSIZE];
+
     while (server->serving == CDTP_TRUE)
     {
         // Create the read sockets
@@ -489,18 +491,42 @@ void _cdtp_server_serve(CDTPServer *server)
         {
             if (server->allocated_clients[i] == CDTP_TRUE && FD_ISSET(server->clients[i]->sock, &read_socks))
             {
-                // TODO: read data from the client, check for errors, etc.
+#ifdef _WIN32
+                int recv_code = recv(server->clients[i]->sock, size_buffer, CDTP_LENSIZE, 0);
+                if (recv_code == SOCKET_ERROR)
+#else
+                int recv_code = read(server->clients[i]->sock, size_buffer, CDTP_LENSIZE, 0);
+                if (recv_code == 0)
+#endif
+                    _cdtp_server_disconnect_sock(server, i);
+                else
+                {
+                    size_t msg_size = _cdtp_ascii_to_dec(size_buffer);
+                    char *buffer = malloc(msg_size * sizeof(char));
+#ifdef _WIN32
+                    recv_code = recv(server->clients[i]->sock, size_buffer, msg_size, 0);
+                    if (recv_code == SOCKET_ERROR)
+#else
+                    recv_code = read(server->clients[i]->sock, size_buffer, msg_size, 0);
+                    if (recv_code == 0)
+#endif
+                        _cdtp_server_disconnect_sock(server, i);
+                    else
+                    {
+                        _cdtp_server_call_on_recv(server, i, (void *)buffer, msg_size);
+                    }
+                }
             }
         }
     }
 }
 
-void _cdtp_server_call_on_recv(CDTPServer *server, int client_id, void *data)
+void _cdtp_server_call_on_recv(CDTPServer *server, int client_id, void *data, size_t data_len)
 {
     if (server->event_blocking == CDTP_TRUE)
-        (*(server->on_recv))(client_id, data, server->on_recv_arg);
+        (*(server->on_recv))(client_id, data, data_len, server->on_recv_arg);
     else
-        _cdtp_start_thread_on_recv_server(server->on_recv, client_id, data, server->on_recv_arg);
+        _cdtp_start_thread_on_recv_server(server->on_recv, client_id, data, data_len, server->on_recv_arg);
 }
 
 void _cdtp_server_call_on_connect(CDTPServer *server, int client_id)
@@ -537,8 +563,14 @@ void _cdtp_server_send_status(int client_sock, int status_code)
 {
     char *message = _cdtp_construct_message(&status_code, sizeof(status_code));
     if (send(client_sock, message, CDTP_LENSIZE + sizeof(status_code), 0) < 0)
-    {
         _cdtp_set_err(CDTP_STATUS_SEND_FAILED);
-        return;
-    }
+    free(message);
+}
+
+void _cdtp_server_disconnect_sock(CDTPServer *server, int client_id)
+{
+    closesocket(server->clients[client_id]->sock);
+    server->allocated_clients[client_id] = CDTP_FALSE;
+    free(server->clients[client_id]);
+    server->num_clients--;
 }

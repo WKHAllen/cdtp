@@ -8,6 +8,7 @@
 
 // Includes
 #include <stdlib.h>
+#include <stddef.h>
 #include <string.h>
 #include <math.h>
 

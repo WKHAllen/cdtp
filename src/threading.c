@@ -4,13 +4,14 @@ struct CDTPEventFunc
 {
     char *name;
     union func {
-        void (*func_int_voidp_voidp)(int, void *, void *); // on_recv (server)
-        void (*func_int_voidp      )(int, void *);         // on_connect, on_disconnect (server)
-        void (*func_voidp_voidp    )(void *, void *);      // on_recv (client)
-        void (*func_voidp          )(void *);              // on_disconnected (client)
+        void (*func_int_voidp_sizet_voidp)(int, void *, size_t, void *); // on_recv (server)
+        void (*func_int_voidp      )(int, void *);                       // on_connect, on_disconnect (server)
+        void (*func_voidp_voidp    )(void *, void *);                    // on_recv (client)
+        void (*func_voidp          )(void *);                            // on_disconnected (client)
     } func;
     int int1;
     void *voidp1;
+    size_t size_t1;
     void *voidp2;
 };
 
@@ -30,7 +31,7 @@ void *_cdtp_event_thread(void *func_info)
 
     // Find out which function to call
     if (strcmp(event_func_info->name, "on_recv_server") == 0)
-        (*event_func_info->func.func_int_voidp_voidp)(event_func_info->int1, event_func_info->voidp1, event_func_info->voidp2);
+        (*event_func_info->func.func_int_voidp_sizet_voidp)(event_func_info->int1, event_func_info->voidp1, event_func_info->size_t1, event_func_info->voidp2);
     else if (strcmp(event_func_info->name, "on_connect") == 0)
         (*event_func_info->func.func_int_voidp)(event_func_info->int1, event_func_info->voidp1);
     else if (strcmp(event_func_info->name, "on_disconnect") == 0)
@@ -69,13 +70,14 @@ void _cdtp_start_event_thread(CDTPEventFunc *func_info)
 #endif
 }
 
-void _cdtp_start_thread_on_recv_server(void (*func)(int, void *, void *), int client_id, void *data, void *arg)
+void _cdtp_start_thread_on_recv_server(void (*func)(int, void *, size_t, void *), int client_id, void *data, size_t data_len, void *arg)
 {
     CDTPEventFunc *func_info = malloc(sizeof(*func_info));
     func_info->name = "on_recv_server";
-    func_info->func.func_int_voidp_voidp = func;
+    func_info->func.func_int_voidp_sizet_voidp = func;
     func_info->int1 = client_id;
     func_info->voidp1 = data;
+    func_info->size_t1 = data_len;
     func_info->voidp2 = arg;
     _cdtp_start_event_thread(func_info);
 }

@@ -62,7 +62,7 @@ First, you'll want to create a server.
 
 ```c
 CDTPServer *cdtp_server(size_t max_clients,
-                        void (*on_recv      )(int, void *, void *),
+                        void (*on_recv      )(int, void *, size_t, void *),
                         void (*on_connect   )(int, void *),
                         void (*on_disconnect)(int, void *),
                         void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg,
@@ -73,7 +73,7 @@ Create a CDTPServer object.
 
 `max_clients` is the maximum number of clients the server can handle at once.
 
-`on_recv` is a function that will be called when a data packet is received from a client. It should take three arguments: an integer corresponding to the ID of the client who sent the packet, a void pointer to the data that was sent, and a void pointer.
+`on_recv` is a function that will be called when a data packet is received from a client. It should take four arguments: an integer corresponding to the ID of the client who sent the packet, a void pointer to the data that was sent, a size_t value indicating the size of the data, and a void pointer.
 
 `on_connect` is a function that will be called when a client connects. It should take two arguments: an integer corresponding to the ID of the client who connected, and a void pointer.
 
@@ -93,7 +93,7 @@ Create a CDTPServer object.
 
 ```c
 CDTPServer *cdtp_server_default(size_t max_clients,
-                                void (*on_recv      )(int, void *, void *),
+                                void (*on_recv      )(int, void *, size_t, void *),
                                 void (*on_connect   )(int, void *),
                                 void (*on_disconnect)(int, void *),
                                 void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg);
