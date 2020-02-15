@@ -443,7 +443,7 @@ void _cdtp_server_serve(CDTPServer *server)
             }
 #else
             new_sock = accept(server->sock->sock, (struct sockaddr *)&address, (socklen_t *)&addrlen);
-            if (accept_code < 0)
+            if (new_sock < 0)
             {
                 int err_code = errno;
                 if (err_code != ENOTSOCK || server->serving == CDTP_TRUE)
