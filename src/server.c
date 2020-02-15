@@ -432,19 +432,24 @@ void _cdtp_server_serve(CDTPServer *server)
         if (FD_ISSET(server->sock->sock, &read_socks))
         {
             // Accept the new socket and check if an error has occurred
-            int accept_code = new_sock = accept(server->sock->sock, (struct sockaddr *)&address, (int *)&addrlen);
-            if (accept_code < 0)
-            {
+            new_sock = accept(server->sock->sock, (struct sockaddr *)&address, (int *)&addrlen);
 #ifdef _WIN32
+            if (new_sock == INVALID_SOCKET)
+            {
                 int err_code = WSAGetLastError();
                 if (err_code != WSAENOTSOCK || server->serving == CDTP_TRUE)
-#else
-                int err_code = errno;
-                if (err_code != ENOTSOCK || server->serving == CDTP_TRUE)
-#endif
                     _cdtp_set_error(CDTP_SOCKET_ACCEPT_FAILED, err_code);
                 return;
             }
+#else
+            if (accept_code < 0)
+            {
+                int err_code = errno;
+                if (err_code != ENOTSOCK || server->serving == CDTP_TRUE)
+                    _cdtp_set_error(CDTP_SOCKET_ACCEPT_FAILED, err_code);
+                return;
+            }
+#endif
 
             int new_client_id = _cdtp_server_new_client_id(server);
             if (new_client_id != CDTP_MAX_CLIENTS_REACHED)
