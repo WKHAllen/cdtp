@@ -459,13 +459,14 @@ void _cdtp_server_serve(CDTPServer *server)
             }
 #endif
 
+            // Put new socket in the client list
             int new_client_id = _cdtp_server_new_client_id(server);
             if (new_client_id != CDTP_MAX_CLIENTS_REACHED)
             {
                 // Add the new socket to the client array
                 server->clients[new_client_id] = malloc(sizeof(*(server->clients[new_client_id])));
                 server->clients[new_client_id]->sock = new_sock;
-                server->clients[new_client_id]->address = address;
+                memcpy(&(server->clients[new_client_id]->address), &address, sizeof(address));
                 server->allocated_clients[new_client_id] = CDTP_TRUE;
                 server->num_clients++;
                 _cdtp_server_send_status(new_sock, CDTP_SUCCESS);
