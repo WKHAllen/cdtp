@@ -432,8 +432,8 @@ void _cdtp_server_serve(CDTPServer *server)
         if (FD_ISSET(server->sock->sock, &read_socks))
         {
             // Accept the new socket and check if an error has occurred
-            new_sock = accept(server->sock->sock, (struct sockaddr *)&address, (int *)&addrlen);
 #ifdef _WIN32
+            new_sock = accept(server->sock->sock, (struct sockaddr *)&address, (int *)&addrlen);
             if (new_sock == INVALID_SOCKET)
             {
                 int err_code = WSAGetLastError();
@@ -442,6 +442,7 @@ void _cdtp_server_serve(CDTPServer *server)
                 return;
             }
 #else
+            new_sock = accept(server->sock->sock, (struct sockaddr *)&address, (socklen_t *)&addrlen);
             if (accept_code < 0)
             {
                 int err_code = errno;
