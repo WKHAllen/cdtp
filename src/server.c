@@ -428,6 +428,13 @@ void _cdtp_server_serve(CDTPServer *server)
         // Wait for activity
         activity = select(max_sd, &read_socks, NULL, NULL, NULL);
 
+        // Check for select errors
+        if (activity < 0)
+        {
+            _cdtp_set_err(CDTP_SELECT_FAILED);
+            return;
+        }
+
         // Check if something happened on the main socket
         if (FD_ISSET(server->sock->sock, &read_socks))
         {
@@ -518,6 +525,7 @@ int _cdtp_server_new_client_id(CDTPServer *server)
     for (int i = 0; i < server->max_clients; i++)
         if (server->allocated_clients[i] != CDTP_TRUE)
             return i;
+    return CDTP_MAX_CLIENTS_REACHED;
 }
 
 #ifdef _WIN32
