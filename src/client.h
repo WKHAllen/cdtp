@@ -150,4 +150,16 @@ int cdtp_client_port(CDTPClient *client);
  */
 void cdtp_client_send(CDTPClient *client, void *data, size_t data_len);
 
+// Call the handle function
+void _cdtp_client_call_handle(CDTPClient *client);
+
+// Client handle function
+void _cdtp_client_handle(CDTPClient *client);
+
+// Call the on_recv function
+void _cdtp_client_call_on_recv(CDTPClient *client, void *data, size_t data_len);
+
+// Call the on_connect function
+void _cdtp_client_call_on_disconnected(CDTPClient *client);
+
 #endif // CDTP_CLIENT_H

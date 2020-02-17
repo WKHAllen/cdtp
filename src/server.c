@@ -29,7 +29,7 @@ EXPORT CDTPServer *cdtp_server(size_t max_clients,
         int return_code = _cdtp_init();
         if (return_code != 0)
         {
-            _cdtp_set_error(CDTP_SERVER_WINSOCK_INIT_FAILED, return_code);
+            _cdtp_set_error(CDTP_WINSOCK_INIT_FAILED, return_code);
             return server;
         }
     }
@@ -216,8 +216,8 @@ EXPORT void cdtp_server_stop(CDTPServer *server)
 {
     server->serving = CDTP_FALSE;
 
-    // Close sockets
 #ifdef _WIN32
+    // Close sockets
     for (int i = 0; i < server->max_clients; i++)
         if (server->allocated_clients[i] == CDTP_TRUE)
             if (closesocket(server->clients[i]->sock) != 0)
@@ -230,7 +230,15 @@ EXPORT void cdtp_server_stop(CDTPServer *server)
         _cdtp_set_err(CDTP_SERVER_STOP_FAILED);
         return;
     }
+
+    // Wait for threads to exit
+    if (server->blocking != CDTP_TRUE && WaitForSingleObject(server->serve_thread, INFINITE) == WAIT_FAILED)
+    {
+        _cdtp_set_error(CDTP_SERVE_THREAD_NOT_CLOSING, GetLastError());
+        return;
+    }
 #else
+    // Close sockets
     for (int i = 0; i < server->max_clients; i++)
         if (server->allocated_clients[i] == CDTP_TRUE)
             if (close(server->clients[i]->sock) != 0)
@@ -243,21 +251,16 @@ EXPORT void cdtp_server_stop(CDTPServer *server)
         _cdtp_set_err(CDTP_SERVER_STOP_FAILED);
         return;
     }
-#endif
 
     // Wait for threads to exit
-#ifdef _WIN32
-    if (WaitForSingleObject(server->serve_thread, INFINITE) == WAIT_FAILED)
+    if (server->blocking != CDTP_TRUE)
     {
-        _cdtp_set_error(CDTP_SERVE_THREAD_NOT_CLOSING, GetLastError());
-        return;
-    }
-#else
-    int err_code = pthread_join(server->serve_thread, NULL);
-    if (err_code != 0)
-    {
-        _cdtp_set_error(CDTP_SERVE_THREAD_NOT_CLOSING, err_code);
-        return;
+        int err_code = pthread_join(server->serve_thread, NULL);
+        if (err_code != 0)
+        {
+            _cdtp_set_error(CDTP_SERVE_THREAD_NOT_CLOSING, err_code);
+            return;
+        }
     }
 #endif
 

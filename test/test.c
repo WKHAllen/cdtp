@@ -2,19 +2,29 @@
 #include <stdio.h>
 #include <assert.h>
 
-void on_recv(int client_id, void *data, size_t data_len, void *arg)
+void server_on_recv(int client_id, void *data, size_t data_len, void *arg)
 {
     printf("Received data from client #%d: %s (size %ld)\n", client_id, (char *)data, data_len);
 }
 
-void on_connect(int client_id, void *arg)
+void server_on_connect(int client_id, void *arg)
 {
     printf("Client #%d connected\n", client_id);
 }
 
-void on_disconnect(int client_id, void *arg)
+void server_on_disconnect(int client_id, void *arg)
 {
     printf("Client #%d disconnected\n", client_id);
+}
+
+void client_on_recv(void *data, size_t data_len, void *arg)
+{
+    printf("Received from server: %s (size %ld)\n", (char *)data, data_len);
+}
+
+void client_on_disconnected(void *arg)
+{
+    printf("Unexpectedly disconnected from server\n");
 }
 
 void on_err(int cdtp_err, int underlying_err, void *arg)
@@ -39,7 +49,7 @@ int main(int argc, char **argv)
 
     // Server initialization
     CDTPServer *server = cdtp_server(16,
-                                     on_recv, on_connect, on_disconnect,
+                                     server_on_recv, server_on_connect, server_on_disconnect,
                                      NULL, NULL, NULL,
                                      CDTP_FALSE, CDTP_FALSE);
 
@@ -68,6 +78,17 @@ int main(int argc, char **argv)
     // Test that server cannot be restarted
     cdtp_server_start_default_port(server, host);
     assert(cdtp_get_error() == CDTP_SERVER_CANNOT_RESTART);
+
+    // Client initialization
+    CDTPClient *client = cdtp_client(client_on_recv, client_on_disconnected,
+                                     NULL, NULL,
+                                     CDTP_FALSE, CDTP_FALSE);
+
+    // Client connect
+    cdtp_client_connect_default_port(client, host);
+
+    // Client disconnect
+    cdtp_client_disconnect(client);
 
     printf("Successfully passed all tests\n");
     return 0;
