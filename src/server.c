@@ -106,7 +106,6 @@ EXPORT void cdtp_server_start(CDTPServer *server, char *host, int port)
         _cdtp_set_error(CDTP_SERVER_ALREADY_SERVING, 0);
         return;
     }
-    server->serving = CDTP_TRUE;
 
     // Set the server address
 #ifdef _WIN32
@@ -141,6 +140,7 @@ EXPORT void cdtp_server_start(CDTPServer *server, char *host, int port)
     }
 
     // Serve
+    server->serving = CDTP_TRUE;
     _cdtp_server_call_serve(server);
 }
 
@@ -163,7 +163,6 @@ EXPORT void cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port)
         _cdtp_set_error(CDTP_SERVER_ALREADY_SERVING, 0);
         return;
     }
-    server->serving = CDTP_TRUE;
 
     // Set the server address
     server->sock->address.sin_family = CDTP_ADDRESS_FAMILY;
@@ -185,6 +184,7 @@ EXPORT void cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port)
     }
 
     // Serve
+    server->serving = CDTP_TRUE;
     _cdtp_server_call_serve(server);
 }
 

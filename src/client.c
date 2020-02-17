@@ -28,7 +28,7 @@ EXPORT CDTPClient *cdtp_client(void (*on_recv        )(void *, size_t, void *),
         }
     }
 
-    // Initialize the server socket
+    // Initialize the client socket
     client->sock = malloc(sizeof(*(client->sock)));
 
     // Initialize the socket info
@@ -72,13 +72,12 @@ EXPORT void cdtp_client_connect(CDTPClient *client, char *host, int port)
         return;
     }
 
-    // Make sure the server is not already serving
+    // Make sure the client is not already connected
     if (client->connected == CDTP_TRUE)
     {
         _cdtp_set_error(CDTP_CLIENT_ALREADY_CONNECTED, 0);
         return;
     }
-    client->connected = CDTP_TRUE;
 
     // Set the client address
 #ifdef _WIN32
@@ -89,7 +88,7 @@ EXPORT void cdtp_client_connect(CDTPClient *client, char *host, int port)
         return;
     }
 #else
-    if (inet_pton(CDTP_ADDRESS_FAMILY, host, &(server->sock->address)) != 1)
+    if (inet_pton(CDTP_ADDRESS_FAMILY, host, &(client->sock->address)) != 1)
     {
         _cdtp_set_err(CDTP_CLIENT_ADDRESS_FAILED);
         return;
@@ -105,6 +104,7 @@ EXPORT void cdtp_client_connect(CDTPClient *client, char *host, int port)
     }
 
     // Handle received data
+    client->connected = CDTP_TRUE;
     _cdtp_client_call_handle(client);
 }
 
@@ -121,13 +121,12 @@ EXPORT void cdtp_client_connect_host(CDTPClient *client, in_addr_t host, int por
         return;
     }
 
-    // Make sure the server is not already serving
+    // Make sure the client is not already connected
     if (client->connected == CDTP_TRUE)
     {
         _cdtp_set_error(CDTP_CLIENT_ALREADY_CONNECTED, 0);
         return;
     }
-    client->connected = CDTP_TRUE;
 
     // Set the client address
     client->sock->address.sin_family = CDTP_ADDRESS_FAMILY;
@@ -141,6 +140,7 @@ EXPORT void cdtp_client_connect_host(CDTPClient *client, in_addr_t host, int por
     }
 
     // Handle received data
+    client->connected = CDTP_TRUE;
     _cdtp_client_call_handle(client);
 }
 
@@ -224,12 +224,50 @@ EXPORT struct sockaddr_in cdtp_client_addr(CDTPClient *client)
 
 EXPORT char *cdtp_client_host(CDTPClient *client)
 {
-    // TODO: implement this function
+    // Make sure the client is connected
+    if (client->connected != CDTP_TRUE)
+    {
+        _cdtp_set_error(CDTP_CLIENT_NOT_CONNECTED, 0);
+        return "";
+    }
+
+    char *addr = malloc(CDTP_ADDRSTRLEN * sizeof(char));
+#ifdef _WIN32
+    int addrlen = CDTP_ADDRSTRLEN;
+    if (WSAAddressToString((LPSOCKADDR)&(client->sock->address), sizeof(client->sock->address), NULL, addr, (LPDWORD)&addrlen) != 0)
+    {
+        _cdtp_set_err(CDTP_CLIENT_ADDRESS_FAILED);
+        return "";
+    }
+    // Remove the port
+    for (int i = 0; i < CDTP_ADDRSTRLEN && addr[i] != '\0'; i++)
+    {
+        if (addr[i] == ':')
+        {
+            addr[i] = '\0';
+            break;
+        }
+    }
+#else
+    if (inet_ntop(CDTP_ADDRESS_FAMILY, &(client->sock->address), addr, CDTP_ADDRSTRLEN) == NULL)
+    {
+        _cdtp_set_err(CDTP_CLIENT_ADDRESS_FAILED);
+        return "";
+    }
+#endif
+    return addr;
 }
 
 EXPORT int cdtp_client_port(CDTPClient *client)
 {
-    // TODO: implement this function
+    // Make sure the server is running
+    if (client->connected != CDTP_TRUE)
+    {
+        _cdtp_set_error(CDTP_CLIENT_NOT_CONNECTED, 0);
+        return 0;
+    }
+
+    return ntohs(client->sock->address.sin_port);
 }
 
 EXPORT void cdtp_client_send(CDTPClient *client, void *data, size_t data_len)

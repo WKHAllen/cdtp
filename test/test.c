@@ -71,13 +71,8 @@ int main(int argc, char **argv)
     cdtp_server_remove_client(server, 0);
     assert(cdtp_get_error() == CDTP_CLIENT_DOES_NOT_EXIST);
 
-    // Server stop
-    cdtp_server_stop(server);
-    check_err();
-
-    // Test that server cannot be restarted
-    cdtp_server_start_default_port(server, host);
-    assert(cdtp_get_error() == CDTP_SERVER_CANNOT_RESTART);
+    // Register error event
+    cdtp_on_error(on_err, NULL);
 
     // Client initialization
     CDTPClient *client = cdtp_client(client_on_recv, client_on_disconnected,
@@ -87,8 +82,26 @@ int main(int argc, char **argv)
     // Client connect
     cdtp_client_connect_default_port(client, host);
 
+    // Get IP address and port
+    char *client_ip_address = cdtp_client_host(client);
+    int client_port = cdtp_client_port(client);
+    printf("IP address: %s\n", client_ip_address);
+    printf("Port:       %d\n", client_port);
+    free(client_ip_address);
+
     // Client disconnect
     cdtp_client_disconnect(client);
+
+    // Unregister error event
+    cdtp_on_error_clear();
+
+    // Server stop
+    cdtp_server_stop(server);
+    check_err();
+
+    // Test that server cannot be restarted
+    cdtp_server_start_default_port(server, host);
+    assert(cdtp_get_error() == CDTP_SERVER_CANNOT_RESTART);
 
     printf("Successfully passed all tests\n");
     return 0;
