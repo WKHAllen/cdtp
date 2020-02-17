@@ -21,10 +21,22 @@ void wait(double seconds)
 #endif
 }
 
+char *voidp_to_str(void *data, size_t data_size)
+{
+    char *data_str = (char *)data;
+    char *message = malloc((data_size + 1) * sizeof(char));
+    for (int i = 0; i < data_size; i++)
+        message[i] = data_str[i];
+    message[data_size] = '\0';
+    return message;
+}
+
 void server_on_recv(int client_id, void *data, size_t data_size, void *arg)
 {
-    printf("Received data from client #%d: %s (size %ld)\n", client_id, (char *)data, data_size);
+    char *message = voidp_to_str(data, data_size);
+    printf("Received data from client #%d: %s (size %ld)\n", client_id, message, data_size);
     free(data);
+    free(message);
 }
 
 void server_on_connect(int client_id, void *arg)
@@ -117,6 +129,10 @@ int main(int argc, char **argv)
     // Client send
     char *client_message = "Hello, server.";
     cdtp_client_send(client, client_message, strlen(client_message));
+
+    // Server send
+    // char *server_message = "Hello, client #0.";
+    // cdtp_server_send(server, 0, server_message, strlen(server_message));
 
     wait(wait_time);
 

@@ -519,7 +519,7 @@ void _cdtp_server_serve(CDTPServer *server)
                 {
                     size_t msg_size = _cdtp_ascii_to_dec(size_buffer);
                     char *buffer = malloc(msg_size * sizeof(char));
-                    recv_code = recv(server->clients[i]->sock, size_buffer, msg_size, 0);
+                    recv_code = recv(server->clients[i]->sock, buffer, msg_size, 0);
                     if (recv_code == SOCKET_ERROR)
                     {
                         int err_code = WSAGetLastError();
@@ -553,7 +553,7 @@ void _cdtp_server_serve(CDTPServer *server)
                 {
                     size_t msg_size = _cdtp_ascii_to_dec(size_buffer);
                     char *buffer = malloc(msg_size * sizeof(char));
-                    recv_code = read(server->clients[i]->sock, size_buffer, msg_size);
+                    recv_code = read(server->clients[i]->sock, buffer, msg_size);
                     if (recv_code == 0)
                     {
                         _cdtp_server_disconnect_sock(server, i);
