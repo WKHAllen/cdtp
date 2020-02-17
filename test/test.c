@@ -16,7 +16,7 @@ void wait(double seconds)
 #else
     struct timespec ts;
     ts.tv_sec = seconds;
-    ts.tv_nsec = ((seconds * 1000) % 1000) * 1000000;
+    ts.tv_nsec = ((int)(seconds * 1000) % 1000) * 1000000;
     nanosleep(&ts, NULL);
 #endif
 }

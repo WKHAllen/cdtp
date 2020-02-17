@@ -172,7 +172,7 @@ pthread_t _cdtp_start_serve_thread(void (*func)(CDTPServer *), CDTPServer *serve
     int return_code = pthread_create(&thread, NULL, _cdtp_serve_thread, func_info);
     if (return_code != 0)
     {
-        _cdtp_set_error(CDTP_THREAD_START_FAILED, return_code);
+        _cdtp_set_error(CDTP_SERVE_THREAD_START_FAILED, return_code);
         return 0;
     }
 #endif
