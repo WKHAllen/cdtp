@@ -45,9 +45,22 @@ typedef struct CDTPServer
 } CDTPServer;
 
 // Socket client type
-// typedef struct CDTPClient
-// {
-
-// } CDTPClient;
+typedef struct CDTPClient
+{
+    void (*on_recv        )(void *, size_t, void *);
+    void (*on_disconnected)(void *);
+    void *on_recv_arg;
+    void *on_disconnected_arg;
+    int blocking;
+    int event_blocking;
+    int connected;
+    int done;
+    CDTPSocket *sock;
+#ifdef _WIN32
+    HANDLE handle_thread;
+#else
+    pthread_t handle_thread;
+#endif
+} CDTPClient;
 
 #endif // CDTP_DEFS_H
