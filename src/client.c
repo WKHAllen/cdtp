@@ -300,10 +300,16 @@ void _cdtp_client_handle(CDTPClient *client)
 
 void _cdtp_client_call_on_recv(CDTPClient *client, void *data, size_t data_size)
 {
-    // TODO: implement this function
+    if (client->event_blocking == CDTP_TRUE)
+        (*(client->on_recv))(data, data_size, client->on_recv_arg);
+    else
+        _cdtp_start_thread_on_recv_client(client->on_recv, data, data_size, client->on_recv_arg);
 }
 
 void _cdtp_client_call_on_disconnected(CDTPClient *client)
 {
-    // TODO: implement this function
+    if (client->event_blocking == CDTP_TRUE)
+        (*(client->on_disconnected))(client->on_disconnected_arg);
+    else
+        _cdtp_start_thread_on_disconnected(client->on_disconnected, client->on_disconnected_arg);
 }
