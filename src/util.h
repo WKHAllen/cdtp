@@ -37,7 +37,7 @@
 #define CDTP_TRUE  1
 
 // CDTP error codes
-#define CDTP_SUCCESS                   0
+#define CDTP_SUCCESS                    0
 #define CDTP_WINSOCK_INIT_FAILED        1
 #define CDTP_SERVER_SOCK_INIT_FAILED    2
 #define CDTP_SERVER_SETSOCKOPT_FAILED   3
@@ -65,6 +65,7 @@
 #define CDTP_CLIENT_DISCONNECT_FAILED  25
 #define CDTP_HANDLE_THREAD_NOT_CLOSING 26
 #define CDTP_CLIENT_NOT_CONNECTED      27
+#define CDTP_CLIENT_SEND_FAILED        28
 
 // Global address family to use
 #ifndef CDTP_ADDRESS_FAMILY

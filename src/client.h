@@ -144,11 +144,11 @@ int cdtp_client_port(CDTPClient *client);
 /*
  * Send data to the server
  * 
- * client:   the client object
- * data:     the data to send
- * data_len: the size of the data
+ * client:    the client object
+ * data:      the data to send
+ * data_size: the size of the data
  */
-void cdtp_client_send(CDTPClient *client, void *data, size_t data_len);
+void cdtp_client_send(CDTPClient *client, void *data, size_t data_size);
 
 // Call the handle function
 void _cdtp_client_call_handle(CDTPClient *client);
@@ -157,7 +157,7 @@ void _cdtp_client_call_handle(CDTPClient *client);
 void _cdtp_client_handle(CDTPClient *client);
 
 // Call the on_recv function
-void _cdtp_client_call_on_recv(CDTPClient *client, void *data, size_t data_len);
+void _cdtp_client_call_on_recv(CDTPClient *client, void *data, size_t data_size);
 
 // Call the on_connect function
 void _cdtp_client_call_on_disconnected(CDTPClient *client);

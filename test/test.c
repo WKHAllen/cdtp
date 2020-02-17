@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <assert.h>
 
-void server_on_recv(int client_id, void *data, size_t data_len, void *arg)
+void server_on_recv(int client_id, void *data, size_t data_size, void *arg)
 {
-    printf("Received data from client #%d: %s (size %ld)\n", client_id, (char *)data, data_len);
+    printf("Received data from client #%d: %s (size %ld)\n", client_id, (char *)data, data_size);
 }
 
 void server_on_connect(int client_id, void *arg)
@@ -17,9 +17,9 @@ void server_on_disconnect(int client_id, void *arg)
     printf("Client #%d disconnected\n", client_id);
 }
 
-void client_on_recv(void *data, size_t data_len, void *arg)
+void client_on_recv(void *data, size_t data_size, void *arg)
 {
-    printf("Received from server: %s (size %ld)\n", (char *)data, data_len);
+    printf("Received from server: %s (size %ld)\n", (char *)data, data_size);
 }
 
 void client_on_disconnected(void *arg)

@@ -524,12 +524,12 @@ void _cdtp_server_serve(CDTPServer *server)
     }
 }
 
-void _cdtp_server_call_on_recv(CDTPServer *server, int client_id, void *data, size_t data_len)
+void _cdtp_server_call_on_recv(CDTPServer *server, int client_id, void *data, size_t data_size)
 {
     if (server->event_blocking == CDTP_TRUE)
-        (*(server->on_recv))(client_id, data, data_len, server->on_recv_arg);
+        (*(server->on_recv))(client_id, data, data_size, server->on_recv_arg);
     else
-        _cdtp_start_thread_on_recv_server(server->on_recv, client_id, data, data_len, server->on_recv_arg);
+        _cdtp_start_thread_on_recv_server(server->on_recv, client_id, data, data_size, server->on_recv_arg);
 }
 
 void _cdtp_server_call_on_connect(CDTPServer *server, int client_id)

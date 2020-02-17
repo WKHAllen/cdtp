@@ -270,9 +270,19 @@ EXPORT int cdtp_client_port(CDTPClient *client)
     return ntohs(client->sock->address.sin_port);
 }
 
-EXPORT void cdtp_client_send(CDTPClient *client, void *data, size_t data_len)
+EXPORT void cdtp_client_send(CDTPClient *client, void *data, size_t data_size)
 {
-    // TODO: implement this function
+    // Make sure the client is connected
+    if (client->connected != CDTP_TRUE)
+    {
+        _cdtp_set_error(CDTP_CLIENT_NOT_CONNECTED, 0);
+        return;
+    }
+
+    char *message = _cdtp_construct_message(data, data_size);
+    if (send(client->sock->sock, message, CDTP_LENSIZE + data_size, 0) < 0)
+        _cdtp_set_err(CDTP_CLIENT_SEND_FAILED);
+    free(message);
 }
 
 void _cdtp_client_call_handle(CDTPClient *client)
@@ -285,7 +295,7 @@ void _cdtp_client_handle(CDTPClient *client)
     // TODO: implement this function
 }
 
-void _cdtp_client_call_on_recv(CDTPClient *client, void *data, size_t data_len)
+void _cdtp_client_call_on_recv(CDTPClient *client, void *data, size_t data_size)
 {
     // TODO: implement this function
 }
