@@ -497,28 +497,72 @@ void _cdtp_server_serve(CDTPServer *server)
 #ifdef _WIN32
                 int recv_code = recv(server->clients[i]->sock, size_buffer, CDTP_LENSIZE, 0);
                 if (recv_code == SOCKET_ERROR)
-#else
-                int recv_code = read(server->clients[i]->sock, size_buffer, CDTP_LENSIZE);
-                if (recv_code == 0)
-#endif
+                {
+                    int err_code = WSAGetLastError();
+                    if (err_code == WSAECONNRESET)
+                    {
+                        _cdtp_server_disconnect_sock(server, i);
+                        _cdtp_server_call_on_disconnect(server, i);
+                    }
+                    else
+                    {
+                        _cdtp_set_error(CDTP_SOCKET_RECV_FAILED, err_code);
+                        return;
+                    }
+                }
+                else if (recv_code == 0)
+                {
                     _cdtp_server_disconnect_sock(server, i);
+                    _cdtp_server_call_on_disconnect(server, i);
+                }
                 else
                 {
                     size_t msg_size = _cdtp_ascii_to_dec(size_buffer);
                     char *buffer = malloc(msg_size * sizeof(char));
-#ifdef _WIN32
                     recv_code = recv(server->clients[i]->sock, size_buffer, msg_size, 0);
                     if (recv_code == SOCKET_ERROR)
+                    {
+                        int err_code = WSAGetLastError();
+                        if (err_code == WSAECONNRESET)
+                        {
+                            _cdtp_server_disconnect_sock(server, i);
+                            _cdtp_server_call_on_disconnect(server, i);
+                        }
+                        else
+                        {
+                            _cdtp_set_error(CDTP_SOCKET_RECV_FAILED, err_code);
+                            return;
+                        }
+                    }
+                    else if (recv_code == 0)
+                    {
+                        _cdtp_server_disconnect_sock(server, i);
+                        _cdtp_server_call_on_disconnect(server, i);
+                    }
+                    else
+                        _cdtp_server_call_on_recv(server, i, (void *)buffer, msg_size);
+                }
 #else
+                int recv_code = read(server->clients[i]->sock, size_buffer, CDTP_LENSIZE);
+                if (recv_code == 0)
+                {
+                    _cdtp_server_disconnect_sock(server, i);
+                    _cdtp_server_call_on_disconnect(server, i);
+                }
+                else
+                {
+                    size_t msg_size = _cdtp_ascii_to_dec(size_buffer);
+                    char *buffer = malloc(msg_size * sizeof(char));
                     recv_code = read(server->clients[i]->sock, size_buffer, msg_size);
                     if (recv_code == 0)
-#endif
-                        _cdtp_server_disconnect_sock(server, i);
-                    else
                     {
-                        _cdtp_server_call_on_recv(server, i, (void *)buffer, msg_size);
+                        _cdtp_server_disconnect_sock(server, i);
+                        _cdtp_server_call_on_disconnect(server, i);
                     }
+                    else
+                        _cdtp_server_call_on_recv(server, i, (void *)buffer, msg_size);
                 }
+#endif
             }
         }
     }
