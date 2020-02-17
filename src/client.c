@@ -287,7 +287,10 @@ EXPORT void cdtp_client_send(CDTPClient *client, void *data, size_t data_size)
 
 void _cdtp_client_call_handle(CDTPClient *client)
 {
-    // TODO: implement this function
+    if (client->blocking == CDTP_TRUE)
+        _cdtp_client_handle(client);
+    else
+        client->handle_thread = _cdtp_start_handle_thread(_cdtp_client_handle, client);
 }
 
 void _cdtp_client_handle(CDTPClient *client)

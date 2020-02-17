@@ -18,8 +18,9 @@
 #endif
 
 // Type definitions
-typedef struct CDTPEventFunc CDTPEventFunc;
-typedef struct CDTPServeFunc CDTPServeFunc;
+typedef struct CDTPEventFunc  CDTPEventFunc;
+typedef struct CDTPServeFunc  CDTPServeFunc;
+typedef struct CDTPHandleFunc CDTPHandleFunc;
 
 // Event thread function
 #ifdef _WIN32
@@ -41,7 +42,7 @@ void _cdtp_start_thread_on_connect(void (*func)(int, void *), int client_id, voi
 void _cdtp_start_thread_on_disconnect(void (*func)(int, void *), int client_id, void *arg);
 
 // Call on_recv (client)
-void _cdtp_start_thread_on_recv_client(void (*func)(void *, void *), void *data, void *arg);
+void _cdtp_start_thread_on_recv_client(void (*func)(void *, size_t, void *), void *data, size_t data_size, void *arg);
 
 // Call on_disconnected (client)
 void _cdtp_start_thread_on_disconnected(void (*func)(void *), void *arg);
@@ -60,6 +61,18 @@ HANDLE _cdtp_start_serve_thread(void (*func)(CDTPServer *), CDTPServer *server);
 pthread_t _cdtp_start_serve_thread(void (*func)(CDTPServer *), CDTPServer *server);
 #endif
 
-// TODO: function to start client handle thread
+// Handle function thread
+#ifdef _WIN32
+DWORD WINAPI _cdtp_handle_thread(LPVOID func_info);
+#else
+void *_cdtp_handle_thread(void *func_info);
+#endif
+
+// Call the handle function using a thread
+#ifdef _WIN32
+HANDLE _cdtp_start_handle_thread(void (*func)(CDTPClient *), CDTPClient *client);
+#else
+pthread_t _cdtp_start_handle_thread(void (*func)(CDTPClient *), CDTPClient *client);
+#endif
 
 #endif // CDTP_THREADING_H
