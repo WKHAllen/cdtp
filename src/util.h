@@ -161,7 +161,10 @@ char *_cdtp_construct_message(void *data, size_t data_size);
 // Deconstruct a message
 void *_cdtp_deconstruct_message(char *message, size_t *data_size);
 
-// Wait function
-void _cdtp_wait(double seconds);
+/*
+ * Cross platform wait function
+ * Useful for waiting short amounts of time between connecting to a server, sending data, disconnecting, etc.
+ */
+void cdtp_sleep(double seconds);
 
 #endif // CDTP_UTIL_H

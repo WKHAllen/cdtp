@@ -130,7 +130,7 @@ void *_cdtp_deconstruct_message(char *message, size_t *data_size)
     return (void *)data;
 }
 
-void _cdtp_wait(double seconds)
+EXPORT void cdtp_sleep(double seconds)
 {
 #ifdef _WIN32
     Sleep(seconds * 1000);

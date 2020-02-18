@@ -263,7 +263,7 @@ EXPORT void cdtp_server_stop(CDTPServer *server)
 		_cdtp_set_err(CDTP_SERVER_STOP_FAILED);
 		return;
 	}
-    _cdtp_wait(0.01);
+    cdtp_sleep(0.01);
     close(client_sock);
 
     if (close(server->sock->sock) != 0)
