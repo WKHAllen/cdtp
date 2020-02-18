@@ -129,3 +129,15 @@ void *_cdtp_deconstruct_message(char *message, size_t *data_size)
         data[i] = message[i + CDTP_LENSIZE];
     return (void *)data;
 }
+
+void _cdtp_wait(double seconds)
+{
+#ifdef _WIN32
+    Sleep(seconds * 1000);
+#else
+    struct timespec ts;
+    ts.tv_sec = seconds;
+    ts.tv_nsec = (int)(seconds * 1000000) % 1000000;
+    nanosleep(&ts, NULL);
+#endif
+}

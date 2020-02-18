@@ -246,6 +246,26 @@ EXPORT void cdtp_server_stop(CDTPServer *server)
                 _cdtp_set_err(CDTP_SERVER_STOP_FAILED);
                 return;
             }
+    
+    // Force the select function to return by attempting to connect
+    struct sockaddr_in addr;
+    addr.sin_addr.s_addr = server->sock->address.sin_addr.s_addr;
+    addr.sin_family = server->sock->address.sin_family;
+    addr.sin_port = server->sock->address.sin_port;
+    int client_sock = socket(CDTP_ADDRESS_FAMILY , SOCK_STREAM , 0);
+	if (client_sock == -1)
+	{
+		_cdtp_set_err(CDTP_SERVER_STOP_FAILED);
+        return;
+	}
+    if (connect(client_sock , (struct sockaddr *)&addr , sizeof(addr)) < 0)
+	{
+		_cdtp_set_err(CDTP_SERVER_STOP_FAILED);
+		return;
+	}
+    _cdtp_wait(0.01);
+    close(client_sock);
+
     if (close(server->sock->sock) != 0)
     {
         _cdtp_set_err(CDTP_SERVER_STOP_FAILED);
@@ -432,6 +452,10 @@ void _cdtp_server_serve(CDTPServer *server)
 
         // Wait for activity
         activity = select(max_sd + 1, &read_socks, NULL, NULL, NULL);
+
+        // Check if the server has been stopped
+        if (server->serving != CDTP_TRUE)
+            return;
 
         // Check for select errors
         if (activity < 0)
