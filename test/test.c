@@ -16,7 +16,7 @@ void wait(double seconds)
 #else
     struct timespec ts;
     ts.tv_sec = seconds;
-    ts.tv_nsec = ((int)(seconds * 1000) % 1000) * 1000000;
+    ts.tv_nsec = (int)(seconds * 1000000) % 1000000;
     nanosleep(&ts, NULL);
 #endif
 }
@@ -97,7 +97,6 @@ int main(int argc, char **argv)
     int port = cdtp_server_port(server);
     printf("IP address: %s\n", ip_address);
     printf("Port:       %d\n", port);
-    free(ip_address);
 
     // Unregister error event
     cdtp_on_error_clear();
@@ -117,7 +116,8 @@ int main(int argc, char **argv)
                                      CDTP_FALSE, CDTP_FALSE);
 
     // Client connect
-    cdtp_client_connect_default_port(client, host);
+    cdtp_client_connect_default_port(client, ip_address);
+    free(ip_address);
 
     // Get IP address and port
     char *client_ip_address = cdtp_client_host(client);
@@ -125,6 +125,8 @@ int main(int argc, char **argv)
     printf("IP address: %s\n", client_ip_address);
     printf("Port:       %d\n", client_port);
     free(client_ip_address);
+
+    wait(wait_time);
 
     // Client send
     char *client_message = "Hello, server.";
@@ -139,14 +141,13 @@ int main(int argc, char **argv)
     // Client disconnect
     cdtp_client_disconnect(client);
 
-    // Unregister error event
-    cdtp_on_error_clear();
-
     wait(wait_time);
 
     // Server stop
     cdtp_server_stop(server);
-    check_err();
+
+    // Unregister error event
+    cdtp_on_error_clear();
 
     // Test that server cannot be restarted
     cdtp_server_start_default_port(server, host);

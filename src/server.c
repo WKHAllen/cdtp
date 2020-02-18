@@ -431,7 +431,7 @@ void _cdtp_server_serve(CDTPServer *server)
         }
 
         // Wait for activity
-        activity = select(max_sd, &read_socks, NULL, NULL, NULL);
+        activity = select(max_sd + 1, &read_socks, NULL, NULL, NULL);
 
         // Check for select errors
         if (activity < 0)

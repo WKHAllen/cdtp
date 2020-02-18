@@ -209,7 +209,7 @@ EXPORT void cdtp_client_disconnect(CDTPClient *client)
     // Free memory
     free(client->sock);
     free(client);
-    client->done = CDTP_FALSE;
+    client->done = CDTP_TRUE;
 }
 
 EXPORT int cdtp_client_connected(CDTPClient *client)
@@ -295,7 +295,10 @@ void _cdtp_client_call_handle(CDTPClient *client)
 
 void _cdtp_client_handle(CDTPClient *client)
 {
-    // TODO: implement this function
+    while (client->connected == CDTP_TRUE)
+    {
+        // TODO: implement this function
+    }
 }
 
 void _cdtp_client_call_on_recv(CDTPClient *client, void *data, size_t data_size)
