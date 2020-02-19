@@ -11,7 +11,6 @@
 #include <stddef.h>
 #include <string.h>
 #include <math.h>
-#include <fcntl.h>
 
 #ifdef _WIN32
     #include <Windows.h>
@@ -72,7 +71,6 @@
 #define CDTP_CLIENT_NOT_CONNECTED       30
 #define CDTP_CLIENT_SEND_FAILED         31
 #define CDTP_CLIENT_RECV_FAILED         32
-#define CDTP_CLIENT_SET_BLOCKING_FAILED 33
 
 // Global address family to use
 #ifndef CDTP_ADDRESS_FAMILY
