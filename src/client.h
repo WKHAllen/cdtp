@@ -162,4 +162,11 @@ void _cdtp_client_call_on_recv(CDTPClient *client, void *data, size_t data_size)
 // Call the on_connect function
 void _cdtp_client_call_on_disconnected(CDTPClient *client);
 
+// Set a socket to blocking or not
+#ifdef _WIN32
+void _cdtp_client_set_blocking(SOCKET sock, int blocking);
+#else
+void _cdtp_client_set_blocking(int sock, int blocking);
+#endif
+
 #endif // CDTP_CLIENT_H

@@ -489,6 +489,7 @@ void _cdtp_client_call_handle(CDTPClient *client)
 
 void _cdtp_client_handle(CDTPClient *client)
 {
+    _cdtp_client_set_blocking(client->sock->sock, CDTP_FALSE);
     char size_buffer[CDTP_LENSIZE];
 
     while (client->connected == CDTP_TRUE)
@@ -517,9 +518,9 @@ void _cdtp_client_handle(CDTPClient *client)
         }
         else if (recv_code == 0)
         {
-            cdtp_client_disconnect(client);
-            _cdtp_client_call_on_disconnected(client);
-            return;
+            // cdtp_client_disconnect(client);
+            // _cdtp_client_call_on_disconnected(client);
+            // return;
         }
         else
         {
@@ -554,9 +555,9 @@ void _cdtp_client_handle(CDTPClient *client)
         int recv_code = read(client->sock->sock, size_buffer, CDTP_LENSIZE);
         if (recv_code == 0)
         {
-            cdtp_client_disconnect(client);
-            _cdtp_client_call_on_disconnected(client);
-            return;
+            // cdtp_client_disconnect(client);
+            // _cdtp_client_call_on_disconnected(client);
+            // return;
         }
         else
         {
@@ -591,3 +592,25 @@ void _cdtp_client_call_on_disconnected(CDTPClient *client)
     else
         _cdtp_start_thread_on_disconnected(client->on_disconnected, client->on_disconnected_arg);
 }
+
+#ifdef _WIN32
+void _cdtp_client_set_blocking(SOCKET sock, int blocking)
+{
+    unsigned long mode = blocking;
+    if (ioctlsocket(sock, FIONBIO, &mode) != 0)
+        _cdtp_set_err(CDTP_CLIENT_SET_BLOCKING_FAILED);
+}
+#else
+void _cdtp_client_set_blocking(int sock, int blocking)
+{
+    int flags = fcntl(sock, F_GETFL, 0);
+    if (flags == -1)
+    {
+        _cdtp_set_err(CDTP_CLIENT_SET_BLOCKING_FAILED);
+        return;
+    }
+    flags = (blocking == CDTP_TRUE) ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
+    if (fcntl(sock, F_SETFL, flags) != 0)
+        _cdtp_set_err(CDTP_CLIENT_SET_BLOCKING_FAILED);
+}
+#endif
