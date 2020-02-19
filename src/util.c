@@ -137,7 +137,7 @@ EXPORT void cdtp_sleep(double seconds)
 #else
     struct timespec ts;
     ts.tv_sec = seconds;
-    ts.tv_nsec = (int)(seconds * 1000000) % 1000000;
+    ts.tv_nsec = (int)(seconds * 1000000000) % 1000000000;
     nanosleep(&ts, NULL);
 #endif
 }
