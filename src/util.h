@@ -58,7 +58,7 @@
 #define CDTP_HANDLE_THREAD_START_FAILED 17
 #define CDTP_SELECT_FAILED              18
 #define CDTP_SOCKET_ACCEPT_FAILED       19
-#define CDTP_SOCKET_RECV_FAILED         20
+#define CDTP_SERVER_RECV_FAILED         20
 #define CDTP_STATUS_SEND_FAILED         21
 #define CDTP_SERVER_FULL                22
 #define CDTP_CLIENT_SOCK_INIT_FAILED    23
@@ -70,6 +70,7 @@
 #define CDTP_HANDLE_THREAD_NOT_CLOSING  29
 #define CDTP_CLIENT_NOT_CONNECTED       30
 #define CDTP_CLIENT_SEND_FAILED         31
+#define CDTP_CLIENT_RECV_FAILED         32
 
 // Global address family to use
 #ifndef CDTP_ADDRESS_FAMILY

@@ -3,24 +3,6 @@
 #include <string.h>
 #include <assert.h>
 
-#ifdef _WIN32
-    #include <windows.h>
-#else
-    #include <time.h>
-#endif
-
-void wait(double seconds)
-{
-#ifdef _WIN32
-    Sleep(seconds * 1000);
-#else
-    struct timespec ts;
-    ts.tv_sec = seconds;
-    ts.tv_nsec = (int)(seconds * 1000000) % 1000000;
-    nanosleep(&ts, NULL);
-#endif
-}
-
 char *voidp_to_str(void *data, size_t data_size)
 {
     char *data_str = (char *)data;
@@ -51,8 +33,10 @@ void server_on_disconnect(int client_id, void *arg)
 
 void client_on_recv(void *data, size_t data_size, void *arg)
 {
-    printf("Received from server: %s (size %ld)\n", (char *)data, data_size);
+    char *message = voidp_to_str(data, data_size);
+    printf("Received data from server: %s (size %ld)\n", message, data_size);
     free(data);
+    free(message);
 }
 
 void client_on_disconnected(void *arg)
@@ -108,7 +92,7 @@ int main(int argc, char **argv)
     // Register error event
     cdtp_on_error(on_err, NULL);
 
-    wait(wait_time);
+    cdtp_sleep(wait_time);
 
     // Client initialization
     CDTPClient *client = cdtp_client(client_on_recv, client_on_disconnected,
@@ -126,22 +110,24 @@ int main(int argc, char **argv)
     printf("Port:       %d\n", client_port);
     free(client_ip_address);
 
-    wait(wait_time);
+    cdtp_sleep(wait_time);
 
     // Client send
     char *client_message = "Hello, server.";
     cdtp_client_send(client, client_message, strlen(client_message));
 
-    // Server send
-    // char *server_message = "Hello, client #0.";
-    // cdtp_server_send(server, 0, server_message, strlen(server_message));
+    cdtp_sleep(wait_time);
 
-    wait(wait_time);
+    // Server send
+    char *server_message = "Hello, client #0.";
+    cdtp_server_send(server, 0, server_message, strlen(server_message));
+
+    cdtp_sleep(wait_time);
 
     // Client disconnect
     cdtp_client_disconnect(client);
 
-    wait(wait_time);
+    cdtp_sleep(wait_time);
 
     // Server stop
     cdtp_server_stop(server);

@@ -530,7 +530,7 @@ void _cdtp_server_serve(CDTPServer *server)
                     }
                     else
                     {
-                        _cdtp_set_error(CDTP_SOCKET_RECV_FAILED, err_code);
+                        _cdtp_set_error(CDTP_SERVER_RECV_FAILED, err_code);
                         return;
                     }
                 }
@@ -554,7 +554,7 @@ void _cdtp_server_serve(CDTPServer *server)
                         }
                         else
                         {
-                            _cdtp_set_error(CDTP_SOCKET_RECV_FAILED, err_code);
+                            _cdtp_set_error(CDTP_SERVER_RECV_FAILED, err_code);
                             return;
                         }
                     }
