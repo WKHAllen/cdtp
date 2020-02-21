@@ -594,26 +594,35 @@ void _cdtp_server_serve(CDTPServer *server)
 
 void _cdtp_server_call_on_recv(CDTPServer *server, int client_id, void *data, size_t data_size)
 {
-    if (server->event_blocking == CDTP_TRUE)
-        (*(server->on_recv))(client_id, data, data_size, server->on_recv_arg);
-    else
-        _cdtp_start_thread_on_recv_server(server->on_recv, client_id, data, data_size, server->on_recv_arg);
+    if (server->on_recv != NULL)
+    {
+        if (server->event_blocking == CDTP_TRUE)
+            (*(server->on_recv))(client_id, data, data_size, server->on_recv_arg);
+        else
+            _cdtp_start_thread_on_recv_server(server->on_recv, client_id, data, data_size, server->on_recv_arg);
+    }
 }
 
 void _cdtp_server_call_on_connect(CDTPServer *server, int client_id)
 {
-    if (server->event_blocking == CDTP_TRUE)
-        (*(server->on_connect))(client_id, server->on_connect_arg);
-    else
-        _cdtp_start_thread_on_connect(server->on_connect, client_id, server->on_connect_arg);
+    if (server->on_connect != NULL)
+    {
+        if (server->event_blocking == CDTP_TRUE)
+            (*(server->on_connect))(client_id, server->on_connect_arg);
+        else
+            _cdtp_start_thread_on_connect(server->on_connect, client_id, server->on_connect_arg);
+    }
 }
 
 void _cdtp_server_call_on_disconnect(CDTPServer *server, int client_id)
 {
-    if (server->event_blocking == CDTP_TRUE)
-        (*(server->on_disconnect))(client_id, server->on_disconnect_arg);
-    else
-        _cdtp_start_thread_on_disconnect(server->on_disconnect, client_id, server->on_disconnect_arg);
+    if (server->on_disconnect != NULL)
+    {
+        if (server->event_blocking == CDTP_TRUE)
+            (*(server->on_disconnect))(client_id, server->on_disconnect_arg);
+        else
+            _cdtp_start_thread_on_disconnect(server->on_disconnect, client_id, server->on_disconnect_arg);
+    }
 }
 
 int _cdtp_server_new_client_id(CDTPServer *server)

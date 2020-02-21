@@ -9,6 +9,7 @@
 #include "defs.h"
 #include "util.h"
 #include "threading.h"
+#include "server.h"
 
 /*
  * Client creation/initialization

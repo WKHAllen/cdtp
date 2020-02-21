@@ -388,6 +388,41 @@ EXPORT void cdtp_client_disconnect(CDTPClient *client)
         return;
     }
 
+    // Connect to the local server to simulate activity
+    char *local_server_host = cdtp_server_host(client->local_server);
+    int local_server_port = cdtp_server_port(client->local_server);
+
+    int local_client_sock;
+    struct sockaddr_in local_client_address;
+
+    if ((local_client_sock = socket(CDTP_ADDRESS_FAMILY, SOCK_STREAM, 0)) == 0)
+    {
+        _cdtp_set_err(CDTP_CLIENT_SOCK_INIT_FAILED);
+        return;
+    }
+    
+    if (inet_pton(CDTP_ADDRESS_FAMILY, local_server_host, &(local_client_address)) != 1)
+    {
+        _cdtp_set_err(CDTP_CLIENT_ADDRESS_FAILED);
+        return;
+    }
+    local_client_address.sin_family = CDTP_ADDRESS_FAMILY;
+    local_client_address.sin_port = htons(local_server_port);
+
+    if (connect(local_client_sock, (struct sockaddr *)&(local_client_address), sizeof(local_client_address)) < 0)
+    {
+        _cdtp_set_err(CDTP_CLIENT_CONNECT_FAILED);
+        return;
+    }
+
+    if (close(local_client_sock) != 0)
+    {
+        _cdtp_set_err(CDTP_CLIENT_DISCONNECT_FAILED);
+        return;
+    }
+
+    free(local_server_host);
+
     // Wait for threads to exit
     if (client->blocking != CDTP_TRUE)
     {
@@ -489,11 +524,11 @@ void _cdtp_client_call_handle(CDTPClient *client)
 
 void _cdtp_client_handle(CDTPClient *client)
 {
+#ifdef _WIN32
     char size_buffer[CDTP_LENSIZE];
 
     while (client->connected == CDTP_TRUE)
     {
-#ifdef _WIN32
         int recv_code = recv(client->sock->sock, size_buffer, CDTP_LENSIZE, 0);
 
         // Check if the client has disconnected
@@ -551,6 +586,37 @@ void _cdtp_client_handle(CDTPClient *client)
                 _cdtp_client_call_on_recv(client, (void *)buffer, msg_size);
         }
 #else
+    fd_set read_socks;
+    client->local_server = cdtp_server_default(1, NULL, NULL, NULL, NULL, NULL, NULL);
+    cdtp_server_start(client->local_server, CDTP_LOCAL_SERVER_HOST, CDTP_LOCAL_SERVER_PORT);
+    int max_sd = client->sock->sock > client->local_server->sock->sock ? client->sock->sock : client->local_server->sock->sock;
+    int activity;
+    char size_buffer[CDTP_LENSIZE];
+
+    while (client->connected == CDTP_TRUE)
+    {
+        // Set sockets for select
+        FD_ZERO(&read_socks);
+        FD_SET(client->sock->sock, &read_socks);
+        FD_SET(client->local_server->sock->sock, &read_socks);
+
+        // Wait for activity
+        activity = select(max_sd + 1, &read_socks, NULL, NULL, NULL);
+
+        // Check if the client has disconnected
+        if (client->connected != CDTP_TRUE)
+        {
+            cdtp_server_stop(client->local_server);
+            return;
+        }
+
+        // Check for select errors
+        if (activity < 0)
+        {
+            _cdtp_set_err(CDTP_SELECT_FAILED);
+            return;
+        }
+
         int recv_code = read(client->sock->sock, size_buffer, CDTP_LENSIZE);
         if (recv_code == 0)
         {
@@ -572,22 +638,28 @@ void _cdtp_client_handle(CDTPClient *client)
             else
                 _cdtp_client_call_on_recv(client, (void *)buffer, msg_size);
         }
-#endif
     }
+#endif
 }
 
 void _cdtp_client_call_on_recv(CDTPClient *client, void *data, size_t data_size)
 {
-    if (client->event_blocking == CDTP_TRUE)
-        (*(client->on_recv))(data, data_size, client->on_recv_arg);
-    else
-        _cdtp_start_thread_on_recv_client(client->on_recv, data, data_size, client->on_recv_arg);
+    if (client->on_recv != NULL)
+    {
+        if (client->event_blocking == CDTP_TRUE)
+            (*(client->on_recv))(data, data_size, client->on_recv_arg);
+        else
+            _cdtp_start_thread_on_recv_client(client->on_recv, data, data_size, client->on_recv_arg);
+    }
 }
 
 void _cdtp_client_call_on_disconnected(CDTPClient *client)
 {
-    if (client->event_blocking == CDTP_TRUE)
-        (*(client->on_disconnected))(client->on_disconnected_arg);
-    else
-        _cdtp_start_thread_on_disconnected(client->on_disconnected, client->on_disconnected_arg);
+    if (client->on_disconnected != NULL)
+    {
+        if (client->event_blocking == CDTP_TRUE)
+            (*(client->on_disconnected))(client->on_disconnected_arg);
+        else
+            _cdtp_start_thread_on_disconnected(client->on_disconnected, client->on_disconnected_arg);
+    }
 }
