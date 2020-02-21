@@ -585,6 +585,7 @@ void _cdtp_client_handle(CDTPClient *client)
             else
                 _cdtp_client_call_on_recv(client, (void *)buffer, msg_size);
         }
+    }
 #else
     fd_set read_socks;
     client->local_server = cdtp_server_default(1, NULL, NULL, NULL, NULL, NULL, NULL);
