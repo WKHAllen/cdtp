@@ -50,6 +50,14 @@ void cdtp_on_error_clear(void);
 
 Unregister a function set by `cdtp_on_error`.
 
+### cdtp_sleep
+
+```c
+void cdtp_sleep(double seconds);
+```
+
+While not necessarily a function that has to do with checking errors, this can be useful for avoiding them. It can sometimes be necessary to wait between network operations, such as connect, send, etc. This function provides a cross platform way to do this.
+
 ## Server
 
 CDTP provides the `CDTPServer` type, which represents a network server. The library also contains a variety of functions to manipulate the server.
