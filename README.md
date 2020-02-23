@@ -6,6 +6,35 @@ CDTP is a cross platform networking library written in C. It is based on [dtplib
 
 The library is written and tested on Windows and Linux. It is expected to work on macOS and related platforms as well.
 
+## Important information
+
+Here are a few things you may want to know about.
+
+### Internet Protocol version
+
+The default version is IPv4, however one can use IPv6 by including the following line before including the cdtp header file:
+
+```c
+#define CDTP_ADDRESS_FAMILY AF_INET6
+```
+
+### Default port
+
+The default port is 29275. This can be changed by including the following line before including the cdtp header file, replacing `MY_PORT` with the desired port:
+
+```c
+#define CDTP_PORT MY_PORT
+```
+
+### Client local server
+
+On Unix, a local CDTP server is created with the client object to force the select function unblock. This server will run at the address `127.0.0.1` (IPv6: `::1`) and `29276` (the port immediately after the default port). Both of these can be changed by defining them to the desired values before including the cdtp header file:
+
+```c
+#define CDTP_LOCAL_SERVER_HOST MY_LOCAL_SERVER_HOST
+#define CDTP_LOCAL_SERVER_PORT MY_LOCAL_SERVER_PORT
+```
+
 ## Checking for errors
 
 Errors can occur in libraries CDTP depends on. Because of this, CDTP provides several ways of checking if errors have occurred.

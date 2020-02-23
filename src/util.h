@@ -93,8 +93,17 @@
     #define CDTP_PORT 29275
 #endif
 
-#define CDTP_LOCAL_SERVER_HOST "127.0.0.1"
-#define CDTP_LOCAL_SERVER_PORT (CDTP_PORT + 1)
+// Default CDTP local server host and port
+#ifndef CDTP_LOCAL_SERVER_HOST
+    #if (CDTP_ADDRESS_FAMILY == AF_INET)
+        #define CDTP_LOCAL_SERVER_HOST "127.0.0.1"
+    #else
+        #define CDTP_LOCAL_SERVER_HOST "::1"
+    #endif
+#endif
+#ifndef CDTP_LOCAL_SERVER_PORT
+    #define CDTP_LOCAL_SERVER_PORT (CDTP_PORT + 1)
+#endif
 
 // Length of the size portion of each message
 #define CDTP_LENSIZE 5
