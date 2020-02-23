@@ -175,7 +175,7 @@ void cdtp_server_stop(CDTPServer *server);
 
 Stop a CDTP server.
 
-### Sending data
+### Sending data to clients
 
 CDTP provides two functions for sending data to clients.
 
@@ -229,7 +229,7 @@ Get the server IP address as a string. `free()` will need to be called on the st
 int cdtp_server_port(CDTPServer *server);
 ```
 
-Get the port the server is running on.
+Get the server port as an integer.
 
 #### cdtp_server_remove_client
 
@@ -241,4 +241,155 @@ Disconnect a client, providing the client's ID.
 
 ## Client
 
-Documentation on client types and functions will be provided once development on them is complete.
+CDTP provides the `CDTPClient` type, which represents a network client. The library also contains a variety of functions to manipulate the client.
+
+### Creating a client
+
+First, you'll want to create a client.
+
+#### cdtp_client
+
+```c
+CDTPClient *cdtp_client(void (*on_recv        )(void *, size_t, void *),
+                        void (*on_disconnected)(void *),
+                        void *on_recv_arg, void *on_disconnected_arg,
+                        int blocking, int event_blocking);
+```
+
+Create a CDTPClient object.
+
+`on_recv` is a function that will be called when a data packet is received from the server. It should take three arguments: a void pointer to the data that was sent, a size_t value indicating the size of the data, and a void pointer.
+
+`on_disconnected` is a function that will be called when the client is unexpectedly disconnected from the server. It should take one argument: a void pointer.
+
+`on_recv_arg` is a void pointer to the variable that will be passed to the `on_recv` function.
+
+`on_disconnected_arg` is a void pointer to the variable that will be passed to the `on_disconnected` function.
+
+`blocking` is a boolean flag (i.e. `CDTP_FALSE` (0) or `CDTP_TRUE` (1)) that indicates whether the `cdtp_client_connect` function will block. If set to false, the client will connect to the server in a thread.
+
+`event_blocking` is a boolean flag (i.e. `CDTP_FALSE` (0) or `CDTP_TRUE` (1)) that indicates whether the event functions (i.e. `on_recv`, `on_disconnected`) will block. If set to false, the event functions will be called using threads.
+
+#### cdtp_client_default
+
+```c
+CDTPClient *cdtp_client_default(void (*on_recv        )(void *, size_t, void *),
+                                void (*on_disconnected)(void *),
+                                void *on_recv_arg, void *on_disconnected_arg);
+```
+
+Create a CDTPClient object. This function is exactly like `cdtp_client` except that the `blocking` and `event_blocking` arguments default to `CDTP_FALSE` (0).
+
+### Connecting to a server
+
+After creating a client, the next step is connecting to a server. To do this, you again have several options.
+
+#### cdtp_client_connect
+
+```c
+void cdtp_client_connect(CDTPClient *client, char *host, int port);
+```
+
+Connect to a CDTP server, given a host IP address and integer port. `host` can be either an IPv4 or IPv6 address. `port` must be a port number between 1 and 65535.
+
+#### cdtp_client_connect_host
+
+```c
+void cdtp_client_connect_host(CDTPClient *client, ULONG host, int port);
+void cdtp_client_connect_host(CDTPClient *client, in_addr_t host, int port);
+```
+
+Connect to a CDTP server. `host` is an unsigned long (i.e. `INADDR_ANY`) on Windows, and an in_addr_t structure elsewhere. `port` is an integer representing a port number.
+
+#### cdtp_client_connect_default_host
+
+```c
+void cdtp_client_connect_default_host(CDTPClient *client, int port);
+```
+
+Connect to a CDTP server, specifying the port. The host will be set to `INADDR_ANY`.
+
+#### cdtp_client_connect_default_port
+
+```c
+void cdtp_client_connect_default_port(CDTPClient *client, char *host);
+```
+
+Start a CDTP server, specifying the host as a string. The port will default to `CDTP_PORT` (29275).
+
+#### cdtp_client_connect_host_default_port
+
+```c
+void cdtp_client_connect_host_default_port(CDTPClient *client, ULONG host);
+void cdtp_client_connect_host_default_port(CDTPClient *client, in_addr_t host);
+```
+
+Connect to a CDTP server. `host` is an unsigned long (i.e. `INADDR_ANY`) on Windows, and an in_addr_t structure elsewhere. The port will default to `CDTP_PORT` (29275).
+
+#### cdtp_client_connect_default
+
+```c
+void cdtp_client_connect_default(CDTPClient *client);
+```
+
+Connect to a CDTP server using the default options. The host will be `INADDR_ANY` and port will be `CDTP_PORT` (29275).
+
+### Disconnecting from a server
+
+When one needs to disconnect from a server, one can use the following function to shut the client down.
+
+#### cdtp_client_disconnect
+
+```c
+void cdtp_client_disconnect(CDTPClient *client);
+```
+
+Disconnect from a CDTP server.
+
+### Sending data to the server
+
+CDTP provides a function for sending data to the server.
+
+#### cdtp_client_send
+
+```c
+void cdtp_client_send(CDTPClient *client, void *data, size_t data_size);
+```
+
+Send data to the server, providing a void pointer to the data, and the size of the data.
+
+### Other client functions
+
+A few other client functions are made available for various purposes.
+
+#### cdtp_client_connected
+
+```c
+int cdtp_client_connected(CDTPClient *client);
+```
+
+Check if the client is connected. Returns `CDTP_FALSE` (0) or `CDTP_TRUE` (1).
+
+#### cdtp_client_addr
+
+```c
+struct sockaddr_in cdtp_client_addr(CDTPClient *client);
+```
+
+Get the client address as a sockaddr_in structure.
+
+#### cdtp_client_host
+
+```c
+char *cdtp_client_host(CDTPClient *client);
+```
+
+Get the client IP address as a string. `free()` will need to be called on the string after it has been used.
+
+#### cdtp_client_port
+
+```c
+int cdtp_client_port(CDTPClient *client);
+```
+
+Get the client port as an integer.
