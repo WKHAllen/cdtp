@@ -252,13 +252,13 @@ EXPORT void cdtp_server_stop(CDTPServer *server)
     addr.sin_addr.s_addr = server->sock->address.sin_addr.s_addr;
     addr.sin_family = server->sock->address.sin_family;
     addr.sin_port = server->sock->address.sin_port;
-    int client_sock = socket(CDTP_ADDRESS_FAMILY , SOCK_STREAM , 0);
+    int client_sock = socket(CDTP_ADDRESS_FAMILY, SOCK_STREAM, 0);
 	if (client_sock == -1)
 	{
 		_cdtp_set_err(CDTP_SERVER_STOP_FAILED);
         return;
 	}
-    if (connect(client_sock , (struct sockaddr *)&addr , sizeof(addr)) < 0)
+    if (connect(client_sock, (struct sockaddr *)&addr, sizeof(addr)) < 0)
 	{
 		_cdtp_set_err(CDTP_SERVER_STOP_FAILED);
 		return;

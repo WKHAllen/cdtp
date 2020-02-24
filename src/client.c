@@ -414,6 +414,7 @@ EXPORT void cdtp_client_disconnect(CDTPClient *client)
         _cdtp_set_err(CDTP_CLIENT_CONNECT_FAILED);
         return;
     }
+    cdtp_sleep(0.01);
 
     if (close(local_client_sock) != 0)
     {
