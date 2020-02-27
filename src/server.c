@@ -264,7 +264,11 @@ EXPORT void cdtp_server_stop(CDTPServer *server)
         return;
     }
     cdtp_sleep(0.01);
-    close(client_sock);
+    if (close(client_sock) != 0)
+    {
+        _cdtp_set_err(CDTP_SERVER_STOP_FAILED);
+        return;
+    }
 
     if (close(server->sock->sock) != 0)
     {
