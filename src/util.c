@@ -3,44 +3,49 @@
 int CDTP_INIT = CDTP_FALSE;
 int CDTP_EXIT = CDTP_FALSE;
 
-int CDTP_ERROR       = CDTP_SUCCESS;
+int CDTP_ERROR = CDTP_SUCCESS;
 int CDTP_ERROR_UNDER = 0;
 
 int CDTP_ON_ERROR_REGISTERED = CDTP_FALSE;
-void (*CDTP_ON_ERROR)(int, int, void *);
-void *CDTP_ON_ERROR_ARG;
+void (*CDTP_ON_ERROR)(int, int, void*);
+void* CDTP_ON_ERROR_ARG;
 
 int _cdtp_init(void)
 {
-    if (CDTP_INIT != CDTP_TRUE)
-    {
+    if (CDTP_INIT != CDTP_TRUE) {
         CDTP_INIT = CDTP_TRUE;
         atexit(_cdtp_exit);
+
 #ifdef _WIN32
         WSADATA wsa;
         return WSAStartup(MAKEWORD(2, 2), &wsa);
 #else
         return 0;
 #endif
+
     }
+
     return 0;
 }
 
 void _cdtp_exit(void)
 {
-    if (CDTP_EXIT != CDTP_TRUE)
-    {
+    if (CDTP_EXIT != CDTP_TRUE) {
         CDTP_EXIT = CDTP_TRUE;
+
 #ifdef _WIN32
         WSACleanup();
 #endif
+
     }
 }
 
 EXPORT int cdtp_error(void)
 {
-    if (CDTP_ERROR == CDTP_SUCCESS)
+    if (CDTP_ERROR == CDTP_SUCCESS) {
         return CDTP_FALSE;
+    }
+
     return CDTP_TRUE;
 }
 
@@ -60,13 +65,13 @@ EXPORT int cdtp_get_underlying_error(void)
 
 void _cdtp_set_error(int cdtp_err, int underlying_err)
 {
-    if (CDTP_ON_ERROR_REGISTERED != CDTP_TRUE)
-    {
+    if (CDTP_ON_ERROR_REGISTERED != CDTP_TRUE) {
         CDTP_ERROR = cdtp_err;
         CDTP_ERROR_UNDER = underlying_err;
     }
-    else
+    else {
         (*CDTP_ON_ERROR)(cdtp_err, underlying_err, CDTP_ON_ERROR_ARG);
+    }
 }
 
 void _cdtp_set_err(int cdtp_err)
@@ -78,7 +83,10 @@ void _cdtp_set_err(int cdtp_err)
 #endif
 }
 
-EXPORT void cdtp_on_error(void (*on_error)(int, int, void *), void *arg)
+EXPORT void cdtp_on_error(
+    void (*on_error)(int, int, void*),
+    void* arg
+)
 {
     CDTP_ON_ERROR_REGISTERED = CDTP_TRUE;
     CDTP_ON_ERROR = on_error;
@@ -90,44 +98,58 @@ EXPORT void cdtp_on_error_clear(void)
     CDTP_ON_ERROR_REGISTERED = CDTP_FALSE;
 }
 
-char *_cdtp_dec_to_ascii(size_t dec)
+char* _cdtp_dec_to_ascii(size_t dec)
 {
-    char *ascii = malloc(CDTP_LENSIZE * sizeof(char));
-    for (int i = 0; i < CDTP_LENSIZE; i++)
+    char* ascii = malloc(CDTP_LENSIZE * sizeof(char));
+
+    for (int i = 0; i < CDTP_LENSIZE; i++) {
         ascii[i] = dec / pow(256, CDTP_LENSIZE - i - 1);
+    }
+
     return ascii;
 }
 
-size_t _cdtp_ascii_to_dec(char *ascii)
+size_t _cdtp_ascii_to_dec(char* ascii)
 {
     size_t dec = 0;
-    for (int i = 0; i < CDTP_LENSIZE; i++)
+
+    for (int i = 0; i < CDTP_LENSIZE; i++) {
         dec += ascii[i] * pow(256, CDTP_LENSIZE - i - 1);
+    }
+
     return dec;
 }
 
-char *_cdtp_construct_message(void *data, size_t data_size)
+char* _cdtp_construct_message(void* data, size_t data_size)
 {
     // data_size should not be greater than 256 ^ CDTP_LENSIZE (or in this case, a tebibyte)
-    char *data_str = (char *)data;
-    char *message = malloc((CDTP_LENSIZE + data_size) * sizeof(char));
-    char *size = _cdtp_dec_to_ascii(data_size);
-    for (int i = 0; i < CDTP_LENSIZE; i++)
+    char* data_str = (char*)data;
+    char* message = malloc((CDTP_LENSIZE + data_size) * sizeof(char));
+    char* size = _cdtp_dec_to_ascii(data_size);
+
+    for (int i = 0; i < CDTP_LENSIZE; i++) {
         message[i] = size[i];
-    for (int i = 0; i < data_size; i++)
+    }
+
+    for (int i = 0; i < data_size; i++) {
         message[i + CDTP_LENSIZE] = data_str[i];
+    }
+
     free(size);
     return message;
 }
 
-void *_cdtp_deconstruct_message(char *message, size_t *data_size)
+void* _cdtp_deconstruct_message(char* message, size_t* data_size)
 {
     // only the first CDTP_LENSIZE bytes of message will be read as the size
     *data_size = _cdtp_ascii_to_dec(message);
-    char *data = malloc(*data_size * sizeof(char));
-    for (int i = 0; i < *data_size; i++)
+    char* data = malloc(*data_size * sizeof(char));
+
+    for (int i = 0; i < *data_size; i++) {
         data[i] = message[i + CDTP_LENSIZE];
-    return (void *)data;
+    }
+
+    return (void*)data;
 }
 
 EXPORT void cdtp_sleep(double seconds)

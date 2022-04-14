@@ -6,31 +6,31 @@
 #ifndef CDTP_UTIL_H
 #define CDTP_UTIL_H
 
-// Includes
+ // Includes
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
 #include <math.h>
 
 #ifdef _WIN32
-    #include <Windows.h>
-    #include <WinSock2.h>
-    #include <WS2tcpip.h>
-    #pragma comment(lib, "Ws2_32.lib")
+#include <Windows.h>
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#pragma comment(lib, "Ws2_32.lib")
 #else
-    #include <unistd.h>
-    #include <sys/socket.h>
-    #include <netinet/in.h>
-    #include <arpa/inet.h>
-    #include <errno.h>
-    #include <time.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <errno.h>
+#include <time.h>
 #endif
 
 // Export functions
 #ifdef _WIN32
-    #define EXPORT __declspec(dllexport)
+#define EXPORT __declspec(dllexport)
 #else
-    #define EXPORT __attribute__((visibility("default")))
+#define EXPORT __attribute__((visibility("default")))
 #endif
 
 // Boolean values
@@ -74,7 +74,7 @@
 
 // Global address family to use
 #ifndef CDTP_ADDRESS_FAMILY
-    #define CDTP_ADDRESS_FAMILY AF_INET
+#define CDTP_ADDRESS_FAMILY AF_INET
 #endif
 
 // INET and INET6 address string length
@@ -83,26 +83,26 @@
 
 // Global address string length
 #if (CDTP_ADDRESS_FAMILY == AF_INET)
-    #define CDTP_ADDRSTRLEN CDTP_INET_ADDRSTRLEN
+#define CDTP_ADDRSTRLEN CDTP_INET_ADDRSTRLEN
 #elif (CDTP_ADDRESS_FAMILY == AF_INET6)
-    #define CDTP_ADDRSTRLEN CDTP_INET6_ADDRSTRLEN
+#define CDTP_ADDRSTRLEN CDTP_INET6_ADDRSTRLEN
 #endif
 
 // Default CDTP port
 #ifndef CDTP_PORT
-    #define CDTP_PORT 29275
+#define CDTP_PORT 29275
 #endif
 
 // Default CDTP local server host and port
 #ifndef CDTP_LOCAL_SERVER_HOST
-    #if (CDTP_ADDRESS_FAMILY == AF_INET)
-        #define CDTP_LOCAL_SERVER_HOST "127.0.0.1"
-    #else
-        #define CDTP_LOCAL_SERVER_HOST "::1"
-    #endif
+#if (CDTP_ADDRESS_FAMILY == AF_INET)
+#define CDTP_LOCAL_SERVER_HOST "127.0.0.1"
+#else
+#define CDTP_LOCAL_SERVER_HOST "::1"
+#endif
 #endif
 #ifndef CDTP_LOCAL_SERVER_PORT
-    #define CDTP_LOCAL_SERVER_PORT (CDTP_PORT + 1)
+#define CDTP_LOCAL_SERVER_PORT (CDTP_PORT + 1)
 #endif
 
 // Length of the size portion of each message
@@ -119,8 +119,8 @@ extern int CDTP_ERROR_UNDER;
 
 // Registered function to handle errors
 extern int CDTP_ON_ERROR_REGISTERED;
-extern void (*CDTP_ON_ERROR)(int, int, void *);
-extern void *CDTP_ON_ERROR_ARG;
+extern void (*CDTP_ON_ERROR)(int, int, void*);
+extern void* CDTP_ON_ERROR_ARG;
 
 // Initialize the library
 int _cdtp_init(void);
@@ -151,11 +151,14 @@ void _cdtp_set_err(int cdtp_err);
 
 /*
  * Register a function to run when an error occurs
- * 
+ *
  * on_error: pointer to a function that will be called when an error occurs
  * arg:      a value that will be passed to the on_error function
  */
-void cdtp_on_error(void (*on_error)(int, int, void *), void *arg);
+void cdtp_on_error(
+    void (*on_error)(int, int, void*),
+    void* arg
+);
 
 /*
  * Unregister the on_error function
@@ -163,16 +166,16 @@ void cdtp_on_error(void (*on_error)(int, int, void *), void *arg);
 void cdtp_on_error_clear(void);
 
 // Convert decimal to ascii
-char *_cdtp_dec_to_ascii(size_t dec);
+char* _cdtp_dec_to_ascii(size_t dec);
 
 // Convert ascii to decimal
-size_t _cdtp_ascii_to_dec(char *ascii);
+size_t _cdtp_ascii_to_dec(char* ascii);
 
 // Construct a message
-char *_cdtp_construct_message(void *data, size_t data_size);
+char* _cdtp_construct_message(void* data, size_t data_size);
 
 // Deconstruct a message
-void *_cdtp_deconstruct_message(char *message, size_t *data_size);
+void* _cdtp_deconstruct_message(char* message, size_t* data_size);
 
 /*
  * Cross platform wait function
