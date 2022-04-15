@@ -131,7 +131,7 @@ char* _cdtp_construct_message(void* data, size_t data_size)
         message[i] = size[i];
     }
 
-    for (int i = 0; i < data_size; i++) {
+    for (size_t i = 0; i < data_size; i++) {
         message[i + CDTP_LENSIZE] = data_str[i];
     }
 
@@ -145,7 +145,7 @@ void* _cdtp_deconstruct_message(char* message, size_t* data_size)
     *data_size = _cdtp_ascii_to_dec(message);
     char* data = malloc(*data_size * sizeof(char));
 
-    for (int i = 0; i < *data_size; i++) {
+    for (size_t i = 0; i < *data_size; i++) {
         data[i] = message[i + CDTP_LENSIZE];
     }
 

@@ -13,10 +13,9 @@
 #include <math.h>
 
 #ifdef _WIN32
-#include <Windows.h>
 #include <WinSock2.h>
+#include <Windows.h>
 #include <WS2tcpip.h>
-#pragma comment(lib, "Ws2_32.lib")
 #else
 #include <unistd.h>
 #include <sys/socket.h>

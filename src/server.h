@@ -31,9 +31,9 @@
  */
 CDTPServer* cdtp_server(
   size_t max_clients,
-  void (*on_recv)(int, void*, size_t, void*),
-  void (*on_connect)(int, void*),
-  void (*on_disconnect)(int, void*),
+  void (*on_recv)(size_t, void*, size_t, void*),
+  void (*on_connect)(size_t, void*),
+  void (*on_disconnect)(size_t, void*),
   void* on_recv_arg,
   void* on_connect_arg,
   void* on_disconnect_arg,
@@ -55,9 +55,9 @@ CDTPServer* cdtp_server(
  * blocking and event_blocking are set to false
  */
 CDTPServer* cdtp_server_default(size_t max_clients,
-  void (*on_recv)(int, void*, size_t, void*),
-  void (*on_connect)(int, void*),
-  void (*on_disconnect)(int, void*),
+  void (*on_recv)(size_t, void*, size_t, void*),
+  void (*on_connect)(size_t, void*),
+  void (*on_disconnect)(size_t, void*),
   void* on_recv_arg,
   void* on_connect_arg,
   void* on_disconnect_arg
@@ -171,7 +171,7 @@ int cdtp_server_port(CDTPServer* server);
  * server:    the server object
  * client_id: the ID of the client to be removed
  */
-void cdtp_server_remove_client(CDTPServer* server, int client_id);
+void cdtp_server_remove_client(CDTPServer* server, size_t client_id);
 
 /*
  * Send data to a client
@@ -181,7 +181,7 @@ void cdtp_server_remove_client(CDTPServer* server, int client_id);
  * data:      the data to send
  * data_size: the size of the data
  */
-void cdtp_server_send(CDTPServer* server, int client_id, void* data, size_t data_size);
+void cdtp_server_send(CDTPServer* server, size_t client_id, void* data, size_t data_size);
 
 /*
  * Send data to all clients
@@ -199,16 +199,16 @@ void _cdtp_server_call_serve(CDTPServer* server);
 void _cdtp_server_serve(CDTPServer* server);
 
 // Call the on_recv function
-void _cdtp_server_call_on_recv(CDTPServer* server, int client_id, void* data, size_t data_size);
+void _cdtp_server_call_on_recv(CDTPServer* server, size_t client_id, void* data, size_t data_size);
 
 // Call the on_connect function
-void _cdtp_server_call_on_connect(CDTPServer* server, int client_id);
+void _cdtp_server_call_on_connect(CDTPServer* server, size_t client_id);
 
 // Call the on_disconnect function
-void _cdtp_server_call_on_disconnect(CDTPServer* server, int client_id);
+void _cdtp_server_call_on_disconnect(CDTPServer* server, size_t client_id);
 
 // Get the first available client ID
-int _cdtp_server_new_client_id(CDTPServer* server);
+size_t _cdtp_server_new_client_id(CDTPServer* server);
 
 // Send a client a status code
 #ifdef _WIN32
@@ -218,6 +218,6 @@ void _cdtp_server_send_status(int client_sock, int status_code);
 #endif
 
 // Disconnect a socket
-void _cdtp_server_disconnect_sock(CDTPServer* server, int client_id);
+void _cdtp_server_disconnect_sock(CDTPServer* server, size_t client_id);
 
 #endif // CDTP_SERVER_H

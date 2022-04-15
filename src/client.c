@@ -462,7 +462,7 @@ EXPORT int cdtp_client_port(CDTPClient* client)
     // Make sure the server is running
     if (client->connected != CDTP_TRUE) {
         _cdtp_set_error(CDTP_CLIENT_NOT_CONNECTED, 0);
-        return NULL;
+        return 0;
     }
 
     return ntohs(client->sock->address.sin_port);

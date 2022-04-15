@@ -99,9 +99,9 @@ First, you'll want to create a server.
 
 ```c
 CDTPServer *cdtp_server(size_t max_clients,
-                        void (*on_recv      )(int, void *, size_t, void *),
-                        void (*on_connect   )(int, void *),
-                        void (*on_disconnect)(int, void *),
+                        void (*on_recv      )(size_t, void *, size_t, void *),
+                        void (*on_connect   )(size_t, void *),
+                        void (*on_disconnect)(size_t, void *),
                         void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg,
                         int blocking, int event_blocking);
 ```
@@ -130,9 +130,9 @@ Create a CDTPServer object.
 
 ```c
 CDTPServer *cdtp_server_default(size_t max_clients,
-                                void (*on_recv      )(int, void *, size_t, void *),
-                                void (*on_connect   )(int, void *),
-                                void (*on_disconnect)(int, void *),
+                                void (*on_recv      )(size_t, void *, size_t, void *),
+                                void (*on_connect   )(size_t, void *),
+                                void (*on_disconnect)(size_t, void *),
                                 void *on_recv_arg, void *on_connect_arg, void *on_disconnect_arg);
 ```
 
@@ -211,7 +211,7 @@ CDTP provides two functions for sending data to clients.
 #### cdtp_server_send
 
 ```c
-void cdtp_server_send(CDTPServer *server, int client_id, void *data, size_t data_size);
+void cdtp_server_send(CDTPServer *server, size_t client_id, void *data, size_t data_size);
 ```
 
 Send data to a client, providing the client's ID, a void pointer to the data, and the size of the data.
@@ -263,7 +263,7 @@ Get the server port as an integer.
 #### cdtp_server_remove_client
 
 ```c
-void cdtp_server_remove_client(CDTPServer *server, int client_id);
+void cdtp_server_remove_client(CDTPServer *server, size_t client_id);
 ```
 
 Disconnect a client, providing the client's ID.
