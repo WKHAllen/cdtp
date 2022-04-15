@@ -9,8 +9,7 @@
 #include "util.h"
 
  // Socket type
-typedef struct _CDTPSocket
-{
+typedef struct _CDTPSocket {
 #ifdef _WIN32
     SOCKET sock;
 #else
@@ -20,8 +19,7 @@ typedef struct _CDTPSocket
 } CDTPSocket;
 
 // Socket server type
-typedef struct _CDTPServer
-{
+typedef struct _CDTPServer {
     size_t max_clients;
     void (*on_recv)(size_t, void*, size_t, void*);
     void (*on_connect)(size_t, void*);
@@ -45,8 +43,7 @@ typedef struct _CDTPServer
 } CDTPServer;
 
 // Socket client type
-typedef struct _CDTPClient
-{
+typedef struct _CDTPClient {
     void (*on_recv)(void*, size_t, void*);
     void (*on_disconnected)(void*);
     void* on_recv_arg;

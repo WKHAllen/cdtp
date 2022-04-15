@@ -2,16 +2,22 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <inttypes.h>
+
+#ifdef _WIN32
+#  ifdef _WIN64
+#    define PRI_SIZE_T PRIu64
+#  else
+#    define PRI_SIZE_T PRIu32
+#  endif
+#else
+#  define PRI_SIZE_T "zu"
+#endif
 
 char* voidp_to_str(void* data, size_t data_size)
 {
-    char* data_str = (char*)data;
-    char* message = malloc((data_size + 1) * sizeof(char));
-
-    for (size_t i = 0; i < data_size; i++) {
-        message[i] = data_str[i];
-    }
-
+    char* message = (char*)malloc((data_size + 1) * sizeof(char));
+    memcpy(message, data, data_size);
     message[data_size] = '\0';
     return message;
 }
@@ -19,25 +25,29 @@ char* voidp_to_str(void* data, size_t data_size)
 void server_on_recv(size_t client_id, void* data, size_t data_size, void* arg)
 {
     char* message = voidp_to_str(data, data_size);
-    printf("Received data from client #%d: %s (size %ld)\n", client_id, message, data_size);
+    printf("Received data from client #%" PRI_SIZE_T ": %s (size %" PRI_SIZE_T ")\n", client_id, message, data_size);
+    printf("Arg: %s\n", (char*)arg);
     free(data);
     free(message);
 }
 
 void server_on_connect(size_t client_id, void* arg)
 {
-    printf("Client #%d connected\n", client_id);
+    printf("Client #%" PRI_SIZE_T " connected\n", client_id);
+    printf("Arg: %s\n", (char*)arg);
 }
 
 void server_on_disconnect(size_t client_id, void* arg)
 {
-    printf("Client #%d disconnected\n", client_id);
+    printf("Client #%" PRI_SIZE_T " disconnected\n", client_id);
+    printf("Arg: %s\n", (char*)arg);
 }
 
 void client_on_recv(void* data, size_t data_size, void* arg)
 {
     char* message = voidp_to_str(data, data_size);
-    printf("Received data from server: %s (size %ld)\n", message, data_size);
+    printf("Received data from server: %s (size %" PRI_SIZE_T ")\n", message, data_size);
+    printf("Arg: %s\n", (char*)arg);
     free(data);
     free(message);
 }
@@ -45,12 +55,14 @@ void client_on_recv(void* data, size_t data_size, void* arg)
 void client_on_disconnected(void* arg)
 {
     printf("Unexpectedly disconnected from server\n");
+    printf("Arg: %s\n", (char*)arg);
 }
 
 void on_err(int cdtp_err, int underlying_err, void* arg)
 {
     printf("CDTP error:       %d\n", cdtp_err);
     printf("Underlying error: %d\n", underlying_err);
+    printf("Arg: %s\n", (char*)arg);
     exit(EXIT_FAILURE);
 }
 
@@ -61,7 +73,7 @@ void check_err(void)
     }
 }
 
-int main(int argc, char** argv)
+int main(void)
 {
     double wait_time = 0.1;
 

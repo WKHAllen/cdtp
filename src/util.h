@@ -13,23 +13,23 @@
 #include <math.h>
 
 #ifdef _WIN32
-#include <WinSock2.h>
-#include <Windows.h>
-#include <WS2tcpip.h>
+#  include <WinSock2.h>
+#  include <Windows.h>
+#  include <WS2tcpip.h>
 #else
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <errno.h>
-#include <time.h>
+#  include <unistd.h>
+#  include <sys/socket.h>
+#  include <netinet/in.h>
+#  include <arpa/inet.h>
+#  include <errno.h>
+#  include <time.h>
 #endif
 
 // Export functions
 #ifdef _WIN32
-#define EXPORT __declspec(dllexport)
+#  define EXPORT __declspec(dllexport)
 #else
-#define EXPORT __attribute__((visibility("default")))
+#  define EXPORT __attribute__((visibility("default")))
 #endif
 
 // Boolean values
@@ -73,7 +73,7 @@
 
 // Global address family to use
 #ifndef CDTP_ADDRESS_FAMILY
-#define CDTP_ADDRESS_FAMILY AF_INET
+#  define CDTP_ADDRESS_FAMILY AF_INET
 #endif
 
 // INET and INET6 address string length
@@ -82,26 +82,26 @@
 
 // Global address string length
 #if (CDTP_ADDRESS_FAMILY == AF_INET)
-#define CDTP_ADDRSTRLEN CDTP_INET_ADDRSTRLEN
+#  define CDTP_ADDRSTRLEN CDTP_INET_ADDRSTRLEN
 #elif (CDTP_ADDRESS_FAMILY == AF_INET6)
-#define CDTP_ADDRSTRLEN CDTP_INET6_ADDRSTRLEN
+#  define CDTP_ADDRSTRLEN CDTP_INET6_ADDRSTRLEN
 #endif
 
 // Default CDTP port
 #ifndef CDTP_PORT
-#define CDTP_PORT 29275
+#  define CDTP_PORT 29275
 #endif
 
 // Default CDTP local server host and port
 #ifndef CDTP_LOCAL_SERVER_HOST
-#if (CDTP_ADDRESS_FAMILY == AF_INET)
-#define CDTP_LOCAL_SERVER_HOST "127.0.0.1"
-#else
-#define CDTP_LOCAL_SERVER_HOST "::1"
-#endif
+#  if (CDTP_ADDRESS_FAMILY == AF_INET)
+#    define CDTP_LOCAL_SERVER_HOST "127.0.0.1"
+#  else
+#    define CDTP_LOCAL_SERVER_HOST "::1"
+#  endif
 #endif
 #ifndef CDTP_LOCAL_SERVER_PORT
-#define CDTP_LOCAL_SERVER_PORT (CDTP_PORT + 1)
+#  define CDTP_LOCAL_SERVER_PORT (CDTP_PORT + 1)
 #endif
 
 // Length of the size portion of each message

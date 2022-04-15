@@ -12,9 +12,9 @@
 #include <string.h>
 
 #ifdef _WIN32
-#include <Windows.h>
+#  include <Windows.h>
 #else
-#include <pthread.h>
+#  include <pthread.h>
 #endif
 
 // Type definitions
