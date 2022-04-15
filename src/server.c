@@ -102,7 +102,7 @@ EXPORT CDTPServer* cdtp_server_default(
     );
 }
 
-EXPORT void cdtp_server_start(CDTPServer* server, char* host, int port)
+EXPORT void cdtp_server_start(CDTPServer* server, char* host, unsigned short port)
 {
     // Change 'localhost' to '127.0.0.1'
     if (strcmp(host, "localhost") == 0) {
@@ -157,9 +157,9 @@ EXPORT void cdtp_server_start(CDTPServer* server, char* host, int port)
 }
 
 #ifdef _WIN32
-EXPORT void cdtp_server_start_host(CDTPServer* server, ULONG host, int port)
+EXPORT void cdtp_server_start_host(CDTPServer* server, ULONG host, unsigned short port)
 #else
-EXPORT void cdtp_server_start_host(CDTPServer* server, in_addr_t host, int port)
+EXPORT void cdtp_server_start_host(CDTPServer* server, in_addr_t host, unsigned short port)
 #endif
 {
     // Make sure the server has not been run before
@@ -196,7 +196,7 @@ EXPORT void cdtp_server_start_host(CDTPServer* server, in_addr_t host, int port)
     _cdtp_server_call_serve(server);
 }
 
-EXPORT void cdtp_server_start_default_host(CDTPServer* server, int port)
+EXPORT void cdtp_server_start_default_host(CDTPServer* server, unsigned short port)
 {
     cdtp_server_start_host(server, INADDR_ANY, port);
 }

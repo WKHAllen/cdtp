@@ -145,7 +145,7 @@ After creating a server, the next step is starting it. To do this, you again hav
 #### cdtp_server_start
 
 ```c
-void cdtp_server_start(CDTPServer *server, char *host, int port);
+void cdtp_server_start(CDTPServer *server, char *host, unsigned short port);
 ```
 
 Start a CDTP server, given a host IP address and integer port. `host` can be either an IPv4 or IPv6 address. `port` must be an unused port between 1 and 65535.
@@ -153,8 +153,8 @@ Start a CDTP server, given a host IP address and integer port. `host` can be eit
 #### cdtp_server_start_host
 
 ```c
-void cdtp_server_start_host(CDTPServer *server, ULONG     host, int port);
-void cdtp_server_start_host(CDTPServer *server, in_addr_t host, int port);
+void cdtp_server_start_host(CDTPServer *server, ULONG     host, unsigned short port);
+void cdtp_server_start_host(CDTPServer *server, in_addr_t host, unsigned short port);
 ```
 
 Start a CDTP server. `host` is an unsigned long (i.e. `INADDR_ANY`) on Windows, and an in_addr_t structure elsewhere. `port` is an integer representing an unused port.
@@ -162,7 +162,7 @@ Start a CDTP server. `host` is an unsigned long (i.e. `INADDR_ANY`) on Windows, 
 #### cdtp_server_start_default_host
 
 ```c
-void cdtp_server_start_default_host(CDTPServer *server, int port);
+void cdtp_server_start_default_host(CDTPServer *server, unsigned short port);
 ```
 
 Start a CDTP server, specifying the port. The host will be set to `INADDR_ANY`.
@@ -316,7 +316,7 @@ After creating a client, the next step is connecting to a server. To do this, yo
 #### cdtp_client_connect
 
 ```c
-void cdtp_client_connect(CDTPClient *client, char *host, int port);
+void cdtp_client_connect(CDTPClient *client, char *host, unsigned short port);
 ```
 
 Connect to a CDTP server, given a host IP address and integer port. `host` can be either an IPv4 or IPv6 address. `port` must be a port number between 1 and 65535.
@@ -324,8 +324,8 @@ Connect to a CDTP server, given a host IP address and integer port. `host` can b
 #### cdtp_client_connect_host
 
 ```c
-void cdtp_client_connect_host(CDTPClient *client, ULONG host, int port);
-void cdtp_client_connect_host(CDTPClient *client, in_addr_t host, int port);
+void cdtp_client_connect_host(CDTPClient *client, ULONG host, unsigned short port);
+void cdtp_client_connect_host(CDTPClient *client, in_addr_t host, unsigned short port);
 ```
 
 Connect to a CDTP server. `host` is an unsigned long (i.e. `INADDR_ANY`) on Windows, and an in_addr_t structure elsewhere. `port` is an integer representing a port number.
@@ -333,7 +333,7 @@ Connect to a CDTP server. `host` is an unsigned long (i.e. `INADDR_ANY`) on Wind
 #### cdtp_client_connect_default_host
 
 ```c
-void cdtp_client_connect_default_host(CDTPClient *client, int port);
+void cdtp_client_connect_default_host(CDTPClient *client, unsigned short port);
 ```
 
 Connect to a CDTP server, specifying the port. The host will be set to `INADDR_ANY`.

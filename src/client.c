@@ -61,7 +61,7 @@ EXPORT CDTPClient* cdtp_client_default(
     return cdtp_client(on_recv, on_disconnected, on_recv_arg, on_disconnected_arg, CDTP_FALSE, CDTP_FALSE);
 }
 
-EXPORT void cdtp_client_connect(CDTPClient* client, char* host, int port)
+EXPORT void cdtp_client_connect(CDTPClient* client, char* host, unsigned short port)
 {
     // Change 'localhost' to '127.0.0.1'
     if (strcmp(host, "localhost") == 0) {
@@ -195,9 +195,9 @@ EXPORT void cdtp_client_connect(CDTPClient* client, char* host, int port)
 }
 
 #ifdef _WIN32
-EXPORT void cdtp_client_connect_host(CDTPClient* client, ULONG host, int port)
+EXPORT void cdtp_client_connect_host(CDTPClient* client, ULONG host, unsigned short port)
 #else
-EXPORT void cdtp_client_connect_host(CDTPClient* client, in_addr_t host, int port)
+EXPORT void cdtp_client_connect_host(CDTPClient* client, in_addr_t host, unsigned short port)
 #endif
 {
     // Make sure the client has not connected before
@@ -314,7 +314,7 @@ EXPORT void cdtp_client_connect_host(CDTPClient* client, in_addr_t host, int por
     _cdtp_client_call_handle(client);
 }
 
-EXPORT void cdtp_client_connect_default_host(CDTPClient* client, int port)
+EXPORT void cdtp_client_connect_default_host(CDTPClient* client, unsigned short port)
 {
     cdtp_client_connect_host(client, INADDR_ANY, port);
 }

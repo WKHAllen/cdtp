@@ -54,7 +54,7 @@ CDTPClient* cdtp_client_default(
  * host:   the host as a string
  * port:   the port as an integer
  */
-void cdtp_client_connect(CDTPClient* client, char* host, int port);
+void cdtp_client_connect(CDTPClient* client, char* host, unsigned short port);
 
 /*
  * Connect to a server with a non-string host
@@ -64,9 +64,9 @@ void cdtp_client_connect(CDTPClient* client, char* host, int port);
  * port:   the port as an integer
  */
 #ifdef _WIN32
-void cdtp_client_connect_host(CDTPClient* client, ULONG host, int port);
+void cdtp_client_connect_host(CDTPClient* client, ULONG host, unsigned short port);
 #else
-void cdtp_client_connect_host(CDTPClient* client, in_addr_t host, int port);
+void cdtp_client_connect_host(CDTPClient* client, in_addr_t host, unsigned short port);
 #endif
 
 /*
@@ -77,7 +77,7 @@ void cdtp_client_connect_host(CDTPClient* client, in_addr_t host, int port);
  *
  * host is set to INADDR_ANY
  */
-void cdtp_client_connect_default_host(CDTPClient* client, int port);
+void cdtp_client_connect_default_host(CDTPClient* client, unsigned short port);
 
 /*
  * Connect to a server with the default port

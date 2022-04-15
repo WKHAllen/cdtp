@@ -70,7 +70,7 @@ CDTPServer* cdtp_server_default(size_t max_clients,
  * host:   the host as a string
  * port:   the port as an integer
  */
-void cdtp_server_start(CDTPServer* server, char* host, int port);
+void cdtp_server_start(CDTPServer* server, char* host, unsigned short port);
 
 /*
  * Start a server with a non-string host
@@ -80,9 +80,9 @@ void cdtp_server_start(CDTPServer* server, char* host, int port);
  * port:   the port as an integer
  */
 #ifdef _WIN32
-void cdtp_server_start_host(CDTPServer* server, ULONG host, int port);
+void cdtp_server_start_host(CDTPServer* server, ULONG host, unsigned short port);
 #else
-void cdtp_server_start_host(CDTPServer* server, in_addr_t host, int port);
+void cdtp_server_start_host(CDTPServer* server, in_addr_t host, unsigned short port);
 #endif
 
 /*
@@ -93,7 +93,7 @@ void cdtp_server_start_host(CDTPServer* server, in_addr_t host, int port);
  *
  * host is set to INADDR_ANY
  */
-void cdtp_server_start_default_host(CDTPServer* server, int port);
+void cdtp_server_start_default_host(CDTPServer* server, unsigned short port);
 
 /*
  * Start a server with the default port

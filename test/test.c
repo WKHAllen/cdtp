@@ -101,7 +101,7 @@ int main(void)
 
     // Get IP address and port
     char* ip_address = cdtp_server_host(server);
-    int port = cdtp_server_port(server);
+    unsigned short port = cdtp_server_port(server);
     printf("IP address: %s\n", ip_address);
     printf("Port:       %d\n", port);
 
