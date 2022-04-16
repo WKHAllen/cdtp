@@ -10,7 +10,6 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
-#include <math.h>
 
 #ifdef _WIN32
 #  include <WinSock2.h>
@@ -164,11 +163,11 @@ void cdtp_on_error(
  */
 void cdtp_on_error_clear(void);
 
-// Convert decimal to ascii
-char* _cdtp_dec_to_ascii(size_t dec);
+// Encode the size of a message
+unsigned char* _cdtp_encode_message_size(size_t dec);
 
-// Convert ascii to decimal
-size_t _cdtp_ascii_to_dec(char* ascii);
+// Decode the size of a message
+size_t _cdtp_decode_message_size(unsigned char* ascii);
 
 // Construct a message
 char* _cdtp_construct_message(void* data, size_t data_size);

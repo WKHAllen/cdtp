@@ -1,6 +1,8 @@
 #include "../bin/include/cdtp.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <assert.h>
 #include <inttypes.h>
 
@@ -14,9 +16,56 @@
 #  define PRI_SIZE_T "zu"
 #endif
 
+typedef struct _TestState {
+    int receiving_random_message;
+    size_t random_message_to_server_len;
+    size_t random_message_to_client_len;
+    char* random_message_to_server;
+    char* random_message_to_client;
+} TestState;
+
+TestState* new_test_state(
+    size_t random_message_to_server_len,
+    size_t random_message_to_client_len,
+    char* random_message_to_server,
+    char* random_message_to_client
+)
+{
+    TestState* test_state = malloc(sizeof(TestState));
+    test_state->receiving_random_message = CDTP_FALSE;
+    test_state->random_message_to_server_len = random_message_to_server_len;
+    test_state->random_message_to_client_len = random_message_to_client_len;
+    test_state->random_message_to_server = random_message_to_server;
+    test_state->random_message_to_client = random_message_to_client;
+    return test_state;
+}
+
+void cleanup_test_state(TestState* test_state)
+{
+    free(test_state->random_message_to_server);
+    free(test_state->random_message_to_client);
+    free(test_state);
+}
+
+int randint(int min, int max)
+{
+    return min + (rand() % (max - min + 1));
+}
+
+char* randbytes(size_t size)
+{
+    char* bytes = malloc(size * sizeof(char));
+
+    for (size_t i = 0; i < size; i++) {
+        bytes[i] = (char)randint(0, 255);
+    }
+
+    return bytes;
+}
+
 char* voidp_to_str(void* data, size_t data_size)
 {
-    char* message = (char*)malloc((data_size + 1) * sizeof(char));
+    char* message = malloc((data_size + 1) * sizeof(char));
     memcpy(message, data, data_size);
     message[data_size] = '\0';
     return message;
@@ -24,11 +73,21 @@ char* voidp_to_str(void* data, size_t data_size)
 
 void server_on_recv(size_t client_id, void* data, size_t data_size, void* arg)
 {
-    char* message = voidp_to_str(data, data_size);
-    printf("Received data from client #%" PRI_SIZE_T ": %s (size %" PRI_SIZE_T ")\n", client_id, message, data_size);
-    printf("Arg: %s\n", (char*)arg);
+    TestState* test_state = (TestState*)arg;
+
+    if (test_state->receiving_random_message != CDTP_TRUE) {
+        char* message = voidp_to_str(data, data_size);
+        printf("Received data from client #%" PRI_SIZE_T ": %s (size %" PRI_SIZE_T ")\n", client_id, message, data_size);
+        printf("Arg: %s\n", (char*)arg);
+        free(message);
+    }
+    else {
+        printf("Received large random message from client (size %" PRI_SIZE_T ", %" PRI_SIZE_T ")\n", data_size, test_state->random_message_to_server_len);
+        assert(data_size == test_state->random_message_to_server_len);
+        assert(memcmp(data, test_state->random_message_to_server, data_size) == 0);
+    }
+
     free(data);
-    free(message);
 }
 
 void server_on_connect(size_t client_id, void* arg)
@@ -45,11 +104,21 @@ void server_on_disconnect(size_t client_id, void* arg)
 
 void client_on_recv(void* data, size_t data_size, void* arg)
 {
-    char* message = voidp_to_str(data, data_size);
-    printf("Received data from server: %s (size %" PRI_SIZE_T ")\n", message, data_size);
-    printf("Arg: %s\n", (char*)arg);
+    TestState* test_state = (TestState*)arg;
+
+    if (test_state->receiving_random_message != CDTP_TRUE) {
+        char* message = voidp_to_str(data, data_size);
+        printf("Received data from server: %s (size %" PRI_SIZE_T ")\n", message, data_size);
+        printf("Arg: %s\n", (char*)arg);
+        free(message);
+    }
+    else {
+        printf("Received large random message from server (size %" PRI_SIZE_T ", %" PRI_SIZE_T ")\n", data_size, test_state->random_message_to_client_len);
+        assert(data_size == test_state->random_message_to_client_len);
+        assert(memcmp(data, test_state->random_message_to_client, data_size) == 0);
+    }
+
     free(data);
-    free(message);
 }
 
 void client_on_disconnected(void* arg)
@@ -77,6 +146,22 @@ int main(void)
 {
     double wait_time = 0.1;
 
+    // Generate large random messages
+    srand(time(NULL));
+    size_t random_message_to_server_len = randint(32768, 65535);
+    size_t random_message_to_client_len = randint(65536, 82175); // fails on Linux at values >= 82176?
+    char* random_message_to_server = randbytes(random_message_to_server_len);
+    char* random_message_to_client = randbytes(random_message_to_client_len);
+    printf("Large random message sizes: %" PRI_SIZE_T ", %" PRI_SIZE_T "\n", random_message_to_server_len, random_message_to_client_len);
+
+    // Initialize test state
+    TestState* test_state = new_test_state(
+        random_message_to_server_len,
+        random_message_to_client_len,
+        random_message_to_server,
+        random_message_to_client
+    );
+
     printf("Running tests...\n");
 
     // Register error event
@@ -88,9 +173,9 @@ int main(void)
         server_on_recv,
         server_on_connect,
         server_on_disconnect,
-        NULL,
-        NULL,
-        NULL,
+        test_state,
+        test_state,
+        test_state,
         CDTP_FALSE,
         CDTP_FALSE
     );
@@ -121,8 +206,8 @@ int main(void)
     CDTPClient* client = cdtp_client(
         client_on_recv,
         client_on_disconnected,
-        NULL,
-        NULL,
+        test_state,
+        test_state,
         CDTP_FALSE,
         CDTP_FALSE
     );
@@ -152,6 +237,20 @@ int main(void)
 
     cdtp_sleep(wait_time);
 
+    test_state->receiving_random_message = CDTP_TRUE;
+
+    // Client send large message
+    cdtp_client_send(client, random_message_to_server, random_message_to_server_len);
+
+    cdtp_sleep(wait_time);
+
+    // Server send large message
+    cdtp_server_send_all(server, random_message_to_client, random_message_to_client_len);
+
+    cdtp_sleep(wait_time);
+
+    test_state->receiving_random_message = CDTP_FALSE;
+
     // Client disconnect
     cdtp_client_disconnect(client);
 
@@ -168,5 +267,6 @@ int main(void)
     assert(cdtp_get_error() == CDTP_SERVER_CANNOT_RESTART);
 
     printf("Successfully passed all tests\n");
+    cleanup_test_state(test_state);
     return 0;
 }

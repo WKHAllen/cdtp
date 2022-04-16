@@ -3,7 +3,8 @@
 EXPORT CDTPClient* cdtp_client(
     void (*on_recv)(void*, size_t, void*),
     void (*on_disconnected)(void*),
-    void* on_recv_arg, void* on_disconnected_arg,
+    void* on_recv_arg,
+    void* on_disconnected_arg,
     int blocking,
     int event_blocking
 )
@@ -103,9 +104,9 @@ EXPORT void cdtp_client_connect(CDTPClient* client, char* host, unsigned short p
     }
 
     // Check the return code
-    char size_buffer[CDTP_LENSIZE];
+    unsigned char size_buffer[CDTP_LENSIZE];
 #ifdef _WIN32
-    int recv_code = recv(client->sock->sock, size_buffer, CDTP_LENSIZE, 0);
+    int recv_code = recv(client->sock->sock, (char*)size_buffer, CDTP_LENSIZE, 0);
 
     if (recv_code == SOCKET_ERROR) {
         int err_code = WSAGetLastError();
@@ -126,7 +127,7 @@ EXPORT void cdtp_client_connect(CDTPClient* client, char* host, unsigned short p
         return;
     }
     else {
-        size_t msg_size = _cdtp_ascii_to_dec(size_buffer);
+        size_t msg_size = _cdtp_decode_message_size(size_buffer);
         char* buffer = malloc(msg_size * sizeof(char));
         recv_code = recv(client->sock->sock, buffer, msg_size, 0);
 
@@ -167,7 +168,7 @@ EXPORT void cdtp_client_connect(CDTPClient* client, char* host, unsigned short p
         return;
     }
     else {
-        size_t msg_size = _cdtp_ascii_to_dec(size_buffer);
+        size_t msg_size = _cdtp_decode_message_size(size_buffer);
         char* buffer = malloc(msg_size * sizeof(char));
         recv_code = read(client->sock->sock, buffer, msg_size);
 
@@ -223,9 +224,9 @@ EXPORT void cdtp_client_connect_host(CDTPClient* client, in_addr_t host, unsigne
     }
 
     // Check the return code
-    char size_buffer[CDTP_LENSIZE];
+    unsigned char size_buffer[CDTP_LENSIZE];
 #ifdef _WIN32
-    int recv_code = recv(client->sock->sock, size_buffer, CDTP_LENSIZE, 0);
+    int recv_code = recv(client->sock->sock, (char*)size_buffer, CDTP_LENSIZE, 0);
 
     if (recv_code == SOCKET_ERROR) {
         int err_code = WSAGetLastError();
@@ -245,7 +246,7 @@ EXPORT void cdtp_client_connect_host(CDTPClient* client, in_addr_t host, unsigne
         return;
     }
     else {
-        size_t msg_size = _cdtp_ascii_to_dec(size_buffer);
+        size_t msg_size = _cdtp_decode_message_size(size_buffer);
         char* buffer = malloc(msg_size * sizeof(char));
         recv_code = recv(client->sock->sock, buffer, msg_size, 0);
 
@@ -287,7 +288,7 @@ EXPORT void cdtp_client_connect_host(CDTPClient* client, in_addr_t host, unsigne
         return;
     }
     else {
-        size_t msg_size = _cdtp_ascii_to_dec(size_buffer);
+        size_t msg_size = _cdtp_decode_message_size(size_buffer);
         char* buffer = malloc(msg_size * sizeof(char));
         recv_code = read(client->sock->sock, buffer, msg_size);
 
@@ -498,10 +499,10 @@ void _cdtp_client_call_handle(CDTPClient* client)
 void _cdtp_client_handle(CDTPClient* client)
 {
 #ifdef _WIN32
-    char size_buffer[CDTP_LENSIZE];
+    unsigned char size_buffer[CDTP_LENSIZE];
 
     while (client->connected == CDTP_TRUE) {
-        int recv_code = recv(client->sock->sock, size_buffer, CDTP_LENSIZE, 0);
+        int recv_code = recv(client->sock->sock, (char*)size_buffer, CDTP_LENSIZE, 0);
 
         // Check if the client has disconnected
         if (client->connected != CDTP_TRUE) {
@@ -527,8 +528,12 @@ void _cdtp_client_handle(CDTPClient* client)
             return;
         }
         else {
-            size_t msg_size = _cdtp_ascii_to_dec(size_buffer);
+            size_t msg_size = _cdtp_decode_message_size(size_buffer);
             char* buffer = malloc(msg_size * sizeof(char));
+
+            // Wait in case the message is sent in multiple chunks
+            cdtp_sleep(0.01);
+
             recv_code = recv(client->sock->sock, buffer, msg_size, 0);
 
             if (recv_code == SOCKET_ERROR) {
@@ -560,7 +565,7 @@ void _cdtp_client_handle(CDTPClient* client)
     cdtp_server_start(client->local_server, CDTP_LOCAL_SERVER_HOST, CDTP_LOCAL_SERVER_PORT);
     int max_sd = client->sock->sock > client->local_server->sock->sock ? client->sock->sock : client->local_server->sock->sock;
     int activity;
-    char size_buffer[CDTP_LENSIZE];
+    unsigned char size_buffer[CDTP_LENSIZE];
 
     while (client->connected == CDTP_TRUE) {
         // Set sockets for select
@@ -583,6 +588,9 @@ void _cdtp_client_handle(CDTPClient* client)
             return;
         }
 
+        // Wait in case the message is sent in multiple chunks
+        cdtp_sleep(0.01);
+
         int recv_code = read(client->sock->sock, size_buffer, CDTP_LENSIZE);
 
         if (recv_code == 0) {
@@ -591,8 +599,12 @@ void _cdtp_client_handle(CDTPClient* client)
             return;
         }
         else {
-            size_t msg_size = _cdtp_ascii_to_dec(size_buffer);
+            size_t msg_size = _cdtp_decode_message_size(size_buffer);
             char* buffer = malloc(msg_size * sizeof(char));
+
+            // Wait in case the message is sent in multiple chunks
+            cdtp_sleep(0.01);
+
             recv_code = read(client->sock->sock, buffer, msg_size);
 
             if (recv_code == 0) {

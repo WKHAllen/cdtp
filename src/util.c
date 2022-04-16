@@ -98,26 +98,28 @@ EXPORT void cdtp_on_error_clear(void)
     CDTP_ON_ERROR_REGISTERED = CDTP_FALSE;
 }
 
-char* _cdtp_dec_to_ascii(size_t dec)
+unsigned char* _cdtp_encode_message_size(size_t size)
 {
-    char* ascii = malloc(CDTP_LENSIZE * sizeof(char));
+    unsigned char* encoded_size = malloc(CDTP_LENSIZE * sizeof(unsigned char));
 
-    for (int i = 0; i < CDTP_LENSIZE; i++) {
-        ascii[i] = dec / pow(256, CDTP_LENSIZE - i - 1);
+    for (int i = CDTP_LENSIZE - 1; i >= 0; i--) {
+        encoded_size[i] = size % 256;
+        size = size >> 8;
     }
 
-    return ascii;
+    return encoded_size;
 }
 
-size_t _cdtp_ascii_to_dec(char* ascii)
+size_t _cdtp_decode_message_size(unsigned char* encoded_size)
 {
-    size_t dec = 0;
+    size_t size = 0;
 
     for (int i = 0; i < CDTP_LENSIZE; i++) {
-        dec += ascii[i] * pow(256, CDTP_LENSIZE - i - 1);
+        size = size << 8;
+        size += encoded_size[i];
     }
 
-    return dec;
+    return size;
 }
 
 char* _cdtp_construct_message(void* data, size_t data_size)
@@ -125,7 +127,7 @@ char* _cdtp_construct_message(void* data, size_t data_size)
     // data_size should not be greater than 256 ^ CDTP_LENSIZE (or in this case, a tebibyte)
     char* data_str = (char*)data;
     char* message = malloc((CDTP_LENSIZE + data_size) * sizeof(char));
-    char* size = _cdtp_dec_to_ascii(data_size);
+    unsigned char* size = _cdtp_encode_message_size(data_size);
 
     for (int i = 0; i < CDTP_LENSIZE; i++) {
         message[i] = size[i];
@@ -142,7 +144,7 @@ char* _cdtp_construct_message(void* data, size_t data_size)
 void* _cdtp_deconstruct_message(char* message, size_t* data_size)
 {
     // only the first CDTP_LENSIZE bytes of message will be read as the size
-    *data_size = _cdtp_ascii_to_dec(message);
+    *data_size = _cdtp_decode_message_size((unsigned char*)message);
     char* data = malloc(*data_size * sizeof(char));
 
     for (size_t i = 0; i < *data_size; i++) {

@@ -451,7 +451,7 @@ void _cdtp_server_serve(CDTPServer* server)
     int max_sd = server->sock->sock;
 #endif
 
-    char size_buffer[CDTP_LENSIZE];
+    unsigned char size_buffer[CDTP_LENSIZE];
 
     while (server->serving == CDTP_TRUE) {
         // Create the read sockets
@@ -543,7 +543,7 @@ void _cdtp_server_serve(CDTPServer* server)
         for (size_t i = 0; i < server->max_clients; i++) {
             if (server->allocated_clients[i] == CDTP_TRUE && FD_ISSET(server->clients[i]->sock, &read_socks)) {
 #ifdef _WIN32
-                int recv_code = recv(server->clients[i]->sock, size_buffer, CDTP_LENSIZE, 0);
+                int recv_code = recv(server->clients[i]->sock, (char*)size_buffer, CDTP_LENSIZE, 0);
 
                 if (recv_code == SOCKET_ERROR) {
                     int err_code = WSAGetLastError();
@@ -562,8 +562,12 @@ void _cdtp_server_serve(CDTPServer* server)
                     _cdtp_server_call_on_disconnect(server, i);
                 }
                 else {
-                    size_t msg_size = _cdtp_ascii_to_dec(size_buffer);
+                    size_t msg_size = _cdtp_decode_message_size(size_buffer);
                     char* buffer = malloc(msg_size * sizeof(char));
+
+                    // Wait in case the message is sent in multiple chunks
+                    cdtp_sleep(0.01);
+
                     recv_code = recv(server->clients[i]->sock, buffer, msg_size, 0);
 
                     if (recv_code == SOCKET_ERROR) {
@@ -594,8 +598,12 @@ void _cdtp_server_serve(CDTPServer* server)
                     _cdtp_server_call_on_disconnect(server, i);
                 }
                 else {
-                    size_t msg_size = _cdtp_ascii_to_dec(size_buffer);
+                    size_t msg_size = _cdtp_decode_message_size(size_buffer);
                     char* buffer = malloc(msg_size * sizeof(char));
+
+                    // Wait in case the message is sent in multiple chunks
+                    cdtp_sleep(0.01);
+
                     recv_code = read(server->clients[i]->sock, buffer, msg_size);
 
                     if (recv_code == 0) {
