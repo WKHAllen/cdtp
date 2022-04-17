@@ -21,10 +21,11 @@
 typedef struct _CDTPEventFunc {
     char* name;
     union func {
-        void (*func_int_voidp_sizet_voidp)(size_t, void*, size_t, void*); // on_recv (server)
-        void (*func_int_voidp)(size_t, void*); // on_connect, on_disconnect (server)
-        void (*func_voidp_sizet_voidp)(void*, size_t, void*); // on_recv (client)
-        void (*func_voidp)(void*); // on_disconnected (client)
+        ServerOnRecvCallback func_server_on_recv; // on_recv (server)
+        ServerOnConnectCallback func_server_on_connect; // on_connect (server)
+        ServerOnDisconnectCallback func_server_on_disconnect; // on_disconnect (server)
+        ClientOnRecvCallback func_client_on_recv; // on_recv (client)
+        ClientOnDisconnectedCallback func_client_on_disconnected; // on_disconnected (client)
     } func;
     size_t size_t1;
     void* voidp1;
@@ -54,7 +55,7 @@ void _cdtp_start_event_thread(CDTPEventFunc* func_info);
 
 // Call on_recv (server)
 void _cdtp_start_thread_on_recv_server(
-    void (*func)(size_t, void*, size_t, void*),
+    ServerOnRecvCallback func,
     size_t client_id,
     void* data,
     size_t data_len,
@@ -63,21 +64,21 @@ void _cdtp_start_thread_on_recv_server(
 
 // Call on_connect (server)
 void _cdtp_start_thread_on_connect(
-    void (*func)(size_t, void*),
+    ServerOnConnectCallback func,
     size_t client_id,
     void* arg
 );
 
 // Call on_disconnect (server)
 void _cdtp_start_thread_on_disconnect(
-    void (*func)(size_t, void*),
+    ServerOnDisconnectCallback func,
     size_t client_id,
     void* arg
 );
 
 // Call on_recv (client)
 void _cdtp_start_thread_on_recv_client(
-    void (*func)(void*, size_t, void*),
+    ClientOnRecvCallback func,
     void* data,
     size_t data_size,
     void* arg
@@ -85,7 +86,7 @@ void _cdtp_start_thread_on_recv_client(
 
 // Call on_disconnected (client)
 void _cdtp_start_thread_on_disconnected(
-    void (*func)(void*),
+    ClientOnDisconnectedCallback func,
     void* arg
 );
 

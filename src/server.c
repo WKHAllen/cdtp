@@ -2,9 +2,9 @@
 
 EXPORT CDTPServer* cdtp_server(
     size_t max_clients,
-    void (*on_recv)(size_t, void*, size_t, void*),
-    void (*on_connect)(size_t, void*),
-    void (*on_disconnect)(size_t, void*),
+    ServerOnRecvCallback on_recv,
+    ServerOnConnectCallback on_connect,
+    ServerOnDisconnectCallback on_disconnect,
     void* on_recv_arg,
     void* on_connect_arg,
     void* on_disconnect_arg,
@@ -81,9 +81,9 @@ EXPORT CDTPServer* cdtp_server(
 
 EXPORT CDTPServer* cdtp_server_default(
     size_t max_clients,
-    void (*on_recv)(size_t, void*, size_t, void*),
-    void (*on_connect)(size_t, void*),
-    void (*on_disconnect)(size_t, void*),
+    ServerOnRecvCallback on_recv,
+    ServerOnConnectCallback on_connect,
+    ServerOnDisconnectCallback on_disconnect,
     void* on_recv_arg,
     void* on_connect_arg,
     void* on_disconnect_arg

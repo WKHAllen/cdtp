@@ -1,8 +1,8 @@
 #include "client.h"
 
 EXPORT CDTPClient* cdtp_client(
-    void (*on_recv)(void*, size_t, void*),
-    void (*on_disconnected)(void*),
+    ClientOnRecvCallback on_recv,
+    ClientOnDisconnectedCallback on_disconnected,
     void* on_recv_arg,
     void* on_disconnected_arg,
     int blocking,
@@ -53,8 +53,8 @@ EXPORT CDTPClient* cdtp_client(
 }
 
 EXPORT CDTPClient* cdtp_client_default(
-    void (*on_recv)(void*, size_t, void*),
-    void (*on_disconnected)(void*),
+    ClientOnRecvCallback on_recv,
+    ClientOnDisconnectedCallback on_disconnected,
     void* on_recv_arg,
     void* on_disconnected_arg
 )

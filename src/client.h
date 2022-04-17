@@ -22,8 +22,8 @@
   * event_blocking:      whether or not on_recv, on_connect, and on_disconnect will block
   */
 CDTPClient* cdtp_client(
-  void (*on_recv)(void*, size_t, void*),
-  void (*on_disconnected)(void*),
+  ClientOnRecvCallback on_recv,
+  ClientOnDisconnectedCallback on_disconnected,
   void* on_recv_arg,
   void* on_disconnected_arg,
   int blocking,
@@ -41,8 +41,8 @@ CDTPClient* cdtp_client(
  * blocking and event_blocking are set to false
  */
 CDTPClient* cdtp_client_default(
-  void (*on_recv)(void*, size_t, void*),
-  void (*on_disconnected)(void*),
+  ClientOnRecvCallback on_recv,
+  ClientOnDisconnectedCallback on_disconnected,
   void* on_recv_arg,
   void* on_disconnected_arg
 );

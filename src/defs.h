@@ -8,7 +8,14 @@
 
 #include "util.h"
 
- // Socket type
+ // Callback function types
+typedef void (*ServerOnRecvCallback)(size_t, void*, size_t, void*);
+typedef void (*ServerOnConnectCallback)(size_t, void*);
+typedef void (*ServerOnDisconnectCallback)(size_t, void*);
+typedef void (*ClientOnRecvCallback)(void*, size_t, void*);
+typedef void (*ClientOnDisconnectedCallback)(void*);
+
+// Socket type
 typedef struct _CDTPSocket {
 #ifdef _WIN32
     SOCKET sock;
@@ -21,9 +28,9 @@ typedef struct _CDTPSocket {
 // Socket server type
 typedef struct _CDTPServer {
     size_t max_clients;
-    void (*on_recv)(size_t, void*, size_t, void*);
-    void (*on_connect)(size_t, void*);
-    void (*on_disconnect)(size_t, void*);
+    ServerOnRecvCallback on_recv;
+    ServerOnConnectCallback on_connect;
+    ServerOnDisconnectCallback on_disconnect;
     void* on_recv_arg;
     void* on_connect_arg;
     void* on_disconnect_arg;
@@ -44,8 +51,8 @@ typedef struct _CDTPServer {
 
 // Socket client type
 typedef struct _CDTPClient {
-    void (*on_recv)(void*, size_t, void*);
-    void (*on_disconnected)(void*);
+    ClientOnRecvCallback on_recv;
+    ClientOnDisconnectedCallback on_disconnected;
     void* on_recv_arg;
     void* on_disconnected_arg;
     int blocking;

@@ -8,21 +8,21 @@ void* _cdtp_event_thread(void* func_info)
 {
     CDTPEventFunc* event_func_info = (CDTPEventFunc*)func_info;
 
-    // Find out which function to call
+    // Determine which function to call
     if (strcmp(event_func_info->name, "on_recv_server") == 0) {
-        (*event_func_info->func.func_int_voidp_sizet_voidp)(event_func_info->size_t1, event_func_info->voidp1, event_func_info->size_t2, event_func_info->voidp2);
+        (*event_func_info->func.func_server_on_recv)(event_func_info->size_t1, event_func_info->voidp1, event_func_info->size_t2, event_func_info->voidp2);
     }
     else if (strcmp(event_func_info->name, "on_connect") == 0) {
-        (*event_func_info->func.func_int_voidp)(event_func_info->size_t1, event_func_info->voidp1);
+        (*event_func_info->func.func_server_on_connect)(event_func_info->size_t1, event_func_info->voidp1);
     }
     else if (strcmp(event_func_info->name, "on_disconnect") == 0) {
-        (*event_func_info->func.func_int_voidp)(event_func_info->size_t1, event_func_info->voidp1);
+        (*event_func_info->func.func_server_on_disconnect)(event_func_info->size_t1, event_func_info->voidp1);
     }
     else if (strcmp(event_func_info->name, "on_recv_client") == 0) {
-        (*event_func_info->func.func_voidp_sizet_voidp)(event_func_info->voidp1, event_func_info->size_t2, event_func_info->voidp2);
+        (*event_func_info->func.func_client_on_recv)(event_func_info->voidp1, event_func_info->size_t2, event_func_info->voidp2);
     }
     else if (strcmp(event_func_info->name, "on_disconnected") == 0) {
-        (*event_func_info->func.func_voidp)(event_func_info->voidp1);
+        (*event_func_info->func.func_client_on_disconnected)(event_func_info->voidp1);
     }
 
     // Free function information memory and return
@@ -56,7 +56,7 @@ void _cdtp_start_event_thread(CDTPEventFunc* func_info)
 }
 
 void _cdtp_start_thread_on_recv_server(
-    void (*func)(size_t, void*, size_t, void*),
+    ServerOnRecvCallback func,
     size_t client_id,
     void* data,
     size_t data_size,
@@ -65,7 +65,7 @@ void _cdtp_start_thread_on_recv_server(
 {
     CDTPEventFunc* func_info = malloc(sizeof(*func_info));
     func_info->name = "on_recv_server";
-    func_info->func.func_int_voidp_sizet_voidp = func;
+    func_info->func.func_server_on_recv = func;
     func_info->size_t1 = client_id;
     func_info->voidp1 = data;
     func_info->size_t2 = data_size;
@@ -74,35 +74,35 @@ void _cdtp_start_thread_on_recv_server(
 }
 
 void _cdtp_start_thread_on_connect(
-    void (*func)(size_t, void*),
+    ServerOnConnectCallback func,
     size_t client_id,
     void* arg
 )
 {
     CDTPEventFunc* func_info = malloc(sizeof(*func_info));
     func_info->name = "on_connect";
-    func_info->func.func_int_voidp = func;
+    func_info->func.func_server_on_connect = func;
     func_info->size_t1 = client_id;
     func_info->voidp1 = arg;
     _cdtp_start_event_thread(func_info);
 }
 
 void _cdtp_start_thread_on_disconnect(
-    void (*func)(size_t, void*),
+    ServerOnDisconnectCallback func,
     size_t client_id,
     void* arg
 )
 {
     CDTPEventFunc* func_info = malloc(sizeof(*func_info));
     func_info->name = "on_disconnect";
-    func_info->func.func_int_voidp = func;
+    func_info->func.func_server_on_disconnect = func;
     func_info->size_t1 = client_id;
     func_info->voidp1 = arg;
     _cdtp_start_event_thread(func_info);
 }
 
 void _cdtp_start_thread_on_recv_client(
-    void (*func)(void*, size_t, void*),
+    ClientOnRecvCallback func,
     void* data,
     size_t data_size,
     void* arg
@@ -110,7 +110,7 @@ void _cdtp_start_thread_on_recv_client(
 {
     CDTPEventFunc* func_info = malloc(sizeof(*func_info));
     func_info->name = "on_recv_client";
-    func_info->func.func_voidp_sizet_voidp = func;
+    func_info->func.func_client_on_recv = func;
     func_info->voidp1 = data;
     func_info->size_t2 = data_size;
     func_info->voidp2 = arg;
@@ -118,13 +118,13 @@ void _cdtp_start_thread_on_recv_client(
 }
 
 void _cdtp_start_thread_on_disconnected(
-    void (*func)(void*),
+    ClientOnDisconnectedCallback func,
     void* arg
 )
 {
     CDTPEventFunc* func_info = malloc(sizeof(*func_info));
     func_info->name = "on_disconnected";
-    func_info->func.func_voidp = func;
+    func_info->func.func_client_on_disconnected = func;
     func_info->voidp1 = arg;
     _cdtp_start_event_thread(func_info);
 }
