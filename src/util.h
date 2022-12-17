@@ -1,12 +1,11 @@
 /*
- * Utility functions and definitions for cdtp
+ * Utility functions and definitions for cdtp.
  */
 
 #pragma once
 #ifndef CDTP_UTIL_H
 #define CDTP_UTIL_H
 
- // Includes
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
@@ -106,7 +105,7 @@
 // Length of the size portion of each message
 #define CDTP_LENSIZE 5
 
-// Keep track of whether or not the library has been initialized and exited
+// Keep track of whether the library has been initialized and exited
 extern int CDTP_INIT;
 extern int CDTP_EXIT;
 
@@ -129,17 +128,17 @@ void _cdtp_exit(void);
 /*
  * Check if an error has occurred
  */
-int cdtp_error(void);
+EXPORT int cdtp_error(void);
 
 /*
  * Get the CDTP error code
  */
-int cdtp_get_error(void);
+EXPORT int cdtp_get_error(void);
 
 /*
  * Get the underlying layer error code
  */
-int cdtp_get_underlying_error(void);
+EXPORT int cdtp_get_underlying_error(void);
 
 // Set the errors
 void _cdtp_set_error(int cdtp_err, int underlying_err);
@@ -153,7 +152,7 @@ void _cdtp_set_err(int cdtp_err);
  * on_error: pointer to a function that will be called when an error occurs
  * arg:      a value that will be passed to the on_error function
  */
-void cdtp_on_error(
+EXPORT void cdtp_on_error(
     void (*on_error)(int, int, void*),
     void* arg
 );
@@ -161,7 +160,7 @@ void cdtp_on_error(
 /*
  * Unregister the on_error function
  */
-void cdtp_on_error_clear(void);
+EXPORT void cdtp_on_error_clear(void);
 
 // Encode the size of a message
 unsigned char* _cdtp_encode_message_size(size_t dec);
@@ -176,9 +175,9 @@ char* _cdtp_construct_message(void* data, size_t data_size);
 void* _cdtp_deconstruct_message(char* message, size_t* data_size);
 
 /*
- * Cross platform wait function
+ * Cross-platform wait function.
  * Useful for waiting short amounts of time between connecting to a server, sending data, disconnecting, etc.
  */
-void cdtp_sleep(double seconds);
+EXPORT void cdtp_sleep(double seconds);
 
 #endif // CDTP_UTIL_H

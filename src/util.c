@@ -124,7 +124,6 @@ size_t _cdtp_decode_message_size(unsigned char* encoded_size)
 
 char* _cdtp_construct_message(void* data, size_t data_size)
 {
-    // data_size should not be greater than 256 ^ CDTP_LENSIZE (or in this case, a tebibyte)
     char* data_str = (char*)data;
     char* message = malloc((CDTP_LENSIZE + data_size) * sizeof(char));
     unsigned char* size = _cdtp_encode_message_size(data_size);

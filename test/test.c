@@ -175,20 +175,19 @@ int main(void)
         server_on_disconnect,
         test_state,
         test_state,
-        test_state,
-        CDTP_FALSE,
-        CDTP_FALSE
+        test_state
     );
 
     // Server start
     char* host = "127.0.0.1";
-    cdtp_server_start_default_port(server, host);
+    unsigned short port = CDTP_PORT;
+    cdtp_server_start(server, host, port);
 
-    // Get IP address and port
-    char* ip_address = cdtp_server_host(server);
-    unsigned short port = cdtp_server_port(server);
-    printf("IP address: %s\n", ip_address);
-    printf("Port:       %d\n", port);
+    // Get host and port
+    char* server_host = cdtp_server_host(server);
+    unsigned short server_port = cdtp_server_port(server);
+    printf("Host: %s\n", server_host);
+    printf("Port: %d\n", server_port);
 
     // Unregister error event
     cdtp_on_error_clear();
@@ -207,21 +206,19 @@ int main(void)
         client_on_recv,
         client_on_disconnected,
         test_state,
-        test_state,
-        CDTP_FALSE,
-        CDTP_FALSE
+        test_state
     );
 
     // Client connect
-    cdtp_client_connect_default_port(client, ip_address);
-    free(ip_address);
+    cdtp_client_connect(client, host, port);
+    free(server_host);
 
-    // Get IP address and port
-    char* client_ip_address = cdtp_client_host(client);
+    // Get host and port
+    char* client_host = cdtp_client_host(client);
     int client_port = cdtp_client_port(client);
-    printf("IP address: %s\n", client_ip_address);
-    printf("Port:       %d\n", client_port);
-    free(client_ip_address);
+    printf("Host: %s\n", client_host);
+    printf("Port: %d\n", client_port);
+    free(client_host);
 
     cdtp_sleep(wait_time);
 
@@ -263,7 +260,7 @@ int main(void)
     cdtp_on_error_clear();
 
     // Test that server cannot be restarted
-    cdtp_server_start_default_port(server, host);
+    cdtp_server_start(server, host, port);
     assert(cdtp_get_error() == CDTP_SERVER_CANNOT_RESTART);
 
     printf("Successfully passed all tests\n");

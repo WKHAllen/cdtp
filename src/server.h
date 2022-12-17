@@ -1,5 +1,5 @@
 /*
- * Server types and functions for cdtp
+ * Server types and functions for cdtp.
  */
 
 #pragma once
@@ -10,7 +10,7 @@
 #include "util.h"
 #include "threading.h"
 
- // Socket server listen backlog
+// Socket server listen backlog
 #define CDTP_LISTEN_BACKLOG 3
 
 // Server max clients indicator
@@ -26,35 +26,9 @@
  * on_recv_arg:       a value that will be passed to the on_recv function
  * on_connect_arg:    a value that will be passed to the on_connect function
  * on_disconnect_arg: a value that will be passed to the on_disconnect function
- * blocking:          whether or not the cdtp_server_start function and related functions will block
- * event_blocking:    whether or not on_recv, on_connect, and on_disconnect will block
  */
-CDTPServer* cdtp_server(
+EXPORT CDTPServer* cdtp_server(
   size_t max_clients,
-  ServerOnRecvCallback on_recv,
-  ServerOnConnectCallback on_connect,
-  ServerOnDisconnectCallback on_disconnect,
-  void* on_recv_arg,
-  void* on_connect_arg,
-  void* on_disconnect_arg,
-  int blocking,
-  int event_blocking
-);
-
-/*
- * Server creation/initialization, with default blocking parameters
- *
- * max_clients:       the maximum number of clients the server will allow
- * on_recv:           pointer to a function that will be called when a packet is received
- * on_connect:        pointer to a function that will be called when a client connects
- * on_disconnect:     pointer to a function that will be called when a client disconnects
- * on_recv_arg:       a value that will be passed to the on_recv function
- * on_connect_arg:    a value that will be passed to the on_connect function
- * on_disconnect_arg: a value that will be passed to the on_disconnect function
- *
- * blocking and event_blocking are set to false
- */
-CDTPServer* cdtp_server_default(size_t max_clients,
   ServerOnRecvCallback on_recv,
   ServerOnConnectCallback on_connect,
   ServerOnDisconnectCallback on_disconnect,
@@ -70,84 +44,21 @@ CDTPServer* cdtp_server_default(size_t max_clients,
  * host:   the host as a string
  * port:   the port as an integer
  */
-void cdtp_server_start(CDTPServer* server, char* host, unsigned short port);
-
-/*
- * Start a server with a non-string host
- *
- * server: the server object
- * host:   the host in the socket-library-provided format
- * port:   the port as an integer
- */
-#ifdef _WIN32
-void cdtp_server_start_host(CDTPServer* server, ULONG host, unsigned short port);
-#else
-void cdtp_server_start_host(CDTPServer* server, in_addr_t host, unsigned short port);
-#endif
-
-/*
- * Start a server with the default host
- *
- * server: the server object
- * port:   the port as an integer
- *
- * host is set to INADDR_ANY
- */
-void cdtp_server_start_default_host(CDTPServer* server, unsigned short port);
-
-/*
- * Start a server with the default port
- *
- * server: the server object
- * host:   the host as a string
- *
- * port is set to CDTP_PORT
- */
-void cdtp_server_start_default_port(CDTPServer* server, char* host);
-
-/*
- * Start a server with a non-string host and the default port
- *
- * server: the server object
- * host:   the host in the socket-library-provided format
- *
- * port is set to CDTP_PORT
- */
-#ifdef _WIN32
-void cdtp_server_start_host_default_port(CDTPServer* server, ULONG host);
-#else
-void cdtp_server_start_host_default_port(CDTPServer* server, in_addr_t host);
-#endif
-
-/*
- * Start a server with the default host and the default port
- *
- * server: the server object
- *
- * host is set to INADDR_ANY, port is set to CDTP_PORT
- */
-void cdtp_server_start_default(CDTPServer* server);
+EXPORT void cdtp_server_start(CDTPServer* server, char* host, unsigned short port);
 
 /*
  * Stop the server, disconnect all clients, and free up memory
  *
  * server: the server object
  */
-void cdtp_server_stop(CDTPServer* server);
+EXPORT void cdtp_server_stop(CDTPServer* server);
 
 /*
  * Check if the server is serving
  *
  * server: the server object
  */
-int cdtp_server_serving(CDTPServer* server);
-
-/*
- * Get the server address
- *
- * server: the server object
- */
-struct sockaddr_in cdtp_server_addr(CDTPServer* server);
+EXPORT int cdtp_server_serving(CDTPServer* server);
 
 /*
  * Get the server ip address
@@ -156,14 +67,14 @@ struct sockaddr_in cdtp_server_addr(CDTPServer* server);
  *
  * The returned value's memory will need to be freed after use
  */
-char* cdtp_server_host(CDTPServer* server);
+EXPORT char* cdtp_server_host(CDTPServer* server);
 
 /*
  * Get the server port
  *
  * server: the server object
  */
-int cdtp_server_port(CDTPServer* server);
+EXPORT int cdtp_server_port(CDTPServer* server);
 
 /*
  * Remove a client by ID
@@ -171,7 +82,7 @@ int cdtp_server_port(CDTPServer* server);
  * server:    the server object
  * client_id: the ID of the client to be removed
  */
-void cdtp_server_remove_client(CDTPServer* server, size_t client_id);
+EXPORT void cdtp_server_remove_client(CDTPServer* server, size_t client_id);
 
 /*
  * Send data to a client
@@ -181,7 +92,7 @@ void cdtp_server_remove_client(CDTPServer* server, size_t client_id);
  * data:      the data to send
  * data_size: the size of the data
  */
-void cdtp_server_send(CDTPServer* server, size_t client_id, void* data, size_t data_size);
+EXPORT void cdtp_server_send(CDTPServer* server, size_t client_id, void* data, size_t data_size);
 
 /*
  * Send data to all clients
@@ -190,34 +101,6 @@ void cdtp_server_send(CDTPServer* server, size_t client_id, void* data, size_t d
  * data:      the data to send
  * data_size: the size of the data
  */
-void cdtp_server_send_all(CDTPServer* server, void* data, size_t data_size);
-
-// Call the serve function
-void _cdtp_server_call_serve(CDTPServer* server);
-
-// Server serve function
-void _cdtp_server_serve(CDTPServer* server);
-
-// Call the on_recv function
-void _cdtp_server_call_on_recv(CDTPServer* server, size_t client_id, void* data, size_t data_size);
-
-// Call the on_connect function
-void _cdtp_server_call_on_connect(CDTPServer* server, size_t client_id);
-
-// Call the on_disconnect function
-void _cdtp_server_call_on_disconnect(CDTPServer* server, size_t client_id);
-
-// Get the first available client ID
-size_t _cdtp_server_new_client_id(CDTPServer* server);
-
-// Send a client a status code
-#ifdef _WIN32
-void _cdtp_server_send_status(SOCKET client_sock, int status_code);
-#else
-void _cdtp_server_send_status(int client_sock, int status_code);
-#endif
-
-// Disconnect a socket
-void _cdtp_server_disconnect_sock(CDTPServer* server, size_t client_id);
+EXPORT void cdtp_server_send_all(CDTPServer* server, void* data, size_t data_size);
 
 #endif // CDTP_SERVER_H

@@ -21,7 +21,7 @@ ifeq ($(OS),Windows_NT)
 	CLEAN_OBJECTS = del bin\*.o
 	TEST_BINARY = bin\test
 	POST_BUILD_CMD = cd.
-	CLEAN_CMD = del bin\libcdtp.so bin\cdtp.dll bin\test bin\test.exe bin\*.o
+	CLEAN_CMD = del bin\libcdtp.so bin\cdtp.dll bin\test bin\test.exe bin\*.o *.o
 else
 	INCLUDE_FLAGS =
 	LINK_FLAGS = -lpthread -L/usr/src/openssl-3.0.7 -l:libcrypto.so.3
@@ -30,7 +30,7 @@ else
 	CLEAN_OBJECTS = rm -f bin/*.o
 	TEST_BINARY = ./bin/test
 	POST_BUILD_CMD = chmod +x ./bin/test
-	CLEAN_CMD = rm -f bin/libcdtp.so bin/cdtp.dll bin/test bin/test.exe bin/*.o
+	CLEAN_CMD = rm -f bin/libcdtp.so bin/cdtp.dll bin/test bin/test.exe bin/*.o *.o
 endif
 
 all: build

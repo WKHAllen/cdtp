@@ -1,5 +1,5 @@
 /*
- * CDTP type definitions
+ * Type definitions for cdtp.
  */
 
 #pragma once
@@ -8,7 +8,7 @@
 
 #include "util.h"
 
- // Callback function types
+// Callback function types
 typedef void (*ServerOnRecvCallback)(size_t, void*, size_t, void*);
 typedef void (*ServerOnConnectCallback)(size_t, void*);
 typedef void (*ServerOnDisconnectCallback)(size_t, void*);
@@ -34,8 +34,6 @@ typedef struct _CDTPServer {
     void* on_recv_arg;
     void* on_connect_arg;
     void* on_disconnect_arg;
-    int blocking;
-    int event_blocking;
     int serving;
     int done;
     size_t num_clients;
@@ -55,8 +53,6 @@ typedef struct _CDTPClient {
     ClientOnDisconnectedCallback on_disconnected;
     void* on_recv_arg;
     void* on_disconnected_arg;
-    int blocking;
-    int event_blocking;
     int connected;
     int done;
     CDTPSocket* sock;

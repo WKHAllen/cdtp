@@ -1,12 +1,9 @@
 /*
- * C Data Transfer Protocol
+ * Data Transfer Protocol for C
  * 
- * A cross platform networking library written in C.
+ * Modern cross-platform networking interfaces for C.
  * 
  * Author: Will Allen
- * 
- * All functions beginning with an underscore are not exported, and cannot be
- * used from outside the library.
  */
 
 #pragma once
