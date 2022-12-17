@@ -1,4 +1,4 @@
-#include "../bin/include/cdtp.h"
+#include "../src/cdtp.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
