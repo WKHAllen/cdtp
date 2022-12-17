@@ -50,7 +50,7 @@ void _cdtp_client_handle(CDTPClient* client)
         }
         else {
             size_t msg_size = _cdtp_decode_message_size(size_buffer);
-            char* buffer = malloc(msg_size * sizeof(char));
+            char* buffer = (char*) malloc(msg_size * sizeof(char));
 
             // Wait in case the message is sent in multiple chunks
             cdtp_sleep(0.01);
@@ -121,7 +121,7 @@ void _cdtp_client_handle(CDTPClient* client)
         }
         else {
             size_t msg_size = _cdtp_decode_message_size(size_buffer);
-            char* buffer = malloc(msg_size * sizeof(char));
+            char* buffer = (char*) malloc(msg_size * sizeof(char));
 
             // Wait in case the message is sent in multiple chunks
             cdtp_sleep(0.01);
@@ -154,7 +154,7 @@ EXPORT CDTPClient* cdtp_client(
     void* on_disconnected_arg
 )
 {
-    CDTPClient* client = malloc(sizeof(*client));
+    CDTPClient* client = (CDTPClient*) malloc(sizeof(CDTPClient));
 
     // Initialize the client object
     client->on_recv = on_recv;
@@ -175,7 +175,7 @@ EXPORT CDTPClient* cdtp_client(
     }
 
     // Initialize the client socket
-    client->sock = malloc(sizeof(*(client->sock)));
+    client->sock = (CDTPSocket*) malloc(sizeof(CDTPSocket));
 
     // Initialize the socket info
 #ifdef _WIN32
@@ -261,7 +261,7 @@ EXPORT void cdtp_client_connect(CDTPClient* client, char* host, unsigned short p
     }
     else {
         size_t msg_size = _cdtp_decode_message_size(size_buffer);
-        char* buffer = malloc(msg_size * sizeof(char));
+        char* buffer = (char*) malloc(msg_size * sizeof(char));
         recv_code = recv(client->sock->sock, buffer, msg_size, 0);
 
         if (recv_code == SOCKET_ERROR) {
@@ -302,7 +302,7 @@ EXPORT void cdtp_client_connect(CDTPClient* client, char* host, unsigned short p
     }
     else {
         size_t msg_size = _cdtp_decode_message_size(size_buffer);
-        char* buffer = malloc(msg_size * sizeof(char));
+        char* buffer = (char*) malloc(msg_size * sizeof(char));
         recv_code = read(client->sock->sock, buffer, msg_size);
 
         if (recv_code == 0) {
@@ -418,7 +418,7 @@ EXPORT char* cdtp_client_host(CDTPClient* client)
         return NULL;
     }
 
-    char* addr = malloc(CDTP_ADDRSTRLEN * sizeof(char));
+    char* addr = (char*) malloc(CDTP_ADDRSTRLEN * sizeof(char));
 
 #ifdef _WIN32
     int addrlen = CDTP_ADDRSTRLEN;

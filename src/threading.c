@@ -63,7 +63,7 @@ void _cdtp_start_thread_on_recv_server(
     void* arg
 )
 {
-    CDTPEventFunc* func_info = malloc(sizeof(*func_info));
+    CDTPEventFunc* func_info = (CDTPEventFunc*) malloc(sizeof(CDTPEventFunc));
     func_info->name = "on_recv_server";
     func_info->func.func_server_on_recv = func;
     func_info->size_t1 = client_id;
@@ -79,7 +79,7 @@ void _cdtp_start_thread_on_connect(
     void* arg
 )
 {
-    CDTPEventFunc* func_info = malloc(sizeof(*func_info));
+    CDTPEventFunc* func_info = (CDTPEventFunc*) malloc(sizeof(CDTPEventFunc));
     func_info->name = "on_connect";
     func_info->func.func_server_on_connect = func;
     func_info->size_t1 = client_id;
@@ -93,7 +93,7 @@ void _cdtp_start_thread_on_disconnect(
     void* arg
 )
 {
-    CDTPEventFunc* func_info = malloc(sizeof(*func_info));
+    CDTPEventFunc* func_info = (CDTPEventFunc*) malloc(sizeof(CDTPEventFunc));
     func_info->name = "on_disconnect";
     func_info->func.func_server_on_disconnect = func;
     func_info->size_t1 = client_id;
@@ -108,7 +108,7 @@ void _cdtp_start_thread_on_recv_client(
     void* arg
 )
 {
-    CDTPEventFunc* func_info = malloc(sizeof(*func_info));
+    CDTPEventFunc* func_info = (CDTPEventFunc*) malloc(sizeof(CDTPEventFunc));
     func_info->name = "on_recv_client";
     func_info->func.func_client_on_recv = func;
     func_info->voidp1 = data;
@@ -122,7 +122,7 @@ void _cdtp_start_thread_on_disconnected(
     void* arg
 )
 {
-    CDTPEventFunc* func_info = malloc(sizeof(*func_info));
+    CDTPEventFunc* func_info = (CDTPEventFunc*) malloc(sizeof(CDTPEventFunc));
     func_info->name = "on_disconnected";
     func_info->func.func_client_on_disconnected = func;
     func_info->voidp1 = arg;
@@ -163,7 +163,7 @@ pthread_t _cdtp_start_serve_thread(
 #endif
 {
     // Set function information
-    CDTPServeFunc* func_info = malloc(sizeof(*func_info));
+    CDTPServeFunc* func_info = (CDTPServeFunc*) malloc(sizeof(CDTPServeFunc));
     func_info->func = func;
     func_info->server = server;
 
@@ -223,7 +223,7 @@ pthread_t _cdtp_start_handle_thread(
 #endif
 {
     // Set function information
-    CDTPHandleFunc* func_info = malloc(sizeof(*func_info));
+    CDTPHandleFunc* func_info = (CDTPHandleFunc*) malloc(sizeof(CDTPHandleFunc));
     func_info->func = func;
     func_info->client = client;
 

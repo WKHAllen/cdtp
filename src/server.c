@@ -153,7 +153,7 @@ void _cdtp_server_serve(CDTPServer* server)
 
             if (new_client_id != CDTP_MAX_CLIENTS_REACHED) {
                 // Add the new socket to the client array
-                server->clients[new_client_id] = malloc(sizeof(*(server->clients[new_client_id])));
+                server->clients[new_client_id] = (CDTPSocket*) malloc(sizeof(CDTPSocket));
                 server->clients[new_client_id]->sock = new_sock;
                 memcpy(&(server->clients[new_client_id]->address), &address, sizeof(address));
                 server->allocated_clients[new_client_id] = CDTP_TRUE;
@@ -198,7 +198,7 @@ void _cdtp_server_serve(CDTPServer* server)
                 }
                 else {
                     size_t msg_size = _cdtp_decode_message_size(size_buffer);
-                    char* buffer = malloc(msg_size * sizeof(char));
+                    char* buffer = (char*) malloc(msg_size * sizeof(char));
 
                     // Wait in case the message is sent in multiple chunks
                     cdtp_sleep(0.01);
@@ -234,7 +234,7 @@ void _cdtp_server_serve(CDTPServer* server)
                 }
                 else {
                     size_t msg_size = _cdtp_decode_message_size(size_buffer);
-                    char* buffer = malloc(msg_size * sizeof(char));
+                    char* buffer = (char*) malloc(msg_size * sizeof(char));
 
                     // Wait in case the message is sent in multiple chunks
                     cdtp_sleep(0.01);
@@ -271,7 +271,7 @@ EXPORT CDTPServer* cdtp_server(
     void* on_disconnect_arg
 )
 {
-    CDTPServer* server = malloc(sizeof(*server));
+    CDTPServer* server = (CDTPServer*) malloc(sizeof(CDTPServer));
 
     // Initialize the server object
     server->max_clients = max_clients;
@@ -296,7 +296,7 @@ EXPORT CDTPServer* cdtp_server(
     }
 
     // Initialize the server socket
-    server->sock = malloc(sizeof(*(server->sock)));
+    server->sock = (CDTPSocket*) malloc(sizeof(CDTPSocket));
 
     // Initialize the socket info
     int opt = 1;
@@ -324,10 +324,10 @@ EXPORT CDTPServer* cdtp_server(
 #endif
 
     // Initialize the client socket array
-    server->clients = malloc(max_clients * sizeof(*(server->clients)));
+    server->clients = (CDTPSocket**) malloc(max_clients * sizeof(CDTPSocket*));
 
     // Initialize the allocated clients array
-    server->allocated_clients = malloc(max_clients * sizeof(*(server->allocated_clients)));
+    server->allocated_clients = (int*) malloc(max_clients * sizeof(int));
 
     for (size_t i = 0; i < max_clients; i++) {
         server->allocated_clients[i] = CDTP_FALSE;
@@ -485,7 +485,7 @@ EXPORT char* cdtp_server_host(CDTPServer* server)
         return NULL;
     }
 
-    char* addr = malloc(CDTP_ADDRSTRLEN * sizeof(char));
+    char* addr = (char*) malloc(CDTP_ADDRSTRLEN * sizeof(char));
 
 #ifdef _WIN32
     int addrlen = CDTP_ADDRSTRLEN;

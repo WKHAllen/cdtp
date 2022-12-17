@@ -31,7 +31,7 @@ TestState* new_test_state(
     char* random_message_to_client
 )
 {
-    TestState* test_state = malloc(sizeof(TestState));
+    TestState* test_state = (TestState*) malloc(sizeof(TestState));
     test_state->receiving_random_message = CDTP_FALSE;
     test_state->random_message_to_server_len = random_message_to_server_len;
     test_state->random_message_to_client_len = random_message_to_client_len;
@@ -54,7 +54,7 @@ int randint(int min, int max)
 
 char* randbytes(size_t size)
 {
-    char* bytes = malloc(size * sizeof(char));
+    char* bytes = (char*) malloc(size * sizeof(char));
 
     for (size_t i = 0; i < size; i++) {
         bytes[i] = (char)randint(0, 255);
@@ -65,7 +65,7 @@ char* randbytes(size_t size)
 
 char* voidp_to_str(void* data, size_t data_size)
 {
-    char* message = malloc((data_size + 1) * sizeof(char));
+    char* message = (char*) malloc((data_size + 1) * sizeof(char));
     memcpy(message, data, data_size);
     message[data_size] = '\0';
     return message;
