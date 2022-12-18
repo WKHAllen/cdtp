@@ -61,20 +61,20 @@ EXPORT void cdtp_server_stop(CDTPServer* server);
 EXPORT int cdtp_server_serving(CDTPServer* server);
 
 /*
- * Get the server ip address
+ * Get the server host address.
  *
  * server: the server object
  *
  * The returned value's memory will need to be freed after use
  */
-EXPORT char* cdtp_server_host(CDTPServer* server);
+EXPORT char* cdtp_server_get_host(CDTPServer* server);
 
 /*
- * Get the server port
+ * Get the server port.
  *
  * server: the server object
  */
-EXPORT int cdtp_server_port(CDTPServer* server);
+EXPORT unsigned short cdtp_server_get_port(CDTPServer* server);
 
 /*
  * Remove a client by ID

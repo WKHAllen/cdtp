@@ -164,3 +164,22 @@ EXPORT void cdtp_sleep(double seconds)
     nanosleep(&ts, NULL);
 #endif
 }
+
+#ifdef _WIN32
+wchar_t *_str_to_wchar(const char *str) {
+    size_t newsize = strlen(str) + 1;
+    wchar_t *wchar = (wchar_t *) malloc(newsize * sizeof(wchar_t));
+    size_t convertedChars = 0;
+    mbstowcs_s(&convertedChars, wchar, newsize, str, _TRUNCATE);
+    return wchar;
+}
+
+char *_wchar_to_str(const wchar_t *wchar) {
+    size_t wcharsize = wcslen(wchar) + 1;
+    size_t convertedChars = 0;
+    const size_t newsize = wcharsize * 2;
+    char *str = (char *) malloc(newsize * sizeof(char));
+    wcstombs_s(&convertedChars, str, newsize, wchar, _TRUNCATE);
+    return str;
+}
+#endif

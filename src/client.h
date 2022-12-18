@@ -50,20 +50,20 @@ EXPORT void cdtp_client_disconnect(CDTPClient* client);
 EXPORT int cdtp_client_connected(CDTPClient* client);
 
 /*
- * Get the client ip address
+ * Get the client host address.
  *
  * client: the client object
  *
  * The returned value's memory will need to be freed after use
  */
-EXPORT char* cdtp_client_host(CDTPClient* client);
+EXPORT char* cdtp_client_get_host(CDTPClient* client);
 
 /*
- * Get the client port
+ * Get the client port.
  *
  * client: the client object
  */
-EXPORT int cdtp_client_port(CDTPClient* client);
+EXPORT unsigned short cdtp_client_get_port(CDTPClient* client);
 
 /*
  * Send data to the server

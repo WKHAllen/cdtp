@@ -359,10 +359,14 @@ EXPORT void cdtp_server_start(CDTPServer* server, char* host, unsigned short por
 #ifdef _WIN32
     int addrlen = CDTP_ADDRSTRLEN;
 
-    if (WSAStringToAddress(host, CDTP_ADDRESS_FAMILY, NULL, (LPSOCKADDR) & (server->sock->address), &addrlen) != 0) {
+    wchar_t *host_wc = _str_to_wchar(host);
+
+    if (WSAStringToAddressW(host_wc, CDTP_ADDRESS_FAMILY, NULL, (LPSOCKADDR) & (server->sock->address), &addrlen) != 0) {
         _cdtp_set_err(CDTP_SERVER_ADDRESS_FAILED);
         return;
     }
+
+    free(host_wc);
 #else
     if (inet_pton(CDTP_ADDRESS_FAMILY, host, &(server->sock->address)) != 1) {
         _cdtp_set_err(CDTP_SERVER_ADDRESS_FAILED);
@@ -477,7 +481,7 @@ EXPORT int cdtp_server_serving(CDTPServer* server)
     return server->serving;
 }
 
-EXPORT char* cdtp_server_host(CDTPServer* server)
+EXPORT char* cdtp_server_get_host(CDTPServer* server)
 {
     // Make sure the server is running
     if (server->serving != CDTP_TRUE) {
@@ -485,24 +489,29 @@ EXPORT char* cdtp_server_host(CDTPServer* server)
         return NULL;
     }
 
-    char* addr = (char*) malloc(CDTP_ADDRSTRLEN * sizeof(char));
-
 #ifdef _WIN32
     int addrlen = CDTP_ADDRSTRLEN;
 
-    if (WSAAddressToString((LPSOCKADDR) & (server->sock->address), sizeof(server->sock->address), NULL, addr, (LPDWORD)&addrlen) != 0) {
+    wchar_t *addr_wc = (wchar_t *) malloc(CDTP_ADDRSTRLEN * sizeof(wchar_t));
+
+    if (WSAAddressToStringW((LPSOCKADDR) & (server->sock->address), sizeof(server->sock->address), NULL, addr_wc, (LPDWORD)&addrlen) != 0) {
         _cdtp_set_err(CDTP_SERVER_ADDRESS_FAILED);
         return NULL;
     }
 
     // Remove the port
-    for (int i = 0; i < CDTP_ADDRSTRLEN && addr[i] != '\0'; i++) {
-        if (addr[i] == ':') {
-            addr[i] = '\0';
+    for (int i = 0; i < CDTP_ADDRSTRLEN && addr_wc[i] != '\0'; i++) {
+        if (addr_wc[i] == ':') {
+            addr_wc[i] = '\0';
             break;
         }
     }
+
+    char *addr = _wchar_to_str(addr_wc);
+    free(addr_wc);
 #else
+    char* addr = (char*) malloc(CDTP_ADDRSTRLEN * sizeof(char));
+
     if (inet_ntop(CDTP_ADDRESS_FAMILY, &(server->sock->address), addr, CDTP_ADDRSTRLEN) == NULL) {
         _cdtp_set_err(CDTP_SERVER_ADDRESS_FAILED);
         return NULL;
@@ -512,7 +521,7 @@ EXPORT char* cdtp_server_host(CDTPServer* server)
     return addr;
 }
 
-EXPORT int cdtp_server_port(CDTPServer* server)
+EXPORT unsigned short cdtp_server_get_port(CDTPServer* server)
 {
     // Make sure the server is running
     if (server->serving != CDTP_TRUE) {

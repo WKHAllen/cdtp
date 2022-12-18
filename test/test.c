@@ -184,8 +184,8 @@ int main(void)
     cdtp_server_start(server, host, port);
 
     // Get host and port
-    char* server_host = cdtp_server_host(server);
-    unsigned short server_port = cdtp_server_port(server);
+    char* server_host = cdtp_server_get_host(server);
+    unsigned short server_port = cdtp_server_get_port(server);
     printf("Host: %s\n", server_host);
     printf("Port: %d\n", server_port);
 
@@ -214,8 +214,8 @@ int main(void)
     free(server_host);
 
     // Get host and port
-    char* client_host = cdtp_client_host(client);
-    int client_port = cdtp_client_port(client);
+    char* client_host = cdtp_client_get_host(client);
+    int client_port = cdtp_client_get_port(client);
     printf("Host: %s\n", client_host);
     printf("Port: %d\n", client_port);
     free(client_host);

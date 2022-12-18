@@ -180,4 +180,12 @@ void* _cdtp_deconstruct_message(char* message, size_t* data_size);
  */
 EXPORT void cdtp_sleep(double seconds);
 
+#ifdef _WIN32
+// Convert a string to a wide character type.
+wchar_t *_str_to_wchar(const char *str);
+
+// Convert a wide character string to a string.
+char *_wchar_to_str(const wchar_t *wchar);
+#endif
+
 #endif // CDTP_UTIL_H
