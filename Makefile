@@ -2,6 +2,7 @@
 
 CC = gcc
 SOURCES = $(wildcard src/*.c)
+TEST = false
 BUILD_FLAGS = \
 	-std=gnu11 -pedantic -Wall \
 	-Wno-missing-braces -Wextra -Wno-missing-field-initializers -Wformat=2 \
@@ -14,15 +15,17 @@ BUILD_FLAGS = \
 	-fno-omit-frame-pointer -ffloat-store -fno-common
 
 ifeq ($(OS),Windows_NT)
+	NULL_CMD = cd.
 	INCLUDE_FLAGS = -I"C:\Program Files\OpenSSL-Win64\include"
 	LINK_FLAGS = -lWs2_32 -L"C:\Program Files\OpenSSL-Win64\bin" -llibcrypto-3-x64
 	BUILD_SHARED_OUT = bin/cdtp.dll
 	MOVE_OBJECTS = move /y *.o bin >NUL
 	CLEAN_OBJECTS = del bin\*.o
 	TEST_BINARY = bin\test
-	POST_BUILD_CMD = cd.
+	POST_BUILD_CMD = $(NULL_CMD)
 	CLEAN_CMD = del bin\libcdtp.so bin\cdtp.dll bin\test bin\test.exe bin\*.o *.o
 else
+	NULL_CMD = :
 	INCLUDE_FLAGS =
 	LINK_FLAGS = -lpthread -L/usr/src/openssl-3.0.7 -l:libcrypto.so.3
 	BUILD_SHARED_OUT = bin/libcdtp.so
@@ -33,6 +36,18 @@ else
 	CLEAN_CMD = rm -f bin/libcdtp.so bin/cdtp.dll bin/test bin/test.exe bin/*.o *.o
 endif
 
+ifeq ($(TEST),true)
+	BUILD_DIRECTIVES = -DCDTP_TEST
+	BUILD_TEST_BINARY_CMD = \
+		$(CC) -o bin/test \
+		$(INCLUDE_FLAGS) \
+		$(BUILD_FLAGS) \
+		test/*.c -L./bin -Wl,-rpath=./bin -lcdtp
+else
+	BUILD_DIRECTIVES =
+	BUILD_TEST_BINARY_CMD = $(NULL_CMD)
+endif
+
 all: build
 
 build:
@@ -40,6 +55,7 @@ build:
 		-fPIC \
 		$(INCLUDE_FLAGS) \
 		$(BUILD_FLAGS) \
+		$(BUILD_DIRECTIVES) \
 		$(SOURCES) && \
 	$(MOVE_OBJECTS) && \
 	$(CC) -o $(BUILD_SHARED_OUT) \
@@ -48,10 +64,7 @@ build:
 		$(BUILD_FLAGS) \
 		bin/*.o \
 		$(LINK_FLAGS) && \
-	$(CC) -o bin/test \
-		$(INCLUDE_FLAGS) \
-		$(BUILD_FLAGS) \
-		test/*.c -L./bin -Wl,-rpath=./bin -lcdtp && \
+	$(BUILD_TEST_BINARY_CMD) && \
 	$(POST_BUILD_CMD) && \
 	$(CLEAN_OBJECTS)
 

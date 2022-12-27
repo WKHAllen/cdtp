@@ -27,7 +27,7 @@
  * on_connect_arg:    a value that will be passed to the on_connect function
  * on_disconnect_arg: a value that will be passed to the on_disconnect function
  */
-EXPORT CDTPServer* cdtp_server(
+CDTP_EXPORT CDTPServer* cdtp_server(
   size_t max_clients,
   ServerOnRecvCallback on_recv,
   ServerOnConnectCallback on_connect,
@@ -44,21 +44,21 @@ EXPORT CDTPServer* cdtp_server(
  * host:   the host as a string
  * port:   the port as an integer
  */
-EXPORT void cdtp_server_start(CDTPServer* server, char* host, unsigned short port);
+CDTP_EXPORT void cdtp_server_start(CDTPServer* server, char* host, unsigned short port);
 
 /*
  * Stop the server, disconnect all clients, and free up memory
  *
  * server: the server object
  */
-EXPORT void cdtp_server_stop(CDTPServer* server);
+CDTP_EXPORT void cdtp_server_stop(CDTPServer* server);
 
 /*
  * Check if the server is serving
  *
  * server: the server object
  */
-EXPORT int cdtp_server_serving(CDTPServer* server);
+CDTP_EXPORT int cdtp_server_is_serving(CDTPServer* server);
 
 /*
  * Get the server host address.
@@ -67,14 +67,32 @@ EXPORT int cdtp_server_serving(CDTPServer* server);
  *
  * The returned value's memory will need to be freed after use
  */
-EXPORT char* cdtp_server_get_host(CDTPServer* server);
+CDTP_EXPORT char* cdtp_server_get_host(CDTPServer* server);
 
 /*
  * Get the server port.
  *
  * server: the server object
  */
-EXPORT unsigned short cdtp_server_get_port(CDTPServer* server);
+CDTP_EXPORT unsigned short cdtp_server_get_port(CDTPServer* server);
+
+/*
+ * Get the host of a client.
+ *
+ * server: the server object
+ * client_id: the ID of the client
+ *
+ * The returned value's memory will need to be freed after use
+ */
+CDTP_EXPORT char* cdtp_server_get_client_host(CDTPServer* server, size_t client_id);
+
+/*
+ * Get the port of a client.
+ *
+ * server: the server object
+ * client_id: the ID of the client
+ */
+CDTP_EXPORT unsigned short cdtp_server_get_client_port(CDTPServer* server, size_t client_id);
 
 /*
  * Remove a client by ID
@@ -82,7 +100,7 @@ EXPORT unsigned short cdtp_server_get_port(CDTPServer* server);
  * server:    the server object
  * client_id: the ID of the client to be removed
  */
-EXPORT void cdtp_server_remove_client(CDTPServer* server, size_t client_id);
+CDTP_EXPORT void cdtp_server_remove_client(CDTPServer* server, size_t client_id);
 
 /*
  * Send data to a client
@@ -92,7 +110,7 @@ EXPORT void cdtp_server_remove_client(CDTPServer* server, size_t client_id);
  * data:      the data to send
  * data_size: the size of the data
  */
-EXPORT void cdtp_server_send(CDTPServer* server, size_t client_id, void* data, size_t data_size);
+CDTP_EXPORT void cdtp_server_send(CDTPServer* server, size_t client_id, void* data, size_t data_size);
 
 /*
  * Send data to all clients
@@ -101,6 +119,6 @@ EXPORT void cdtp_server_send(CDTPServer* server, size_t client_id, void* data, s
  * data:      the data to send
  * data_size: the size of the data
  */
-EXPORT void cdtp_server_send_all(CDTPServer* server, void* data, size_t data_size);
+CDTP_EXPORT void cdtp_server_send_all(CDTPServer* server, void* data, size_t data_size);
 
 #endif // CDTP_SERVER_H

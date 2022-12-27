@@ -19,7 +19,7 @@
   * on_recv_arg:         a value that will be passed to the on_recv function
   * on_disconnected_arg: a value that will be passed to the on_disconnected function
   */
-EXPORT CDTPClient* cdtp_client(
+CDTP_EXPORT CDTPClient* cdtp_client(
   ClientOnRecvCallback on_recv,
   ClientOnDisconnectedCallback on_disconnected,
   void* on_recv_arg,
@@ -33,21 +33,21 @@ EXPORT CDTPClient* cdtp_client(
  * host:   the host as a string
  * port:   the port as an integer
  */
-EXPORT void cdtp_client_connect(CDTPClient* client, char* host, unsigned short port);
+CDTP_EXPORT void cdtp_client_connect(CDTPClient* client, char* host, unsigned short port);
 
 /*
  * Disconnect from the server and free up memory
  *
  * client: the client object
  */
-EXPORT void cdtp_client_disconnect(CDTPClient* client);
+CDTP_EXPORT void cdtp_client_disconnect(CDTPClient* client);
 
 /*
  * Check if the client is connected to a server
  *
  * client: the client object
  */
-EXPORT int cdtp_client_connected(CDTPClient* client);
+CDTP_EXPORT int cdtp_client_is_connected(CDTPClient* client);
 
 /*
  * Get the client host address.
@@ -56,14 +56,30 @@ EXPORT int cdtp_client_connected(CDTPClient* client);
  *
  * The returned value's memory will need to be freed after use
  */
-EXPORT char* cdtp_client_get_host(CDTPClient* client);
+CDTP_EXPORT char* cdtp_client_get_host(CDTPClient* client);
 
 /*
  * Get the client port.
  *
  * client: the client object
  */
-EXPORT unsigned short cdtp_client_get_port(CDTPClient* client);
+CDTP_EXPORT unsigned short cdtp_client_get_port(CDTPClient* client);
+
+/*
+ * Get the host of the server.
+ *
+ * client: the client object
+ *
+ * The returned value's memory will need to be freed after use
+ */
+CDTP_EXPORT char* cdtp_client_get_server_host(CDTPClient* client);
+
+/*
+ * Get the port of the server.
+ *
+ * client: the client object
+ */
+CDTP_EXPORT unsigned short cdtp_client_get_server_port(CDTPClient* client);
 
 /*
  * Send data to the server
@@ -72,6 +88,6 @@ EXPORT unsigned short cdtp_client_get_port(CDTPClient* client);
  * data:      the data to send
  * data_size: the size of the data
  */
-EXPORT void cdtp_client_send(CDTPClient* client, void* data, size_t data_size);
+CDTP_EXPORT void cdtp_client_send(CDTPClient* client, void* data, size_t data_size);
 
 #endif // CDTP_CLIENT_H

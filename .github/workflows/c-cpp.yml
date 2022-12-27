@@ -13,7 +13,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: make
-      run: make
+    - name: make TEST=true
+      run: make TEST=true
     - name: make test
       run: make test

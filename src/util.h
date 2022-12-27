@@ -25,9 +25,16 @@
 
 // Export functions
 #ifdef _WIN32
-#  define EXPORT __declspec(dllexport)
+#  define CDTP_EXPORT __declspec(dllexport)
 #else
-#  define EXPORT __attribute__((visibility("default")))
+#  define CDTP_EXPORT __attribute__((visibility("default")))
+#endif
+
+// Test export functions
+#ifdef CDTP_TEST
+#  define CDTP_TEST_EXPORT CDTP_EXPORT
+#else
+#  define CDTP_TEST_EXPORT
 #endif
 
 // Boolean values
@@ -128,17 +135,17 @@ void _cdtp_exit(void);
 /*
  * Check if an error has occurred
  */
-EXPORT int cdtp_error(void);
+CDTP_EXPORT int cdtp_error(void);
 
 /*
  * Get the CDTP error code
  */
-EXPORT int cdtp_get_error(void);
+CDTP_EXPORT int cdtp_get_error(void);
 
 /*
  * Get the underlying layer error code
  */
-EXPORT int cdtp_get_underlying_error(void);
+CDTP_EXPORT int cdtp_get_underlying_error(void);
 
 // Set the errors
 void _cdtp_set_error(int cdtp_err, int underlying_err);
@@ -152,7 +159,7 @@ void _cdtp_set_err(int cdtp_err);
  * on_error: pointer to a function that will be called when an error occurs
  * arg:      a value that will be passed to the on_error function
  */
-EXPORT void cdtp_on_error(
+CDTP_EXPORT void cdtp_on_error(
     void (*on_error)(int, int, void*),
     void* arg
 );
@@ -160,13 +167,13 @@ EXPORT void cdtp_on_error(
 /*
  * Unregister the on_error function
  */
-EXPORT void cdtp_on_error_clear(void);
+CDTP_EXPORT void cdtp_on_error_clear(void);
 
 // Encode the size of a message
-unsigned char* _cdtp_encode_message_size(size_t dec);
+CDTP_TEST_EXPORT unsigned char* _cdtp_encode_message_size(size_t dec);
 
 // Decode the size of a message
-size_t _cdtp_decode_message_size(unsigned char* ascii);
+CDTP_TEST_EXPORT size_t _cdtp_decode_message_size(unsigned char* ascii);
 
 // Construct a message
 char* _cdtp_construct_message(void* data, size_t data_size);
@@ -178,7 +185,7 @@ void* _cdtp_deconstruct_message(char* message, size_t* data_size);
  * Cross-platform wait function.
  * Useful for waiting short amounts of time between connecting to a server, sending data, disconnecting, etc.
  */
-EXPORT void cdtp_sleep(double seconds);
+CDTP_EXPORT void cdtp_sleep(double seconds);
 
 #ifdef _WIN32
 // Convert a string to a wide character type.

@@ -40,7 +40,7 @@ void _cdtp_exit(void)
     }
 }
 
-EXPORT int cdtp_error(void)
+CDTP_EXPORT int cdtp_error(void)
 {
     if (CDTP_ERROR == CDTP_SUCCESS) {
         return CDTP_FALSE;
@@ -49,14 +49,14 @@ EXPORT int cdtp_error(void)
     return CDTP_TRUE;
 }
 
-EXPORT int cdtp_get_error(void)
+CDTP_EXPORT int cdtp_get_error(void)
 {
     int err = CDTP_ERROR;
     CDTP_ERROR = CDTP_SUCCESS;
     return err;
 }
 
-EXPORT int cdtp_get_underlying_error(void)
+CDTP_EXPORT int cdtp_get_underlying_error(void)
 {
     int err = CDTP_ERROR_UNDER;
     CDTP_ERROR_UNDER = 0;
@@ -83,7 +83,7 @@ void _cdtp_set_err(int cdtp_err)
 #endif
 }
 
-EXPORT void cdtp_on_error(
+CDTP_EXPORT void cdtp_on_error(
     void (*on_error)(int, int, void*),
     void* arg
 )
@@ -93,12 +93,12 @@ EXPORT void cdtp_on_error(
     CDTP_ON_ERROR_ARG = arg;
 }
 
-EXPORT void cdtp_on_error_clear(void)
+CDTP_EXPORT void cdtp_on_error_clear(void)
 {
     CDTP_ON_ERROR_REGISTERED = CDTP_FALSE;
 }
 
-unsigned char* _cdtp_encode_message_size(size_t size)
+CDTP_TEST_EXPORT unsigned char* _cdtp_encode_message_size(size_t size)
 {
     unsigned char* encoded_size = (unsigned char*) malloc(CDTP_LENSIZE * sizeof(unsigned char));
 
@@ -110,7 +110,7 @@ unsigned char* _cdtp_encode_message_size(size_t size)
     return encoded_size;
 }
 
-size_t _cdtp_decode_message_size(unsigned char* encoded_size)
+CDTP_TEST_EXPORT size_t _cdtp_decode_message_size(unsigned char* encoded_size)
 {
     size_t size = 0;
 
@@ -153,7 +153,7 @@ void* _cdtp_deconstruct_message(char* message, size_t* data_size)
     return (void*)data;
 }
 
-EXPORT void cdtp_sleep(double seconds)
+CDTP_EXPORT void cdtp_sleep(double seconds)
 {
 #ifdef _WIN32
     Sleep(seconds * 1000);
