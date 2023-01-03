@@ -219,130 +219,130 @@ TestState *test_state(
     TestReceivedMessage **client_received
 )
 {
-    TestState *test_state = (TestState *) malloc(sizeof(TestState));
+    TestState *state = (TestState *) malloc(sizeof(TestState));
 
-    test_state->server_receive_count_expected = server_receive_count;
-    test_state->server_connect_count_expected = server_connect_count;
-    test_state->server_disconnect_count_expected = server_disconnect_count;
-    test_state->server_receive_count = 0;
-    test_state->server_connect_count = 0;
-    test_state->server_disconnect_count = 0;
-    test_state->server_received_expected = server_received;
-    test_state->server_receive_client_ids_expected = server_receive_client_ids;
-    test_state->server_connect_client_ids_expected = server_connect_client_ids;
-    test_state->server_disconnect_client_ids_expected = server_disconnect_client_ids;
-    test_state->server_received = (TestReceivedMessage **) malloc(server_receive_count * sizeof(TestReceivedMessage *));
-    test_state->server_receive_client_ids = (size_t *) malloc(server_receive_count * sizeof(size_t));
-    test_state->server_connect_client_ids = (size_t *) malloc(server_connect_count * sizeof(size_t));
-    test_state->server_disconnect_client_ids = (size_t *) malloc(server_disconnect_count * sizeof(size_t));
-    test_state->client_receive_count_expected = client_receive_count;
-    test_state->client_disconnected_count_expected = client_disconnected_count;
-    test_state->client_receive_count = 0;
-    test_state->client_disconnected_count = 0;
-    test_state->client_received_expected = client_received;
-    test_state->client_received = (TestReceivedMessage **) malloc(client_receive_count * sizeof(TestReceivedMessage *));
+    state->server_receive_count_expected = server_receive_count;
+    state->server_connect_count_expected = server_connect_count;
+    state->server_disconnect_count_expected = server_disconnect_count;
+    state->server_receive_count = 0;
+    state->server_connect_count = 0;
+    state->server_disconnect_count = 0;
+    state->server_received_expected = server_received;
+    state->server_receive_client_ids_expected = server_receive_client_ids;
+    state->server_connect_client_ids_expected = server_connect_client_ids;
+    state->server_disconnect_client_ids_expected = server_disconnect_client_ids;
+    state->server_received = (TestReceivedMessage **) malloc(server_receive_count * sizeof(TestReceivedMessage *));
+    state->server_receive_client_ids = (size_t *) malloc(server_receive_count * sizeof(size_t));
+    state->server_connect_client_ids = (size_t *) malloc(server_connect_count * sizeof(size_t));
+    state->server_disconnect_client_ids = (size_t *) malloc(server_disconnect_count * sizeof(size_t));
+    state->client_receive_count_expected = client_receive_count;
+    state->client_disconnected_count_expected = client_disconnected_count;
+    state->client_receive_count = 0;
+    state->client_disconnected_count = 0;
+    state->client_received_expected = client_received;
+    state->client_received = (TestReceivedMessage **) malloc(client_receive_count * sizeof(TestReceivedMessage *));
 
-    return test_state;
+    return state;
 }
 
-void test_state_finish(TestState *test_state)
+void test_state_finish(TestState *state)
 {
-    TEST_ASSERT_EQ(test_state->server_receive_count, test_state->server_receive_count_expected)
-    TEST_ASSERT_EQ(test_state->server_connect_count, test_state->server_connect_count_expected)
-    TEST_ASSERT_EQ(test_state->server_disconnect_count, test_state->server_disconnect_count_expected)
-    TEST_ASSERT_MESSAGES_EQ(test_state->server_received,
-                             test_state->server_received_expected,
-                             test_state->server_receive_count)
-    TEST_ASSERT_ARRAY_EQ(test_state->server_receive_client_ids,
-                         test_state->server_receive_client_ids_expected,
-                         test_state->server_receive_count)
-    TEST_ASSERT_ARRAY_EQ(test_state->server_connect_client_ids,
-                         test_state->server_connect_client_ids_expected,
-                         test_state->server_connect_count)
-    TEST_ASSERT_ARRAY_EQ(test_state->server_disconnect_client_ids,
-                         test_state->server_disconnect_client_ids_expected,
-                         test_state->server_disconnect_count)
-    TEST_ASSERT_EQ(test_state->client_receive_count, test_state->client_receive_count_expected)
-    TEST_ASSERT_EQ(test_state->client_disconnected_count, test_state->client_disconnected_count_expected)
-    TEST_ASSERT_MESSAGES_EQ(test_state->client_received,
-                             test_state->client_received_expected,
-                             test_state->client_receive_count)
+    TEST_ASSERT_EQ(state->server_receive_count, state->server_receive_count_expected)
+    TEST_ASSERT_EQ(state->server_connect_count, state->server_connect_count_expected)
+    TEST_ASSERT_EQ(state->server_disconnect_count, state->server_disconnect_count_expected)
+    TEST_ASSERT_MESSAGES_EQ(state->server_received,
+                            state->server_received_expected,
+                            state->server_receive_count)
+    TEST_ASSERT_ARRAY_EQ(state->server_receive_client_ids,
+                         state->server_receive_client_ids_expected,
+                         state->server_receive_count)
+    TEST_ASSERT_ARRAY_EQ(state->server_connect_client_ids,
+                         state->server_connect_client_ids_expected,
+                         state->server_connect_count)
+    TEST_ASSERT_ARRAY_EQ(state->server_disconnect_client_ids,
+                         state->server_disconnect_client_ids_expected,
+                         state->server_disconnect_count)
+    TEST_ASSERT_EQ(state->client_receive_count, state->client_receive_count_expected)
+    TEST_ASSERT_EQ(state->client_disconnected_count, state->client_disconnected_count_expected)
+    TEST_ASSERT_MESSAGES_EQ(state->client_received,
+                            state->client_received_expected,
+                            state->client_receive_count)
 
-    for (size_t i = 0; i < test_state->server_receive_count; i++) {
-        free(test_state->server_received_expected[i]->data);
-        free(test_state->server_received_expected[i]);
-        free(test_state->server_received[i]->data);
-        free(test_state->server_received[i]);
+    for (size_t i = 0; i < state->server_receive_count; i++) {
+        free(state->server_received_expected[i]->data);
+        free(state->server_received_expected[i]);
+        free(state->server_received[i]->data);
+        free(state->server_received[i]);
     }
 
-    free(test_state->server_received);
-    free(test_state->server_receive_client_ids);
-    free(test_state->server_connect_client_ids);
-    free(test_state->server_disconnect_client_ids);
+    free(state->server_received);
+    free(state->server_receive_client_ids);
+    free(state->server_connect_client_ids);
+    free(state->server_disconnect_client_ids);
 
-    for (size_t i = 0; i < test_state->client_receive_count; i++) {
-        free(test_state->client_received_expected[i]->data);
-        free(test_state->client_received_expected[i]);
-        free(test_state->client_received[i]->data);
-        free(test_state->client_received[i]);
+    for (size_t i = 0; i < state->client_receive_count; i++) {
+        free(state->client_received_expected[i]->data);
+        free(state->client_received_expected[i]);
+        free(state->client_received[i]->data);
+        free(state->client_received[i]);
     }
 
-    free(test_state->client_received);
-    free(test_state);
+    free(state->client_received);
+    free(state);
 }
 
-void test_state_server_received(TestState *test_state, size_t client_id, void *data, size_t data_size)
+void test_state_server_received(TestState *state, size_t client_id, void *data, size_t data_size)
 {
-    TEST_ASSERT(test_state->server_receive_count < test_state->server_receive_count_expected)
+    TEST_ASSERT(state->server_receive_count < state->server_receive_count_expected)
 
-    test_state->server_received[test_state->server_receive_count] = (TestReceivedMessage *) malloc(sizeof(TestReceivedMessage));
-    test_state->server_received[test_state->server_receive_count]->data = data;
-    test_state->server_received[test_state->server_receive_count]->data_size = data_size;
-    test_state->server_receive_client_ids[test_state->server_receive_count++] = client_id;
+    state->server_received[state->server_receive_count] = (TestReceivedMessage *) malloc(sizeof(TestReceivedMessage));
+    state->server_received[state->server_receive_count]->data = data;
+    state->server_received[state->server_receive_count]->data_size = data_size;
+    state->server_receive_client_ids[state->server_receive_count++] = client_id;
 }
 
-void test_state_server_connect(TestState *test_state, size_t client_id)
+void test_state_server_connect(TestState *state, size_t client_id)
 {
-    TEST_ASSERT(test_state->server_connect_count < test_state->server_connect_count_expected)
+    TEST_ASSERT(state->server_connect_count < state->server_connect_count_expected)
 
-    test_state->server_connect_client_ids[test_state->server_connect_count++] = client_id;
+    state->server_connect_client_ids[state->server_connect_count++] = client_id;
 }
 
-void test_state_server_disconnect(TestState *test_state, size_t client_id)
+void test_state_server_disconnect(TestState *state, size_t client_id)
 {
-    TEST_ASSERT(test_state->server_disconnect_count < test_state->server_disconnect_count_expected)
+    TEST_ASSERT(state->server_disconnect_count < state->server_disconnect_count_expected)
 
-    test_state->server_disconnect_client_ids[test_state->server_disconnect_count++] = client_id;
+    state->server_disconnect_client_ids[state->server_disconnect_count++] = client_id;
 }
 
-void test_state_client_received(TestState *test_state, void *data, size_t data_size)
+void test_state_client_received(TestState *state, void *data, size_t data_size)
 {
-    TEST_ASSERT(test_state->client_receive_count < test_state->client_receive_count_expected)
+    TEST_ASSERT(state->client_receive_count < state->client_receive_count_expected)
 
-    test_state->client_received[test_state->client_receive_count] = (TestReceivedMessage *) malloc(sizeof(TestReceivedMessage));
-    test_state->client_received[test_state->client_receive_count]->data = data;
-    test_state->client_received[test_state->client_receive_count]->data_size = data_size;
-    test_state->client_receive_count++;
+    state->client_received[state->client_receive_count] = (TestReceivedMessage *) malloc(sizeof(TestReceivedMessage));
+    state->client_received[state->client_receive_count]->data = data;
+    state->client_received[state->client_receive_count]->data_size = data_size;
+    state->client_receive_count++;
 }
 
-void test_state_client_disconnected(TestState *test_state)
+void test_state_client_disconnected(TestState *state)
 {
-    TEST_ASSERT(test_state->client_disconnected_count < test_state->client_disconnected_count_expected)
+    TEST_ASSERT(state->client_disconnected_count < state->client_disconnected_count_expected)
 
-    test_state->client_disconnected_count++;
+    state->client_disconnected_count++;
 }
 
-int randint(int min, int max)
+int rand_int(int min, int max)
 {
-    return min + (rand() % (max - min + 1));
+    return min + (rand() % (max - min));
 }
 
-char* randbytes(size_t size)
+char* rand_bytes(size_t size)
 {
     char* bytes = (char*) malloc(size * sizeof(char));
 
     for (size_t i = 0; i < size; i++) {
-        bytes[i] = (char) randint(0, 255);
+        bytes[i] = (char) rand_int(0, 256);
     }
 
     return bytes;
@@ -358,37 +358,37 @@ char* voidp_to_str(void* data, size_t data_size)
 
 void server_on_recv(size_t client_id, void *data, size_t data_size, void *arg)
 {
-    TestState *test_state = (TestState *) arg;
+    TestState *state = (TestState *) arg;
 
-    test_state_server_received(test_state, client_id, data, data_size);
+    test_state_server_received(state, client_id, data, data_size);
 }
 
 void server_on_connect(size_t client_id, void *arg)
 {
-    TestState *test_state = (TestState *) arg;
+    TestState *state = (TestState *) arg;
 
-    test_state_server_connect(test_state, client_id);
+    test_state_server_connect(state, client_id);
 }
 
 void server_on_disconnect(size_t client_id, void *arg)
 {
-    TestState *test_state = (TestState *) arg;
+    TestState *state = (TestState *) arg;
 
-    test_state_server_disconnect(test_state, client_id);
+    test_state_server_disconnect(state, client_id);
 }
 
 void client_on_recv(void *data, size_t data_size, void *arg)
 {
-    TestState *test_state = (TestState *) arg;
+    TestState *state = (TestState *) arg;
 
-    test_state_client_received(test_state, data, data_size);
+    test_state_client_received(state, data, data_size);
 }
 
 void client_on_disconnected(void* arg)
 {
-    TestState *test_state = (TestState *) arg;
+    TestState *state = (TestState *) arg;
 
-    test_state_client_disconnected(test_state);
+    test_state_client_disconnected(state);
 }
 
 void on_err(int cdtp_err, int underlying_err, void* arg)
@@ -406,6 +406,11 @@ void check_err(void)
         on_err(cdtp_get_error(), cdtp_get_underlying_error(), NULL);
     }
 }
+
+typedef struct _Custom {
+    int a;
+    size_t b;
+} Custom;
 
 #define WAIT_TIME 0.1
 #define MAX_CLIENTS 16
@@ -661,7 +666,61 @@ void test_send_receive(void)
  */
 void test_send_large_messages(void)
 {
-    // TODO
+    // Initialize test state
+    size_t large_server_message_len = (size_t) rand_int(32768, 65536);
+    char *large_server_message = rand_bytes(large_server_message_len);
+    size_t large_client_message_len = rand_int(16384, 32768);
+    char *large_client_message = rand_bytes(large_client_message_len);
+    TestReceivedMessage *server_received[] = {
+            test_received_message((void *) large_server_message, large_server_message_len)
+    };
+    size_t receive_clients[] = {0};
+    size_t connect_clients[] = {0};
+    size_t disconnect_clients[] = {0};
+    TestReceivedMessage *client_received[] = {
+            test_received_message((void *) large_client_message, large_client_message_len)
+    };
+    TestState *state = test_state(1, 1, 1,
+                                  server_received, receive_clients, connect_clients, disconnect_clients,
+                                  1, 0,
+                                  client_received);
+
+    // Create server
+    CDTPServer *s = cdtp_server(MAX_CLIENTS,
+                                server_on_recv, server_on_connect, server_on_disconnect,
+                                state, state, state);
+    cdtp_server_start(s, SERVER_HOST, SERVER_PORT);
+    char *server_host = cdtp_server_get_host(s);
+    unsigned short server_port = cdtp_server_get_port(s);
+    printf("Server address: %s:%d\n", server_host, server_port);
+    cdtp_sleep(WAIT_TIME);
+
+    // Create client
+    CDTPClient *c = cdtp_client(client_on_recv, client_on_disconnected,
+                                state, state);
+    cdtp_client_connect(c, CLIENT_HOST, CLIENT_PORT);
+    cdtp_sleep(WAIT_TIME);
+
+    // Send messages
+    cdtp_client_send(c, large_server_message, large_server_message_len);
+    cdtp_server_send(s, 0, large_client_message, large_client_message_len);
+    cdtp_sleep(WAIT_TIME);
+
+    // Disconnect client
+    cdtp_client_disconnect(c);
+    cdtp_sleep(WAIT_TIME);
+
+    // Stop server
+    cdtp_server_stop(s);
+    cdtp_sleep(WAIT_TIME);
+
+    // Log message sizes
+    printf("Server message sizes: %" PRI_SIZE_T ", %" PRI_SIZE_T "\n", state->server_received[0]->data_size, large_server_message_len);
+    printf("Client message sizes: %" PRI_SIZE_T ", %" PRI_SIZE_T "\n", state->client_received[0]->data_size, large_client_message_len);
+
+    // Clean up
+    test_state_finish(state);
+    free(server_host);
 }
 
 /**
@@ -669,7 +728,73 @@ void test_send_large_messages(void)
  */
 void test_sending_numerous_messages(void)
 {
-    // TODO
+    // Initialize test state
+    size_t num_server_messages = rand_int(64, 128);
+    int *server_messages = (int *) malloc(num_server_messages * sizeof(int));
+    for (size_t i = 0; i < num_server_messages; i++) server_messages[i] = rand();
+    size_t num_client_messages = rand_int(128, 256);
+    int *client_messages = (int *) malloc(num_client_messages * sizeof(int));
+    for (size_t i = 0; i < num_client_messages; i++) client_messages[i] = rand();
+    TestReceivedMessage **server_received = (TestReceivedMessage **) malloc(num_server_messages * sizeof(TestReceivedMessage *));
+    for (size_t i = 0; i < num_server_messages; i++) server_received[i] = int_message(server_messages[i]);
+    size_t *receive_clients = (size_t *) malloc(num_server_messages * sizeof(size_t));
+    for (size_t i = 0; i < num_server_messages; i++) receive_clients[i] = 0;
+    size_t connect_clients[] = {0};
+    size_t disconnect_clients[] = {0};
+    TestReceivedMessage **client_received = (TestReceivedMessage **) malloc(num_client_messages * sizeof(TestReceivedMessage *));
+    for (size_t i = 0; i < num_client_messages; i++) client_received[i] = int_message(client_messages[i]);
+    TestState *state = test_state(num_server_messages, 1, 1,
+                                  server_received, receive_clients, connect_clients, disconnect_clients,
+                                  num_client_messages, 0,
+                                  client_received);
+
+    // Create server
+    CDTPServer *s = cdtp_server(MAX_CLIENTS,
+                                server_on_recv, server_on_connect, server_on_disconnect,
+                                state, state, state);
+    cdtp_server_start(s, SERVER_HOST, SERVER_PORT);
+    char *server_host = cdtp_server_get_host(s);
+    unsigned short server_port = cdtp_server_get_port(s);
+    printf("Server address: %s:%d\n", server_host, server_port);
+    cdtp_sleep(WAIT_TIME);
+
+    // Create client
+    CDTPClient *c = cdtp_client(client_on_recv, client_on_disconnected,
+                                state, state);
+    cdtp_client_connect(c, CLIENT_HOST, CLIENT_PORT);
+    cdtp_sleep(WAIT_TIME);
+
+    // Send messages
+    for (size_t i = 0; i < num_server_messages; i++) {
+        cdtp_client_send(c, &(server_messages[i]), sizeof(int));
+        cdtp_sleep(0.01);
+    }
+    for (size_t i = 0; i < num_client_messages; i++) {
+        cdtp_server_send_all(s, &(client_messages[i]), sizeof(int));
+        cdtp_sleep(0.01);
+    }
+    cdtp_sleep(WAIT_TIME);
+
+    // Disconnect client
+    cdtp_client_disconnect(c);
+    cdtp_sleep(WAIT_TIME);
+
+    // Stop server
+    cdtp_server_stop(s);
+    cdtp_sleep(WAIT_TIME);
+
+    // Log number of messages
+    printf("Number of server messages: %" PRI_SIZE_T ", %" PRI_SIZE_T "\n", state->server_receive_count, num_server_messages);
+    printf("Number of client messages: %" PRI_SIZE_T ", %" PRI_SIZE_T "\n", state->client_receive_count, num_client_messages);
+
+    // Clean up
+    test_state_finish(state);
+    free(server_messages);
+    free(client_messages);
+    free(server_received);
+    free(client_received);
+    free(receive_clients);
+    free(server_host);
 }
 
 /**
@@ -677,7 +802,59 @@ void test_sending_numerous_messages(void)
  */
 void test_sending_custom_types(void)
 {
-    // TODO
+    // Initialize test state
+    Custom *custom_server_message = (Custom *) malloc(sizeof(Custom));
+    custom_server_message->a = -123;
+    custom_server_message->b = 789;
+    Custom *custom_client_message = (Custom *) malloc(sizeof(Custom));
+    custom_client_message->a = -234;
+    custom_client_message->b = 678;
+    TestReceivedMessage *server_received[] = {
+            test_received_message(custom_server_message, sizeof(Custom))
+    };
+    size_t receive_clients[] = {0};
+    size_t connect_clients[] = {0};
+    size_t disconnect_clients[] = {0};
+    TestReceivedMessage *client_received[] = {
+            test_received_message(custom_client_message, sizeof(Custom))
+    };
+    TestState *state = test_state(1, 1, 1,
+                                  server_received, receive_clients, connect_clients, disconnect_clients,
+                                  1, 0,
+                                  client_received);
+
+    // Create server
+    CDTPServer *s = cdtp_server(MAX_CLIENTS,
+                                server_on_recv, server_on_connect, server_on_disconnect,
+                                state, state, state);
+    cdtp_server_start(s, SERVER_HOST, SERVER_PORT);
+    char *server_host = cdtp_server_get_host(s);
+    unsigned short server_port = cdtp_server_get_port(s);
+    printf("Server address: %s:%d\n", server_host, server_port);
+    cdtp_sleep(WAIT_TIME);
+
+    // Create client
+    CDTPClient *c = cdtp_client(client_on_recv, client_on_disconnected,
+                                state, state);
+    cdtp_client_connect(c, CLIENT_HOST, CLIENT_PORT);
+    cdtp_sleep(WAIT_TIME);
+
+    // Send messages
+    cdtp_client_send(c, custom_server_message, sizeof(Custom));
+    cdtp_server_send(s, 0, custom_client_message, sizeof(Custom));
+    cdtp_sleep(WAIT_TIME);
+
+    // Disconnect client
+    cdtp_client_disconnect(c);
+    cdtp_sleep(WAIT_TIME);
+
+    // Stop server
+    cdtp_server_stop(s);
+    cdtp_sleep(WAIT_TIME);
+
+    // Clean up
+    test_state_finish(state);
+    free(server_host);
 }
 
 /**
@@ -685,7 +862,111 @@ void test_sending_custom_types(void)
  */
 void test_multiple_clients(void)
 {
-    // TODO
+    // Initialize test state
+    char *message_from_client1 = "Hello from client #1!";
+    char *message_from_client2 = "Goodbye from client #2!";
+    size_t message_from_server = 29275;
+    size_t message_to_client1 = 123;
+    size_t message_to_client2 = 789;
+    TestReceivedMessage *server_received[] = {
+            str_message(message_from_client1),
+            str_message(message_from_client2)
+    };
+    size_t receive_clients[] = {0, 1};
+    size_t connect_clients[] = {0, 1};
+    size_t disconnect_clients[] = {0, 1};
+    TestReceivedMessage *client_received[] = {
+            size_t_message(message_from_server),
+            size_t_message(message_from_server),
+            size_t_message(message_to_client1),
+            size_t_message(message_to_client2)
+    };
+    TestState *state = test_state(2, 2, 2,
+                                  server_received, receive_clients, connect_clients, disconnect_clients,
+                                  4, 0,
+                                  client_received);
+
+    // Create server
+    CDTPServer *s = cdtp_server(MAX_CLIENTS,
+                                server_on_recv, server_on_connect, server_on_disconnect,
+                                state, state, state);
+    cdtp_server_start(s, SERVER_HOST, SERVER_PORT);
+    char *server_host = cdtp_server_get_host(s);
+    unsigned short server_port = cdtp_server_get_port(s);
+    printf("Server address: %s:%d\n", server_host, server_port);
+    cdtp_sleep(WAIT_TIME);
+
+    // Create client 1
+    CDTPClient *c1 = cdtp_client(client_on_recv, client_on_disconnected,
+                                state, state);
+    cdtp_client_connect(c1, CLIENT_HOST, CLIENT_PORT);
+    cdtp_sleep(WAIT_TIME);
+
+    // Check client 1 address info
+    char *cc1_host = cdtp_client_get_host(c1);
+    unsigned short cc1_port = cdtp_client_get_port(c1);
+    char *cs1_host = cdtp_server_get_client_host(s, 0);
+    unsigned short cs1_port = cdtp_server_get_client_port(s, 0);
+    printf("Client #1 (according to client #1): %s:%d\n", cc1_host, cc1_port);
+    printf("Client #1 (according to server):    %s:%d\n", cs1_host, cs1_port);
+    TEST_ASSERT_STR_EQ(cc1_host, cs1_host)
+    TEST_ASSERT_INT_EQ(cc1_port, cs1_port)
+
+    // Create client 2
+    CDTPClient *c2 = cdtp_client(client_on_recv, client_on_disconnected,
+                                 state, state);
+    cdtp_client_connect(c2, CLIENT_HOST, CLIENT_PORT);
+    cdtp_sleep(WAIT_TIME);
+
+    // Check client 2 address info
+    char *cc2_host = cdtp_client_get_host(c2);
+    unsigned short cc2_port = cdtp_client_get_port(c2);
+    char *cs2_host = cdtp_server_get_client_host(s, 1);
+    unsigned short cs2_port = cdtp_server_get_client_port(s, 1);
+    printf("Client #2 (according to client #2): %s:%d\n", cc2_host, cc2_port);
+    printf("Client #2 (according to server):    %s:%d\n", cs2_host, cs2_port);
+    TEST_ASSERT_STR_EQ(cc2_host, cs2_host)
+    TEST_ASSERT_INT_EQ(cc2_port, cs2_port)
+
+    // Send message from client 1
+    cdtp_client_send(c1, message_from_client1, STR_SIZE(message_from_client1));
+    cdtp_sleep(WAIT_TIME);
+
+    // Send message from client 2
+    cdtp_client_send(c2, message_from_client2, STR_SIZE(message_from_client2));
+    cdtp_sleep(WAIT_TIME);
+
+    // Send message to all clients
+    cdtp_server_send_all(s, &message_from_server, sizeof(size_t));
+    cdtp_sleep(WAIT_TIME);
+
+    // Send message to client 1
+    cdtp_server_send(s, 0, &message_to_client1, sizeof(size_t));
+    cdtp_sleep(WAIT_TIME);
+
+    // Send message to client 2
+    cdtp_server_send(s, 1, &message_to_client2, sizeof(size_t));
+    cdtp_sleep(WAIT_TIME);
+
+    // Disconnect client 1
+    cdtp_client_disconnect(c1);
+    cdtp_sleep(WAIT_TIME);
+
+    // Disconnect client 2
+    cdtp_client_disconnect(c2);
+    cdtp_sleep(WAIT_TIME);
+
+    // Stop server
+    cdtp_server_stop(s);
+    cdtp_sleep(WAIT_TIME);
+
+    // Clean up
+    test_state_finish(state);
+    free(server_host);
+    free(cc1_host);
+    free(cs1_host);
+    free(cc2_host);
+    free(cs2_host);
 }
 
 /**
@@ -693,7 +974,48 @@ void test_multiple_clients(void)
  */
 void test_client_disconnected(void)
 {
-    // TODO
+    // Initialize test state
+    TestReceivedMessage *server_received[] = EMPTY;
+    size_t receive_clients[] = EMPTY;
+    size_t connect_clients[] = {0};
+    size_t disconnect_clients[] = EMPTY;
+    TestReceivedMessage *client_received[] = EMPTY;
+    TestState *state = test_state(0, 1, 0,
+                                  server_received, receive_clients, connect_clients, disconnect_clients,
+                                  0, 1,
+                                  client_received);
+
+    // Create server
+    CDTPServer *s = cdtp_server(MAX_CLIENTS,
+                                server_on_recv, server_on_connect, server_on_disconnect,
+                                state, state, state);
+    TEST_ASSERT(!cdtp_server_is_serving(s))
+    cdtp_server_start(s, SERVER_HOST, SERVER_PORT);
+    TEST_ASSERT(cdtp_server_is_serving(s))
+    char *server_host = cdtp_server_get_host(s);
+    unsigned short server_port = cdtp_server_get_port(s);
+    printf("Server address: %s:%d\n", server_host, server_port);
+    cdtp_sleep(WAIT_TIME);
+
+    // Create client
+    CDTPClient *c = cdtp_client(client_on_recv, client_on_disconnected,
+                                state, state);
+    TEST_ASSERT(!cdtp_client_is_connected(c))
+    cdtp_client_connect(c, CLIENT_HOST, CLIENT_PORT);
+    TEST_ASSERT(cdtp_client_is_connected(c))
+    cdtp_sleep(WAIT_TIME);
+
+    // Stop server
+    TEST_ASSERT(cdtp_server_is_serving(s))
+    TEST_ASSERT(cdtp_client_is_connected(c))
+    cdtp_server_stop(s);
+    cdtp_sleep(WAIT_TIME);
+    TEST_ASSERT(!cdtp_client_is_connected(c))
+    cdtp_sleep(WAIT_TIME);
+
+    // Clean up
+    test_state_finish(state);
+    free(server_host);
 }
 
 /**
@@ -701,7 +1023,51 @@ void test_client_disconnected(void)
  */
 void test_remove_client(void)
 {
-    // TODO
+    // Initialize test state
+    TestReceivedMessage *server_received[] = EMPTY;
+    size_t receive_clients[] = EMPTY;
+    size_t connect_clients[] = {0};
+    size_t disconnect_clients[] = EMPTY;
+    TestReceivedMessage *client_received[] = EMPTY;
+    TestState *state = test_state(0, 1, 0,
+                                  server_received, receive_clients, connect_clients, disconnect_clients,
+                                  0, 1,
+                                  client_received);
+
+    // Create server
+    CDTPServer *s = cdtp_server(MAX_CLIENTS,
+                                server_on_recv, server_on_connect, server_on_disconnect,
+                                state, state, state);
+    TEST_ASSERT(!cdtp_server_is_serving(s))
+    cdtp_server_start(s, SERVER_HOST, SERVER_PORT);
+    TEST_ASSERT(cdtp_server_is_serving(s))
+    char *server_host = cdtp_server_get_host(s);
+    unsigned short server_port = cdtp_server_get_port(s);
+    printf("Server address: %s:%d\n", server_host, server_port);
+    cdtp_sleep(WAIT_TIME);
+
+    // Create client
+    CDTPClient *c = cdtp_client(client_on_recv, client_on_disconnected,
+                                state, state);
+    TEST_ASSERT(!cdtp_client_is_connected(c))
+    cdtp_client_connect(c, CLIENT_HOST, CLIENT_PORT);
+    TEST_ASSERT(cdtp_client_is_connected(c))
+    cdtp_sleep(WAIT_TIME);
+
+    // Disconnect the client
+    TEST_ASSERT(cdtp_client_is_connected(c))
+    cdtp_server_remove_client(s, 0);
+    cdtp_sleep(WAIT_TIME);
+    TEST_ASSERT(!cdtp_client_is_connected(c))
+
+    // Stop server
+    TEST_ASSERT(cdtp_server_is_serving(s))
+    cdtp_server_stop(s);
+    cdtp_sleep(WAIT_TIME);
+
+    // Clean up
+    test_state_finish(state);
+    free(server_host);
 }
 
 int main(void)
