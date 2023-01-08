@@ -3,6 +3,7 @@
 // Get the first available client ID
 size_t _cdtp_server_new_client_id(CDTPServer* server)
 {
+    // TODO: get next available client ID
     if (server->num_clients >= server->max_clients) {
         return CDTP_MAX_CLIENTS_REACHED;
     }
@@ -70,122 +71,169 @@ void _cdtp_server_call_on_disconnect(CDTPServer* server, size_t client_id)
     }
 }
 
+// Exchange crypto keys with a client
+#ifdef _WIN32
+void _cdtp_server_exchange_keys(CDTPServer *server, size_t client_id, SOCKET client_sock)
+#else
+void _cdtp_server_exchange_keys(CDTPServer *server, size_t client_id, int client_sock)
+#endif
+{
+    // TODO
+    (void) server;
+    (void) client_id;
+    (void) client_sock;
+}
+
 // Server serve function
 void _cdtp_server_serve(CDTPServer* server)
 {
-    fd_set read_socks;
-    int activity;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
 
 #ifdef _WIN32
+    // Set non-blocking
+    unsigned long mode = 1;
+
+    if (ioctlsocket(server->sock->sock, FIONBIO, &mode) != 0) {
+        _cdtp_set_err(CDTP_SERVER_SOCK_INIT_FAILED);
+        return;
+    }
+
     SOCKET new_sock;
-    int max_sd = 0;
 #else
+    // Set non-blocking
+    if (fcntl(server->sock->sock, F_SETFL, fcntl(server->sock->sock, F_GETFL, 0) | O_NONBLOCK) == -1) {
+        _cdtp_set_err(CDTP_SERVER_SOCK_INIT_FAILED);
+        return;
+    }
+
     int new_sock;
-    int max_sd = server->sock->sock;
 #endif
 
     unsigned char size_buffer[CDTP_LENSIZE];
+    int recv_code;
 
     while (server->serving == CDTP_TRUE) {
-        // Create the read sockets
-        FD_ZERO(&read_socks);
-        FD_SET(server->sock->sock, &read_socks);
-
-        for (size_t i = 0; i < server->max_clients; i++) {
-            if (server->allocated_clients[i] == CDTP_TRUE) {
-                FD_SET(server->clients[i]->sock, &read_socks);
-
-#ifndef _WIN32
-                if (server->clients[i]->sock > max_sd) {
-                    max_sd = server->clients[i]->sock;
-                }
+        // Accept incoming connections
+#ifdef _WIN32
+        new_sock = accept(server->sock->sock, (struct sockaddr *) (&address), (int *) (&addrlen));
+#else
+        new_sock = accept(server->sock->sock, (struct sockaddr *) (&address), (socklen_t *) (&addrlen));
 #endif
-            }
-        }
-
-        // Wait for activity
-        activity = select(max_sd + 1, &read_socks, NULL, NULL, NULL);
 
         // Check if the server has been stopped
         if (server->serving != CDTP_TRUE) {
             return;
         }
 
-        // Check for select errors
-        if (activity < 0) {
-            _cdtp_set_err(CDTP_SELECT_FAILED);
-            return;
-        }
-
-        // Check if something happened on the main socket
-        if (FD_ISSET(server->sock->sock, &read_socks)) {
-            // Accept the new socket and check if an error has occurred
 #ifdef _WIN32
-            new_sock = accept(server->sock->sock, (struct sockaddr*)&address, (int*)&addrlen);
+        if (new_sock == INVALID_SOCKET) {
+            int err_code = WSAGetLastError();
 
-            if (new_sock == INVALID_SOCKET) {
-                int err_code = WSAGetLastError();
-
-                if (err_code != WSAENOTSOCK || server->serving == CDTP_TRUE) {
-                    _cdtp_set_error(CDTP_SOCKET_ACCEPT_FAILED, err_code);
-                }
-
-                return;
+            if (err_code == WSAEWOULDBLOCK) {
+                // No new connections, do nothing
             }
-#else
-            new_sock = accept(server->sock->sock, (struct sockaddr*)&address, (socklen_t*)&addrlen);
-
-            if (new_sock < 0) {
-                int err_code = errno;
-
-                if (err_code != ENOTSOCK || server->serving == CDTP_TRUE) {
-                    _cdtp_set_error(CDTP_SOCKET_ACCEPT_FAILED, err_code);
-                }
-
+            else if (err_code != WSAENOTSOCK || server->serving == CDTP_TRUE) {
+                _cdtp_set_error(CDTP_SOCKET_ACCEPT_FAILED, err_code);
                 return;
-            }
-#endif
-
-            // Put new socket in the client list
-            int new_client_id = _cdtp_server_new_client_id(server);
-
-            if (new_client_id != CDTP_MAX_CLIENTS_REACHED) {
-                // Add the new socket to the client array
-                server->clients[new_client_id] = (CDTPSocket*) malloc(sizeof(CDTPSocket));
-                server->clients[new_client_id]->sock = new_sock;
-                memcpy(&(server->clients[new_client_id]->address), &address, sizeof(address));
-                server->allocated_clients[new_client_id] = CDTP_TRUE;
-                server->num_clients++;
-                _cdtp_server_send_status(new_sock, CDTP_SUCCESS);
-                _cdtp_server_call_on_connect(server, new_client_id);
             }
             else {
-                // Tell the client that the server is full
-                _cdtp_server_send_status(new_sock, CDTP_SERVER_FULL);
-
-#ifdef _WIN32
-                closesocket(new_sock);
-#else
-                close(new_sock);
-#endif
-
+                return;
             }
         }
+        else {
+            size_t client_id = _cdtp_server_new_client_id(server);
 
-        // Check if something happened on one of the client sockets
+            // Set blocking for key exchange
+            mode = 0;
+
+            if (ioctlsocket(new_sock, FIONBIO, &mode) != 0) {
+                _cdtp_set_err(CDTP_SOCKET_ACCEPT_FAILED);
+                return;
+            }
+
+            // Exchange keys
+            _cdtp_server_exchange_keys(server, client_id, new_sock);
+
+            // Set non-blocking
+            mode = 1;
+
+            if (ioctlsocket(new_sock, FIONBIO, &mode) != 0) {
+                _cdtp_set_err(CDTP_SOCKET_ACCEPT_FAILED);
+                return;
+            }
+
+            // Add the new socket to the client array
+            server->clients[client_id] = (CDTPSocket *) malloc(sizeof(CDTPSocket));
+            server->clients[client_id]->sock = new_sock;
+            memcpy(&(server->clients[client_id]->address), &address, sizeof(address));
+            server->allocated_clients[client_id] = CDTP_TRUE;
+            server->num_clients++;
+            _cdtp_server_send_status(new_sock, CDTP_SUCCESS);
+            _cdtp_server_call_on_connect(server, client_id);
+        }
+#else
+        if (new_sock < 0) {
+            int err_code = errno;
+
+            if (CDTP_EAGAIN_OR_WOULDBLOCK(err_code)) {
+                // No new connections, do nothing
+            }
+            else if (err_code != ENOTSOCK || server->serving == CDTP_TRUE) {
+                _cdtp_set_error(CDTP_SOCKET_ACCEPT_FAILED, err_code);
+                return;
+            }
+            else {
+                return;
+            }
+        }
+        else {
+            size_t client_id = _cdtp_server_new_client_id(server);
+
+            // Set blocking for key exchange
+            if (fcntl(new_sock, F_SETFL, fcntl(new_sock, F_GETFL, 0) & ~O_NONBLOCK) == -1) {
+                _cdtp_set_err(CDTP_SOCKET_ACCEPT_FAILED);
+                return;
+            }
+
+            // Exchange keys
+            _cdtp_server_exchange_keys(server, client_id, new_sock);
+
+            // Set non-blocking
+            if (fcntl(new_sock, F_SETFL, fcntl(new_sock, F_GETFL, 0) | O_NONBLOCK) == -1) {
+                _cdtp_set_err(CDTP_SOCKET_ACCEPT_FAILED);
+                return;
+            }
+
+            // Add the new socket to the client array
+            server->clients[client_id] = (CDTPSocket *) malloc(sizeof(CDTPSocket));
+            server->clients[client_id]->sock = new_sock;
+            memcpy(&(server->clients[client_id]->address), &address, sizeof(address));
+            server->allocated_clients[client_id] = CDTP_TRUE;
+            server->num_clients++;
+            _cdtp_server_send_status(new_sock, CDTP_SUCCESS);
+            _cdtp_server_call_on_connect(server, client_id);
+        }
+#endif
+
+        // Check for messages from client sockets
         for (size_t i = 0; i < server->max_clients; i++) {
-            if (server->allocated_clients[i] == CDTP_TRUE && FD_ISSET(server->clients[i]->sock, &read_socks)) {
+            if (server->allocated_clients[i] == CDTP_TRUE) {
+                size_t client_id = i;
+                CDTPSocket *client_sock = server->clients[i];
+
 #ifdef _WIN32
-                int recv_code = recv(server->clients[i]->sock, (char*)size_buffer, CDTP_LENSIZE, 0);
+                recv_code = recv(client_sock->sock, (char *) size_buffer, CDTP_LENSIZE, 0);
 
                 if (recv_code == SOCKET_ERROR) {
                     int err_code = WSAGetLastError();
 
-                    if (err_code == WSAECONNRESET) {
-                        _cdtp_server_disconnect_sock(server, i);
-                        _cdtp_server_call_on_disconnect(server, i);
+                    if (err_code == WSAECONNRESET || err_code == WSAENOTSOCK) {
+                        _cdtp_server_disconnect_sock(server, client_id);
+                        _cdtp_server_call_on_disconnect(server, client_id);
+                    }
+                    else if (err_code == WSAEWOULDBLOCK) {
+                        // Nothing happened on the socket, do nothing
                     }
                     else {
                         _cdtp_set_error(CDTP_SERVER_RECV_FAILED, err_code);
@@ -193,24 +241,24 @@ void _cdtp_server_serve(CDTPServer* server)
                     }
                 }
                 else if (recv_code == 0) {
-                    _cdtp_server_disconnect_sock(server, i);
-                    _cdtp_server_call_on_disconnect(server, i);
+                    _cdtp_server_disconnect_sock(server, client_id);
+                    _cdtp_server_call_on_disconnect(server, client_id);
                 }
                 else {
                     size_t msg_size = _cdtp_decode_message_size(size_buffer);
-                    char* buffer = (char*) malloc(msg_size * sizeof(char));
+                    unsigned char *buffer = (unsigned char *) malloc(msg_size * sizeof(unsigned char));
 
                     // Wait in case the message is sent in multiple chunks
-                    cdtp_sleep(0.01);
+                    cdtp_sleep(CDTP_SLEEP_TIME);
 
-                    recv_code = recv(server->clients[i]->sock, buffer, msg_size, 0);
+                    recv_code = recv(client_sock->sock, (char *) buffer, msg_size, 0);
 
                     if (recv_code == SOCKET_ERROR) {
                         int err_code = WSAGetLastError();
 
-                        if (err_code == WSAECONNRESET) {
-                            _cdtp_server_disconnect_sock(server, i);
-                            _cdtp_server_call_on_disconnect(server, i);
+                        if (err_code == WSAECONNRESET || err_code == WSAENOTSOCK) {
+                            _cdtp_server_disconnect_sock(server, client_id);
+                            _cdtp_server_call_on_disconnect(server, client_id);
                         }
                         else {
                             _cdtp_set_error(CDTP_SERVER_RECV_FAILED, err_code);
@@ -218,40 +266,76 @@ void _cdtp_server_serve(CDTPServer* server)
                         }
                     }
                     else if (recv_code == 0) {
-                        _cdtp_server_disconnect_sock(server, i);
-                        _cdtp_server_call_on_disconnect(server, i);
+                        _cdtp_server_disconnect_sock(server, client_id);
+                        _cdtp_server_call_on_disconnect(server, client_id);
+                    }
+                    else if (((size_t) recv_code) != msg_size) {
+                        _cdtp_set_err(CDTP_SERVER_RECV_FAILED);
+                        return;
                     }
                     else {
-                        _cdtp_server_call_on_recv(server, i, (void*)buffer, msg_size);
+                        _cdtp_server_call_on_recv(server, client_id, (void *) buffer, msg_size);
                     }
                 }
 #else
-                int recv_code = read(server->clients[i]->sock, size_buffer, CDTP_LENSIZE);
+                recv_code = read(client_sock->sock, (char *) size_buffer, CDTP_LENSIZE);
 
                 if (recv_code == 0) {
-                    _cdtp_server_disconnect_sock(server, i);
-                    _cdtp_server_call_on_disconnect(server, i);
+                    _cdtp_server_disconnect_sock(server, client_id);
+                    _cdtp_server_call_on_disconnect(server, client_id);
+                }
+                else if (recv_code == -1) {
+                    int err_code = errno;
+
+                    if (err_code == EBADF) {
+                        _cdtp_server_disconnect_sock(server, client_id);
+                        _cdtp_server_call_on_disconnect(server, client_id);
+                    }
+                    else if (CDTP_EAGAIN_OR_WOULDBLOCK(err_code)) {
+                        // Nothing happened on the socket, do nothing
+                    }
+                    else {
+                        _cdtp_set_error(CDTP_SERVER_RECV_FAILED, err_code);
+                        return;
+                    }
                 }
                 else {
                     size_t msg_size = _cdtp_decode_message_size(size_buffer);
-                    char* buffer = (char*) malloc(msg_size * sizeof(char));
+                    unsigned char *buffer = (unsigned char *) malloc(msg_size * sizeof(unsigned char));
 
                     // Wait in case the message is sent in multiple chunks
-                    cdtp_sleep(0.01);
+                    cdtp_sleep(CDTP_SLEEP_TIME);
 
-                    recv_code = read(server->clients[i]->sock, buffer, msg_size);
+                    recv_code = read(client_sock->sock, (char *) buffer, msg_size);
 
-                    if (recv_code == 0) {
-                        _cdtp_server_disconnect_sock(server, i);
-                        _cdtp_server_call_on_disconnect(server, i);
+                    if (recv_code == -1) {
+                        int err_code = errno;
+
+                        if (err_code == EBADF) {
+                            _cdtp_server_disconnect_sock(server, client_id);
+                            _cdtp_server_call_on_disconnect(server, client_id);
+                        } else {
+                            _cdtp_set_error(CDTP_SERVER_RECV_FAILED, err_code);
+                            return;
+                        }
+                    }
+                    else if (recv_code == 0) {
+                        _cdtp_server_disconnect_sock(server, client_id);
+                        _cdtp_server_call_on_disconnect(server, client_id);
+                    }
+                    else if (((size_t) recv_code) != msg_size) {
+                        _cdtp_set_err(CDTP_SERVER_RECV_FAILED);
+                        return;
                     }
                     else {
-                        _cdtp_server_call_on_recv(server, i, (void*)buffer, msg_size);
+                        _cdtp_server_call_on_recv(server, client_id, (void *) buffer, msg_size);
                     }
                 }
 #endif
             }
         }
+
+        cdtp_sleep(CDTP_SLEEP_TIME);
     }
 }
 
@@ -384,7 +468,7 @@ CDTP_EXPORT void cdtp_server_start(CDTPServer* server, char* host, unsigned shor
     }
 
     // Listen for connections
-    if (listen(server->sock->sock, CDTP_LISTEN_BACKLOG) < 0) {
+    if (listen(server->sock->sock, CDTP_SERVER_LISTEN_BACKLOG) < 0) {
         _cdtp_set_err(CDTP_SERVER_LISTEN_FAILED);
         return;
     }
@@ -396,6 +480,12 @@ CDTP_EXPORT void cdtp_server_start(CDTPServer* server, char* host, unsigned shor
 
 CDTP_EXPORT void cdtp_server_stop(CDTPServer* server)
 {
+    // Make sure the server is running
+    if (server->serving != CDTP_TRUE) {
+        _cdtp_set_error(CDTP_SERVER_NOT_SERVING, 0);
+        return;
+    }
+
     server->serving = CDTP_FALSE;
     server->done = CDTP_TRUE;
 
@@ -416,9 +506,16 @@ CDTP_EXPORT void cdtp_server_stop(CDTPServer* server)
     }
 
     // Wait for threads to exit
-    if (WaitForSingleObject(server->serve_thread, INFINITE) == WAIT_FAILED) {
-        _cdtp_set_error(CDTP_SERVE_THREAD_NOT_CLOSING, GetLastError());
-        return;
+    if (GetThreadId(server->serve_thread) == GetCurrentThreadId()) {
+        if (WaitForSingleObject(server->serve_thread, INFINITE) == WAIT_FAILED) {
+            _cdtp_set_error(CDTP_SERVE_THREAD_NOT_CLOSING, GetLastError());
+            return;
+        }
+    } else {
+        if (CloseHandle(server->serve_thread) == 0) {
+            _cdtp_set_error(CDTP_SERVE_THREAD_NOT_CLOSING, GetLastError());
+            return;
+        }
     }
 #else
     // Close sockets
@@ -431,49 +528,28 @@ CDTP_EXPORT void cdtp_server_stop(CDTPServer* server)
         }
     }
 
-    // Force the select function to return by attempting to connect
-    struct sockaddr_in addr;
-    addr.sin_addr.s_addr = server->sock->address.sin_addr.s_addr;
-    addr.sin_family = server->sock->address.sin_family;
-    addr.sin_port = server->sock->address.sin_port;
-    int client_sock = socket(CDTP_ADDRESS_FAMILY, SOCK_STREAM, 0);
-
-    if (client_sock == -1) {
-        _cdtp_set_err(CDTP_SERVER_STOP_FAILED);
-        return;
-    }
-
-    if (connect(client_sock, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
-        _cdtp_set_err(CDTP_SERVER_STOP_FAILED);
-        return;
-    }
-
-    cdtp_sleep(0.01);
-
-    if (close(client_sock) != 0) {
-        _cdtp_set_err(CDTP_SERVER_STOP_FAILED);
-        return;
-    }
-
     if (close(server->sock->sock) != 0) {
         _cdtp_set_err(CDTP_SERVER_STOP_FAILED);
         return;
     }
 
     // Wait for threads to exit
-    int err_code = pthread_join(server->serve_thread, NULL);
+    if (pthread_equal(server->serve_thread, pthread_self()) == 0) {
+        int err_code = pthread_join(server->serve_thread, NULL);
 
-    if (err_code != 0) {
-        _cdtp_set_error(CDTP_SERVE_THREAD_NOT_CLOSING, err_code);
-        return;
+        if (err_code != 0) {
+            _cdtp_set_error(CDTP_SERVE_THREAD_NOT_CLOSING, err_code);
+            return;
+        }
+    } else {
+        int err_code = pthread_detach(server->serve_thread);
+
+        if (err_code != 0) {
+            _cdtp_set_error(CDTP_SERVE_THREAD_NOT_CLOSING, err_code);
+            return;
+        }
     }
 #endif
-
-    // Free memory
-    free(server->sock);
-    free(server->clients);
-    free(server->allocated_clients);
-    free(server);
 }
 
 CDTP_EXPORT int cdtp_server_is_serving(CDTPServer* server)
@@ -699,4 +775,12 @@ CDTP_EXPORT void cdtp_server_send_all(CDTPServer* server, void* data, size_t dat
     }
 
     free(message);
+}
+
+CDTP_EXPORT void cdtp_server_free(CDTPServer *server)
+{
+    free(server->sock);
+    free(server->clients);
+    free(server->allocated_clients);
+    free(server);
 }

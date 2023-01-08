@@ -10,9 +10,6 @@
 #include "util.h"
 #include "threading.h"
 
-// Socket server listen backlog
-#define CDTP_LISTEN_BACKLOG 3
-
 // Server max clients indicator
 #define CDTP_MAX_CLIENTS_REACHED (-1)
 
@@ -120,5 +117,10 @@ CDTP_EXPORT void cdtp_server_send(CDTPServer* server, size_t client_id, void* da
  * data_size: the size of the data
  */
 CDTP_EXPORT void cdtp_server_send_all(CDTPServer* server, void* data, size_t data_size);
+
+/*
+ * Free the memory used by the server.
+ */
+CDTP_EXPORT void cdtp_server_free(CDTPServer *server);
 
 #endif // CDTP_SERVER_H

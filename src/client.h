@@ -90,4 +90,9 @@ CDTP_EXPORT unsigned short cdtp_client_get_server_port(CDTPClient* client);
  */
 CDTP_EXPORT void cdtp_client_send(CDTPClient* client, void* data, size_t data_size);
 
+/*
+ * Free the memory used by the client.
+ */
+CDTP_EXPORT void cdtp_client_free(CDTPClient *client);
+
 #endif // CDTP_CLIENT_H

@@ -60,7 +60,6 @@ typedef struct _CDTPClient {
     HANDLE handle_thread;
 #else
     pthread_t handle_thread;
-    CDTPServer* local_server;
 #endif
 } CDTPClient;
 

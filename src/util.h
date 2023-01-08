@@ -17,10 +17,12 @@
 #else
 #  include <unistd.h>
 #  include <sys/socket.h>
+#  include <fcntl.h>
 #  include <netinet/in.h>
 #  include <arpa/inet.h>
 #  include <errno.h>
 #  include <time.h>
+#  include <limits.h>
 #endif
 
 // Export functions
@@ -97,20 +99,26 @@
 #  define CDTP_PORT 29275
 #endif
 
-// Default CDTP local server host and port
-#ifndef CDTP_LOCAL_SERVER_HOST
-#  if (CDTP_ADDRESS_FAMILY == AF_INET)
-#    define CDTP_LOCAL_SERVER_HOST "127.0.0.1"
-#  else
-#    define CDTP_LOCAL_SERVER_HOST "::1"
-#  endif
-#endif
-#ifndef CDTP_LOCAL_SERVER_PORT
-#  define CDTP_LOCAL_SERVER_PORT (CDTP_PORT + 1)
+// Default CDTP server listen backlog
+#ifndef CDTP_SERVER_LISTEN_BACKLOG
+#  define CDTP_SERVER_LISTEN_BACKLOG 8
 #endif
 
 // Length of the size portion of each message
 #define CDTP_LENSIZE 5
+
+// Amount of time to sleep between socket reads
+#define CDTP_SLEEP_TIME 0.001
+
+// Determine if a blocking error has occurred
+// This is necessary because -Wlogical-op causes a compile-time error on machines where EAGAIN and EWOULDBLOCK are equal
+#ifndef _WIN32
+#  if EAGAIN == EWOULDBLOCK
+#    define CDTP_EAGAIN_OR_WOULDBLOCK(e) (e == EAGAIN)
+#  else
+#    define CDTP_EAGAIN_OR_WOULDBLOCK(e) (e == EAGAIN || e == EWOULDBLOCK)
+#  endif
+#endif
 
 // Keep track of whether the library has been initialized and exited
 extern int CDTP_INIT;
