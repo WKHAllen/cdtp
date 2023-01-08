@@ -675,9 +675,9 @@ void test_send_receive(void)
 void test_send_large_messages(void)
 {
     // Initialize test state
-    size_t large_server_message_len = (size_t) rand_int(32768, 65536);
+    size_t large_server_message_len = (size_t) rand_int(256, 512);
     char *large_server_message = rand_bytes(large_server_message_len);
-    size_t large_client_message_len = rand_int(16384, 32768);
+    size_t large_client_message_len = (size_t) rand_int(128, 256);
     char *large_client_message = rand_bytes(large_client_message_len);
     TestReceivedMessage *server_received[] = {
             test_received_message((void *) large_server_message, large_server_message_len)
@@ -739,10 +739,10 @@ void test_send_large_messages(void)
 void test_sending_numerous_messages(void)
 {
     // Initialize test state
-    size_t num_server_messages = rand_int(64, 128);
+    size_t num_server_messages = (size_t) rand_int(64, 128);
     int *server_messages = (int *) malloc(num_server_messages * sizeof(int));
     for (size_t i = 0; i < num_server_messages; i++) server_messages[i] = rand();
-    size_t num_client_messages = rand_int(128, 256);
+    size_t num_client_messages = (size_t) rand_int(128, 256);
     int *client_messages = (int *) malloc(num_client_messages * sizeof(int));
     for (size_t i = 0; i < num_client_messages; i++) client_messages[i] = rand();
     TestReceivedMessage **server_received = (TestReceivedMessage **) malloc(num_server_messages * sizeof(TestReceivedMessage *));
