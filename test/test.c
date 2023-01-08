@@ -327,7 +327,7 @@ void test_state_client_received(TestState *state, void *data, size_t data_size)
 
 void test_state_client_disconnected(TestState *state)
 {
-//    TEST_ASSERT(state->client_disconnected_count < state->client_disconnected_count_expected)
+    TEST_ASSERT(state->client_disconnected_count < state->client_disconnected_count_expected)
 
     state->client_disconnected_count++;
 }

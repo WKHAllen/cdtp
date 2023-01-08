@@ -400,7 +400,7 @@ CDTP_EXPORT void cdtp_client_disconnect(CDTPClient* client)
     }
 
     // Wait for threads to exit
-    if (GetThreadId(client->handle_thread) == GetCurrentThreadId()) {
+    if (GetThreadId(client->handle_thread) != GetCurrentThreadId()) {
         if (WaitForSingleObject(client->handle_thread, INFINITE) == WAIT_FAILED) {
             _cdtp_set_error(CDTP_HANDLE_THREAD_NOT_CLOSING, GetLastError());
             return;

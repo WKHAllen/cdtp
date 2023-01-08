@@ -229,8 +229,10 @@ void _cdtp_server_serve(CDTPServer* server)
                     int err_code = WSAGetLastError();
 
                     if (err_code == WSAECONNRESET || err_code == WSAENOTSOCK) {
-                        _cdtp_server_disconnect_sock(server, client_id);
-                        _cdtp_server_call_on_disconnect(server, client_id);
+                        if (server->allocated_clients[client_id] == CDTP_TRUE) {
+                            _cdtp_server_disconnect_sock(server, client_id);
+                            _cdtp_server_call_on_disconnect(server, client_id);
+                        }
                     }
                     else if (err_code == WSAEWOULDBLOCK) {
                         // Nothing happened on the socket, do nothing
@@ -241,8 +243,10 @@ void _cdtp_server_serve(CDTPServer* server)
                     }
                 }
                 else if (recv_code == 0) {
-                    _cdtp_server_disconnect_sock(server, client_id);
-                    _cdtp_server_call_on_disconnect(server, client_id);
+                    if (server->allocated_clients[client_id] == CDTP_TRUE) {
+                        _cdtp_server_disconnect_sock(server, client_id);
+                        _cdtp_server_call_on_disconnect(server, client_id);
+                    }
                 }
                 else {
                     size_t msg_size = _cdtp_decode_message_size(size_buffer);
@@ -257,8 +261,10 @@ void _cdtp_server_serve(CDTPServer* server)
                         int err_code = WSAGetLastError();
 
                         if (err_code == WSAECONNRESET || err_code == WSAENOTSOCK) {
-                            _cdtp_server_disconnect_sock(server, client_id);
-                            _cdtp_server_call_on_disconnect(server, client_id);
+                            if (server->allocated_clients[client_id] == CDTP_TRUE) {
+                                _cdtp_server_disconnect_sock(server, client_id);
+                                _cdtp_server_call_on_disconnect(server, client_id);
+                            }
                         }
                         else {
                             _cdtp_set_error(CDTP_SERVER_RECV_FAILED, err_code);
@@ -266,8 +272,10 @@ void _cdtp_server_serve(CDTPServer* server)
                         }
                     }
                     else if (recv_code == 0) {
-                        _cdtp_server_disconnect_sock(server, client_id);
-                        _cdtp_server_call_on_disconnect(server, client_id);
+                        if (server->allocated_clients[client_id] == CDTP_TRUE) {
+                            _cdtp_server_disconnect_sock(server, client_id);
+                            _cdtp_server_call_on_disconnect(server, client_id);
+                        }
                     }
                     else if (((size_t) recv_code) != msg_size) {
                         _cdtp_set_err(CDTP_SERVER_RECV_FAILED);
@@ -281,15 +289,19 @@ void _cdtp_server_serve(CDTPServer* server)
                 recv_code = read(client_sock->sock, (char *) size_buffer, CDTP_LENSIZE);
 
                 if (recv_code == 0) {
-                    _cdtp_server_disconnect_sock(server, client_id);
-                    _cdtp_server_call_on_disconnect(server, client_id);
+                    if (server->allocated_clients[client_id] == CDTP_TRUE) {
+                        _cdtp_server_disconnect_sock(server, client_id);
+                        _cdtp_server_call_on_disconnect(server, client_id);
+                    }
                 }
                 else if (recv_code == -1) {
                     int err_code = errno;
 
                     if (err_code == EBADF) {
-                        _cdtp_server_disconnect_sock(server, client_id);
-                        _cdtp_server_call_on_disconnect(server, client_id);
+                        if (server->allocated_clients[client_id] == CDTP_TRUE) {
+                            _cdtp_server_disconnect_sock(server, client_id);
+                            _cdtp_server_call_on_disconnect(server, client_id);
+                        }
                     }
                     else if (CDTP_EAGAIN_OR_WOULDBLOCK(err_code)) {
                         // Nothing happened on the socket, do nothing
@@ -312,16 +324,20 @@ void _cdtp_server_serve(CDTPServer* server)
                         int err_code = errno;
 
                         if (err_code == EBADF) {
-                            _cdtp_server_disconnect_sock(server, client_id);
-                            _cdtp_server_call_on_disconnect(server, client_id);
+                            if (server->allocated_clients[client_id] == CDTP_TRUE) {
+                                _cdtp_server_disconnect_sock(server, client_id);
+                                _cdtp_server_call_on_disconnect(server, client_id);
+                            }
                         } else {
                             _cdtp_set_error(CDTP_SERVER_RECV_FAILED, err_code);
                             return;
                         }
                     }
                     else if (recv_code == 0) {
-                        _cdtp_server_disconnect_sock(server, client_id);
-                        _cdtp_server_call_on_disconnect(server, client_id);
+                        if (server->allocated_clients[client_id] == CDTP_TRUE) {
+                            _cdtp_server_disconnect_sock(server, client_id);
+                            _cdtp_server_call_on_disconnect(server, client_id);
+                        }
                     }
                     else if (((size_t) recv_code) != msg_size) {
                         _cdtp_set_err(CDTP_SERVER_RECV_FAILED);
@@ -737,6 +753,8 @@ CDTP_EXPORT void cdtp_server_remove_client(CDTPServer* server, size_t client_id)
 #endif
 
     server->allocated_clients[client_id] = CDTP_FALSE;
+    free(server->clients[client_id]);
+    server->num_clients--;
 }
 
 CDTP_EXPORT void cdtp_server_send(CDTPServer* server, size_t client_id, void* data, size_t data_size)
