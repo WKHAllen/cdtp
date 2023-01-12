@@ -478,6 +478,193 @@ void test_util(void)
 }
 
 /**
+ * Test client map functions.
+ */
+void test_client_map(void)
+{
+    // Create map
+    CDTPClientMap *map = _cdtp_client_map();
+    TEST_ASSERT_EQ(map->size, (size_t) 0)
+    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+
+    // Create test sockets
+    CDTPSocket *sock1 = (CDTPSocket *) malloc(sizeof(CDTPSocket));
+    sock1->sock = 123;
+    CDTPSocket *sock2 = (CDTPSocket *) malloc(sizeof(CDTPSocket));
+    sock2->sock = 345;
+
+    // Test false contains
+    int false_contains = _cdtp_client_map_contains(map, 234);
+    TEST_ASSERT_EQ((size_t) false_contains, (size_t) CDTP_FALSE)
+    TEST_ASSERT_EQ(map->size, (size_t) 0)
+    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+
+    // Test null get
+    CDTPSocket *null_get = _cdtp_client_map_get(map, 234);
+    TEST_ASSERT(null_get == NULL)
+    TEST_ASSERT_EQ(map->size, (size_t) 0)
+    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+
+    // Test null pop
+    CDTPSocket *null_pop = _cdtp_client_map_pop(map, 234);
+    TEST_ASSERT(null_pop == NULL)
+    TEST_ASSERT_EQ(map->size, (size_t) 0)
+    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+
+    // Test zero-size iterator
+    CDTPClientMapIter *zero_size_iter = _cdtp_client_map_iter(map);
+    TEST_ASSERT_EQ(zero_size_iter->size, (size_t) 0)
+    _cdtp_client_map_iter_free(zero_size_iter);
+
+    // Test set
+    int set1 = _cdtp_client_map_set(map, 234, sock1);
+    TEST_ASSERT_EQ((size_t) set1, (size_t) CDTP_TRUE)
+    TEST_ASSERT_EQ(map->size, (size_t) 1)
+    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+
+    // Test double set
+    int double_set = _cdtp_client_map_set(map, 234, sock2);
+    TEST_ASSERT_EQ((size_t) double_set, (size_t) CDTP_FALSE)
+    TEST_ASSERT_EQ(map->size, (size_t) 1)
+    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+
+    // Test true contains
+    int contains1 = _cdtp_client_map_contains(map, 234);
+    TEST_ASSERT_EQ((size_t) contains1, (size_t) CDTP_TRUE)
+    TEST_ASSERT_EQ(map->size, (size_t) 1)
+    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+
+    // Test get
+    CDTPSocket *get1 = _cdtp_client_map_get(map, 234);
+    TEST_ASSERT_EQ((size_t) (get1->sock), (size_t) 123)
+    TEST_ASSERT_EQ(map->size, (size_t) 1)
+    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+
+    // Test one-size iterator
+    CDTPClientMapIter *one_size_iter = _cdtp_client_map_iter(map);
+    TEST_ASSERT_EQ(one_size_iter->size, (size_t) 1)
+    TEST_ASSERT_EQ(one_size_iter->clients[0]->client_id, (size_t) 234)
+    TEST_ASSERT_EQ((size_t) (one_size_iter->clients[0]->sock->sock), (size_t) 123)
+    _cdtp_client_map_iter_free(one_size_iter);
+
+    // Test second set, contains, get
+    int contains2 = _cdtp_client_map_contains(map, 456);
+    TEST_ASSERT_EQ((size_t) contains2, (size_t) CDTP_FALSE)
+    CDTPSocket *get2 = _cdtp_client_map_get(map, 456);
+    TEST_ASSERT(get2 == NULL)
+    int set2 = _cdtp_client_map_set(map, 456, sock2);
+    TEST_ASSERT_EQ((size_t) set2, (size_t) CDTP_TRUE)
+    TEST_ASSERT_EQ(map->size, (size_t) 2)
+    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+    int contains3 = _cdtp_client_map_contains(map, 456);
+    TEST_ASSERT_EQ((size_t) contains3, (size_t) CDTP_TRUE)
+    CDTPSocket *get3 = _cdtp_client_map_get(map, 456);
+    TEST_ASSERT_EQ((size_t) (get3->sock), (size_t) 345)
+
+    // Test two-size iterator
+    CDTPClientMapIter *two_size_iter = _cdtp_client_map_iter(map);
+    TEST_ASSERT_EQ(two_size_iter->size, (size_t) 2)
+    TEST_ASSERT_EQ(two_size_iter->clients[0]->client_id, (size_t) 456)
+    TEST_ASSERT_EQ((size_t) (two_size_iter->clients[0]->sock->sock), (size_t) 345)
+    TEST_ASSERT_EQ(two_size_iter->clients[1]->client_id, (size_t) 234)
+    TEST_ASSERT_EQ((size_t) (two_size_iter->clients[1]->sock->sock), (size_t) 123)
+    _cdtp_client_map_iter_free(two_size_iter);
+
+    // Test pop
+    CDTPSocket *pop1 = _cdtp_client_map_pop(map, 234);
+    TEST_ASSERT_EQ((size_t) (pop1->sock), (size_t) 123)
+    TEST_ASSERT_EQ(map->size, (size_t) 1)
+    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+    CDTPSocket *pop2 = _cdtp_client_map_pop(map, 456);
+    TEST_ASSERT_EQ((size_t) (pop2->sock), (size_t) 345)
+    TEST_ASSERT_EQ(map->size, (size_t) 0)
+    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+
+    // Test hash collisions
+    int set3 = _cdtp_client_map_set(map, 3, sock1);
+    int set4 = _cdtp_client_map_set(map, 3 + CDTP_MAP_START_CAPACITY, sock2);
+    TEST_ASSERT_EQ((size_t) set3, (size_t) CDTP_TRUE)
+    TEST_ASSERT_EQ((size_t) set4, (size_t) CDTP_TRUE)
+    TEST_ASSERT_EQ(map->size, (size_t) 2)
+    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+    int contains4 = _cdtp_client_map_contains(map, 3);
+    TEST_ASSERT_EQ((size_t) contains4, (size_t) CDTP_TRUE)
+    int contains5 = _cdtp_client_map_contains(map, 3 + CDTP_MAP_START_CAPACITY);
+    TEST_ASSERT_EQ((size_t) contains5, (size_t) CDTP_TRUE)
+    CDTPSocket *get4 = _cdtp_client_map_get(map, 3);
+    TEST_ASSERT_EQ((size_t) (get4->sock), (size_t) 123)
+    CDTPSocket *get5 = _cdtp_client_map_get(map, 3 + CDTP_MAP_START_CAPACITY);
+    TEST_ASSERT_EQ((size_t) (get5->sock), (size_t) 345)
+    CDTPClientMapIter *iter1 = _cdtp_client_map_iter(map);
+    TEST_ASSERT_EQ(iter1->size, (size_t) 2)
+    TEST_ASSERT_EQ(iter1->clients[0]->client_id, (size_t) 3)
+    TEST_ASSERT_EQ((size_t) (iter1->clients[0]->sock->sock), (size_t) 123)
+    TEST_ASSERT_EQ(iter1->clients[1]->client_id, (size_t) 3 + CDTP_MAP_START_CAPACITY)
+    TEST_ASSERT_EQ((size_t) (iter1->clients[1]->sock->sock), (size_t) 345)
+    _cdtp_client_map_iter_free(iter1);
+    CDTPSocket *pop3 = _cdtp_client_map_pop(map, 3);
+    TEST_ASSERT_EQ((size_t) (pop3->sock), (size_t) 123)
+    TEST_ASSERT_EQ(map->size, (size_t) 1)
+    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+    CDTPSocket *pop4 = _cdtp_client_map_pop(map, 3 + CDTP_MAP_START_CAPACITY);
+    TEST_ASSERT_EQ((size_t) (pop4->sock), (size_t) 345)
+    TEST_ASSERT_EQ(map->size, (size_t) 0)
+    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+
+    // Test resize up
+    for (size_t i = 0; i < 16; i++) {
+        CDTPSocket *sock = (CDTPSocket *) malloc(sizeof(CDTPSocket));
+        sock->sock = 1000 + i;
+        int set5 = _cdtp_client_map_set(map, i * 2, sock);
+        TEST_ASSERT_EQ((size_t) set5, (size_t) CDTP_TRUE)
+    }
+    TEST_ASSERT_EQ(map->size, (size_t) 16)
+    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+    CDTPSocket *sock3 = (CDTPSocket *) malloc(sizeof(CDTPSocket));
+    sock3->sock = 1016;
+    int set6 = _cdtp_client_map_set(map, 32, sock3);
+    TEST_ASSERT_EQ((size_t) set6, (size_t) CDTP_TRUE)
+    TEST_ASSERT_EQ(map->size, (size_t) 17)
+    TEST_ASSERT_EQ(map->capacity, (size_t) (CDTP_MAP_START_CAPACITY * 2))
+    size_t client_id_total = 0;
+    size_t sock_total = 0;
+    CDTPClientMapIter *iter2 = _cdtp_client_map_iter(map);
+    for (size_t i = 0; i < iter2->size; i++) {
+        client_id_total += iter2->clients[i]->client_id;
+        sock_total += (size_t) (iter2->clients[i]->sock->sock);
+    }
+    TEST_ASSERT_EQ(client_id_total, (size_t) 272)
+    TEST_ASSERT_EQ(sock_total, (size_t) 17136)
+    _cdtp_client_map_iter_free(iter2);
+
+    // Test resize down
+    for (size_t i = 16; i >= 8; i--) {
+        CDTPSocket *sock = _cdtp_client_map_pop(map, i * 2);
+        TEST_ASSERT(sock != NULL)
+        free(sock);
+    }
+    TEST_ASSERT_EQ(map->size, (size_t) 8)
+    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY * 2)
+    CDTPSocket *sock4 = _cdtp_client_map_pop(map, 14);
+    TEST_ASSERT(sock4 != NULL)
+    TEST_ASSERT_EQ(map->size, (size_t) 7)
+    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+    free(sock4);
+    for (int i = 6; i >= 0; i--) {
+        CDTPSocket *sock = _cdtp_client_map_pop(map, ((size_t) i) * 2);
+        TEST_ASSERT(sock != NULL)
+        free(sock);
+    }
+    TEST_ASSERT_EQ(map->size, (size_t) 0)
+    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+
+    // Clean up
+    free(sock1);
+    free(sock2);
+    _cdtp_client_map_free(map);
+}
+
+/**
  * Test crypto functions.
  */
 void test_crypto(void)
@@ -1106,6 +1293,8 @@ int main(void)
     // Run tests
     printf("\nTesting utilities...\n");
     test_util();
+    printf("\nTesting client map...\n");
+    test_client_map();
     printf("\nTesting crypto...\n");
     test_crypto();
     printf("\nTesting server creation and serving...\n");

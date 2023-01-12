@@ -23,6 +23,7 @@
 #  include <errno.h>
 #  include <time.h>
 #  include <limits.h>
+#  include <stdint.h>
 #endif
 
 // Export functions

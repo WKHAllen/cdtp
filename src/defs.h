@@ -25,6 +25,32 @@ typedef struct _CDTPSocket {
     struct sockaddr_in address;
 } CDTPSocket;
 
+// Client map node type
+typedef struct _CDTPClientMapNode {
+    int allocated;
+    size_t client_id;
+    CDTPSocket *sock;
+} CDTPClientMapNode;
+
+// Client map type
+typedef struct _CDTPClientMap {
+    size_t size;
+    size_t capacity;
+    CDTPClientMapNode **nodes;
+} CDTPClientMap;
+
+// Client map iterator node type
+typedef struct _CDTPClientMapIterNode {
+    size_t client_id;
+    CDTPSocket *sock;
+} CDTPClientMapIterNode;
+
+// Client map iterator type
+typedef struct _CDTPClientMapIter {
+    size_t size;
+    CDTPClientMapIterNode **clients;
+} CDTPClientMapIter;
+
 // Socket server type
 typedef struct _CDTPServer {
     size_t max_clients;
@@ -39,6 +65,7 @@ typedef struct _CDTPServer {
     size_t num_clients;
     CDTPSocket* sock;
     CDTPSocket** clients;
+//    CDTPClientMap *clients;
     int* allocated_clients;
 #ifdef _WIN32
     HANDLE serve_thread;

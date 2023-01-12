@@ -9,6 +9,7 @@
 #include "defs.h"
 #include "util.h"
 #include "threading.h"
+#include "map.h"
 
 // Server max clients indicator
 #define CDTP_MAX_CLIENTS_REACHED (-1)
