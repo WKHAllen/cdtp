@@ -413,7 +413,6 @@ typedef struct _Custom {
 } Custom;
 
 #define WAIT_TIME 0.1
-#define MAX_CLIENTS 16
 #define SERVER_HOST "0.0.0.0"
 #define SERVER_PORT 29275
 #define CLIENT_HOST "127.0.0.1"
@@ -689,8 +688,7 @@ void test_server_serve(void)
                                   client_received);
 
     // Create server
-    CDTPServer *s = cdtp_server(MAX_CLIENTS,
-                                server_on_recv, server_on_connect, server_on_disconnect,
+    CDTPServer *s = cdtp_server(server_on_recv, server_on_connect, server_on_disconnect,
                                 state, state, state);
     TEST_ASSERT(!cdtp_server_is_serving(s))
 
@@ -733,8 +731,7 @@ void test_addresses(void)
                                   client_received);
 
     // Create server
-    CDTPServer *s = cdtp_server(MAX_CLIENTS,
-                                server_on_recv, server_on_connect, server_on_disconnect,
+    CDTPServer *s = cdtp_server(server_on_recv, server_on_connect, server_on_disconnect,
                                 state, state, state);
     TEST_ASSERT(!cdtp_server_is_serving(s))
     cdtp_server_start(s, SERVER_HOST, SERVER_PORT);
@@ -821,8 +818,7 @@ void test_send_receive(void)
                                   client_received);
 
     // Create server
-    CDTPServer *s = cdtp_server(MAX_CLIENTS,
-                                server_on_recv, server_on_connect, server_on_disconnect,
+    CDTPServer *s = cdtp_server(server_on_recv, server_on_connect, server_on_disconnect,
                                 state, state, state);
     cdtp_server_start(s, SERVER_HOST, SERVER_PORT);
     char *server_host = cdtp_server_get_host(s);
@@ -881,8 +877,7 @@ void test_send_large_messages(void)
                                   client_received);
 
     // Create server
-    CDTPServer *s = cdtp_server(MAX_CLIENTS,
-                                server_on_recv, server_on_connect, server_on_disconnect,
+    CDTPServer *s = cdtp_server(server_on_recv, server_on_connect, server_on_disconnect,
                                 state, state, state);
     cdtp_server_start(s, SERVER_HOST, SERVER_PORT);
     char *server_host = cdtp_server_get_host(s);
@@ -946,8 +941,7 @@ void test_sending_numerous_messages(void)
                                   client_received);
 
     // Create server
-    CDTPServer *s = cdtp_server(MAX_CLIENTS,
-                                server_on_recv, server_on_connect, server_on_disconnect,
+    CDTPServer *s = cdtp_server(server_on_recv, server_on_connect, server_on_disconnect,
                                 state, state, state);
     cdtp_server_start(s, SERVER_HOST, SERVER_PORT);
     char *server_host = cdtp_server_get_host(s);
@@ -1023,8 +1017,7 @@ void test_sending_custom_types(void)
                                   client_received);
 
     // Create server
-    CDTPServer *s = cdtp_server(MAX_CLIENTS,
-                                server_on_recv, server_on_connect, server_on_disconnect,
+    CDTPServer *s = cdtp_server(server_on_recv, server_on_connect, server_on_disconnect,
                                 state, state, state);
     cdtp_server_start(s, SERVER_HOST, SERVER_PORT);
     char *server_host = cdtp_server_get_host(s);
@@ -1066,30 +1059,45 @@ void test_multiple_clients(void)
     // Initialize test state
     char *message_from_client1 = "Hello from client #1!";
     char *message_from_client2 = "Goodbye from client #2!";
+    char *message_from_other_clients = "Just another client -\\_(\"/)_/-";
     size_t message_from_server = 29275;
     size_t message_to_client1 = 123;
     size_t message_to_client2 = 789;
     TestReceivedMessage *server_received[] = {
             str_message(message_from_client1),
-            str_message(message_from_client2)
+            str_message(message_from_client2),
+            str_message(message_from_other_clients),
+            str_message(message_from_other_clients),
+            str_message(message_from_other_clients),
+            str_message(message_from_other_clients),
+            str_message(message_from_other_clients),
+            str_message(message_from_other_clients),
+            str_message(message_from_other_clients),
+            str_message(message_from_other_clients),
+            str_message(message_from_other_clients),
+            str_message(message_from_other_clients),
+            str_message(message_from_other_clients),
+            str_message(message_from_other_clients),
+            str_message(message_from_other_clients),
+            str_message(message_from_other_clients),
+            str_message(message_from_other_clients)
     };
-    size_t receive_clients[] = {0, 1};
-    size_t connect_clients[] = {0, 1};
-    size_t disconnect_clients[] = {0, 1};
+    size_t receive_clients[] = {0, 1, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2};
+    size_t connect_clients[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+    size_t disconnect_clients[] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 0, 1};
     TestReceivedMessage *client_received[] = {
             size_t_message(message_from_server),
             size_t_message(message_from_server),
             size_t_message(message_to_client1),
             size_t_message(message_to_client2)
     };
-    TestState *state = test_state(2, 2, 2,
+    TestState *state = test_state(17, 17, 17,
                                   server_received, receive_clients, connect_clients, disconnect_clients,
                                   4, 0,
                                   client_received);
 
     // Create server
-    CDTPServer *s = cdtp_server(MAX_CLIENTS,
-                                server_on_recv, server_on_connect, server_on_disconnect,
+    CDTPServer *s = cdtp_server(server_on_recv, server_on_connect, server_on_disconnect,
                                 state, state, state);
     cdtp_server_start(s, SERVER_HOST, SERVER_PORT);
     char *server_host = cdtp_server_get_host(s);
@@ -1149,6 +1157,30 @@ void test_multiple_clients(void)
     cdtp_server_send(s, 1, &message_to_client2, sizeof(size_t));
     cdtp_sleep(WAIT_TIME);
 
+    // Connect other clients
+    TEST_ASSERT_EQ(s->clients->capacity, (size_t) CDTP_MAP_MIN_CAPACITY)
+    CDTPClient *other_clients[15];
+    for (size_t i = 0; i < 15; i++) {
+        other_clients[i] = cdtp_client(client_on_recv, client_on_disconnected,
+                                                        state, state);
+        cdtp_client_connect(other_clients[i], CLIENT_HOST, CLIENT_PORT);
+        cdtp_sleep(WAIT_TIME);
+    }
+    TEST_ASSERT_EQ(s->clients->capacity, (size_t) (CDTP_MAP_MIN_CAPACITY * 2))
+
+    // Send messages from other clients
+    for (int i = 14; i >= 0; i--) {
+        cdtp_client_send(other_clients[i], message_from_other_clients, STR_SIZE(message_from_other_clients));
+        cdtp_sleep(WAIT_TIME);
+    }
+
+    // Disconnect other clients
+    for (size_t i = 0; i < 15; i++) {
+        cdtp_client_disconnect(other_clients[i]);
+        cdtp_sleep(WAIT_TIME);
+    }
+    TEST_ASSERT_EQ(s->clients->capacity, (size_t) CDTP_MAP_MIN_CAPACITY)
+
     // Disconnect client 1
     cdtp_client_disconnect(c1);
     cdtp_sleep(WAIT_TIME);
@@ -1166,6 +1198,9 @@ void test_multiple_clients(void)
     cdtp_server_free(s);
     cdtp_client_free(c1);
     cdtp_client_free(c2);
+    for (size_t i = 0; i < 15; i++) {
+        cdtp_client_free(other_clients[i]);
+    }
     free(server_host);
     free(cc1_host);
     free(cs1_host);
@@ -1190,8 +1225,7 @@ void test_client_disconnected(void)
                                   client_received);
 
     // Create server
-    CDTPServer *s = cdtp_server(MAX_CLIENTS,
-                                server_on_recv, server_on_connect, server_on_disconnect,
+    CDTPServer *s = cdtp_server(server_on_recv, server_on_connect, server_on_disconnect,
                                 state, state, state);
     TEST_ASSERT(!cdtp_server_is_serving(s))
     cdtp_server_start(s, SERVER_HOST, SERVER_PORT);
@@ -1242,8 +1276,7 @@ void test_remove_client(void)
                                   client_received);
 
     // Create server
-    CDTPServer *s = cdtp_server(MAX_CLIENTS,
-                                server_on_recv, server_on_connect, server_on_disconnect,
+    CDTPServer *s = cdtp_server(server_on_recv, server_on_connect, server_on_disconnect,
                                 state, state, state);
     TEST_ASSERT(!cdtp_server_is_serving(s))
     cdtp_server_start(s, SERVER_HOST, SERVER_PORT);

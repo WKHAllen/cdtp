@@ -11,14 +11,10 @@
 #include "threading.h"
 #include "map.h"
 
-// Server max clients indicator
-#define CDTP_MAX_CLIENTS_REACHED (-1)
-
 /*
  * Server creation/initialization
  *
- * max_clients:       the maximum number of clients the server will allow
- * on_recv:           pointer to a function that will be called when a packet is received
+ * on_recv:           pointer to a function that will be called when a message is received
  * on_connect:        pointer to a function that will be called when a client connects
  * on_disconnect:     pointer to a function that will be called when a client disconnects
  * on_recv_arg:       a value that will be passed to the on_recv function
@@ -26,7 +22,6 @@
  * on_disconnect_arg: a value that will be passed to the on_disconnect function
  */
 CDTP_EXPORT CDTPServer* cdtp_server(
-  size_t max_clients,
   ServerOnRecvCallback on_recv,
   ServerOnConnectCallback on_connect,
   ServerOnDisconnectCallback on_disconnect,

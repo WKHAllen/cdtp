@@ -53,7 +53,6 @@ typedef struct _CDTPClientMapIter {
 
 // Socket server type
 typedef struct _CDTPServer {
-    size_t max_clients;
     ServerOnRecvCallback on_recv;
     ServerOnConnectCallback on_connect;
     ServerOnDisconnectCallback on_disconnect;
@@ -62,11 +61,9 @@ typedef struct _CDTPServer {
     void* on_disconnect_arg;
     int serving;
     int done;
-    size_t num_clients;
     CDTPSocket* sock;
-    CDTPSocket** clients;
-//    CDTPClientMap *clients;
-    int* allocated_clients;
+    CDTPClientMap *clients;
+    size_t next_client_id;
 #ifdef _WIN32
     HANDLE serve_thread;
 #else

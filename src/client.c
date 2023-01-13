@@ -94,7 +94,7 @@ void _cdtp_client_handle(CDTPClient* client)
                 _cdtp_client_call_on_disconnected(client);
                 return;
             }
-            else if (((size_t)recv_code) != msg_size) {
+            else if (((size_t) recv_code) != msg_size) {
                 _cdtp_set_err(CDTP_CLIENT_RECV_FAILED);
                 return;
             }
@@ -270,93 +270,6 @@ CDTP_EXPORT void cdtp_client_connect(CDTPClient* client, char* host, unsigned sh
         _cdtp_set_err(CDTP_CLIENT_CONNECT_FAILED);
         return;
     }
-
-    // Check the return code
-    unsigned char size_buffer[CDTP_LENSIZE];
-#ifdef _WIN32
-    int recv_code = recv(client->sock->sock, (char*)size_buffer, CDTP_LENSIZE, 0);
-
-    if (recv_code == SOCKET_ERROR) {
-        int err_code = WSAGetLastError();
-
-        if (err_code == WSAECONNRESET) {
-            cdtp_client_disconnect(client);
-            _cdtp_client_call_on_disconnected(client);
-            return;
-        }
-        else {
-            _cdtp_set_error(CDTP_CLIENT_RECV_FAILED, err_code);
-            return;
-        }
-    }
-    else if (recv_code == 0) {
-        cdtp_client_disconnect(client);
-        _cdtp_client_call_on_disconnected(client);
-        return;
-    }
-    else {
-        size_t msg_size = _cdtp_decode_message_size(size_buffer);
-        char* buffer = (char*) malloc(msg_size * sizeof(char));
-        recv_code = recv(client->sock->sock, buffer, msg_size, 0);
-
-        if (recv_code == SOCKET_ERROR) {
-            int err_code = WSAGetLastError();
-
-            if (err_code == WSAECONNRESET) {
-                cdtp_client_disconnect(client);
-                _cdtp_client_call_on_disconnected(client);
-                return;
-            }
-            else {
-                _cdtp_set_error(CDTP_CLIENT_RECV_FAILED, err_code);
-                return;
-            }
-        }
-        else if (recv_code == 0) {
-            cdtp_client_disconnect(client);
-            _cdtp_client_call_on_disconnected(client);
-            return;
-        }
-        else {
-            int connect_code = *(int*)buffer;
-            if (connect_code == CDTP_SERVER_FULL) {
-                _cdtp_set_error(CDTP_SERVER_FULL, 0);
-                cdtp_client_disconnect(client);
-                _cdtp_client_call_on_disconnected(client);
-                return;
-            }
-        }
-    }
-#else
-    int recv_code = read(client->sock->sock, size_buffer, CDTP_LENSIZE);
-
-    if (recv_code == 0) {
-        cdtp_client_disconnect(client);
-        _cdtp_client_call_on_disconnected(client);
-        return;
-    }
-    else {
-        size_t msg_size = _cdtp_decode_message_size(size_buffer);
-        char* buffer = (char*) malloc(msg_size * sizeof(char));
-        recv_code = read(client->sock->sock, buffer, msg_size);
-
-        if (recv_code == 0) {
-            cdtp_client_disconnect(client);
-            _cdtp_client_call_on_disconnected(client);
-            return;
-        }
-        else {
-            int connect_code = *(int*)buffer;
-
-            if (connect_code == CDTP_SERVER_FULL) {
-                _cdtp_set_error(CDTP_SERVER_FULL, 0);
-                cdtp_client_disconnect(client);
-                _cdtp_client_call_on_disconnected(client);
-                return;
-            }
-        }
-    }
-#endif
 
     // Handle received data
     client->connected = CDTP_TRUE;
