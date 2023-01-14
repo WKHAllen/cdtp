@@ -1,12 +1,11 @@
-/*
- * Threading functions and definitions for cdtp
+/**
+ * CDTP threading interface.
  */
 
 #pragma once
 #ifndef CDTP_THREADING_H
 #define CDTP_THREADING_H
 
- // Includes
 #include "util.h"
 #include "server.h"
 #include <string.h>
@@ -17,116 +16,110 @@
 #  include <pthread.h>
 #endif
 
-// Type definitions
-typedef struct _CDTPEventFunc {
-    char* name;
-    union func {
-        ServerOnRecvCallback func_server_on_recv; // on_recv (server)
-        ServerOnConnectCallback func_server_on_connect; // on_connect (server)
-        ServerOnDisconnectCallback func_server_on_disconnect; // on_disconnect (server)
-        ClientOnRecvCallback func_client_on_recv; // on_recv (client)
-        ClientOnDisconnectedCallback func_client_on_disconnected; // on_disconnected (client)
-    } func;
-    size_t size_t1;
-    void* voidp1;
-    size_t size_t2;
-    void* voidp2;
-} CDTPEventFunc;
-
-typedef struct _CDTPServeFunc {
-    void (*func)(CDTPServer*);
-    CDTPServer* server;
-} CDTPServeFunc;
-
-typedef struct _CDTPHandleFunc {
-    void (*func)(CDTPClient*);
-    CDTPClient* client;
-} CDTPHandleFunc;
-
-// Event thread function
-#ifdef _WIN32
-DWORD WINAPI _cdtp_event_thread(LPVOID func_info);
-#else
-void* _cdtp_event_thread(void* func_info);
-#endif
-
-// Call an event function using a thread
-void _cdtp_start_event_thread(CDTPEventFunc* func_info);
-
-// Call on_recv (server)
+/**
+ * Call the server `on_recv` event function in another thread.
+ *
+ * @param func A pointer to the event function.
+ * @param client_id The client ID parameter.
+ * @param data The data parameter.
+ * @param data_size The data size parameter.
+ * @param arg The function argument parameter.
+ */
 void _cdtp_start_thread_on_recv_server(
     ServerOnRecvCallback func,
     size_t client_id,
-    void* data,
-    size_t data_len,
-    void* arg
+    void *data,
+    size_t data_size,
+    void *arg
 );
 
-// Call on_connect (server)
+/**
+ * Call the server `on_connect` event function in another thread.
+ *
+ * @param func A pointer to the event function.
+ * @param client_id The client ID parameter.
+ * @param arg The function argument parameter.
+ */
 void _cdtp_start_thread_on_connect(
     ServerOnConnectCallback func,
     size_t client_id,
-    void* arg
+    void *arg
 );
 
-// Call on_disconnect (server)
+/**
+ * Call the server `on_disconnect` event function in another thread.
+ *
+ * @param func A pointer to the event function.
+ * @param client_id The client ID parameter.
+ * @param arg The function argument parameter.
+ */
 void _cdtp_start_thread_on_disconnect(
     ServerOnDisconnectCallback func,
     size_t client_id,
-    void* arg
+    void *arg
 );
 
-// Call on_recv (client)
+/**
+ * Call the client `on_recv` event function in another thread.
+ *
+ * @param func A pointer to the event function.
+ * @param data The data parameter.
+ * @param data_size The data size parameter.
+ * @param arg The function argument parameter.
+ */
 void _cdtp_start_thread_on_recv_client(
     ClientOnRecvCallback func,
-    void* data,
+    void *data,
     size_t data_size,
-    void* arg
+    void *arg
 );
 
-// Call on_disconnected (client)
+/**
+ * Call the client `on_disconnected` event function in another thread.
+ *
+ * @param func A pointer to the event function.
+ * @param arg The function argument parameter.
+ */
 void _cdtp_start_thread_on_disconnected(
     ClientOnDisconnectedCallback func,
-    void* arg
+    void *arg
 );
 
-// Serve function thread
-#ifdef _WIN32
-DWORD WINAPI _cdtp_serve_thread(LPVOID func_info);
-#else
-void* _cdtp_serve_thread(void* func_info);
-#endif
-
-// Call the serve function using a thread
+/**
+ * Call the server's serve function in a separate thread.
+ *
+ * @param func The serve function.
+ * @param server The socket server.
+ * @return A handle to the thread.
+ */
 #ifdef _WIN32
 HANDLE _cdtp_start_serve_thread(
-    void (*func)(CDTPServer*),
-    CDTPServer* server
+    void (*func)(CDTPServer *),
+    CDTPServer *server
 );
 #else
 pthread_t _cdtp_start_serve_thread(
-    void (*func)(CDTPServer*),
-    CDTPServer* server
+    void (*func)(CDTPServer *),
+    CDTPServer *server
 );
 #endif
 
-// Handle function thread
-#ifdef _WIN32
-DWORD WINAPI _cdtp_handle_thread(LPVOID func_info);
-#else
-void* _cdtp_handle_thread(void* func_info);
-#endif
-
-// Call the handle function using a thread
+/**
+ * Call the client's handle function in a separate thread.
+ *
+ * @param func The handle function.
+ * @param client The socket client.
+ * @return A handle to the thread.
+ */
 #ifdef _WIN32
 HANDLE _cdtp_start_handle_thread(
-    void (*func)(CDTPClient*),
-    CDTPClient* client
+    void (*func)(CDTPClient *),
+    CDTPClient *client
 );
 #else
 pthread_t _cdtp_start_handle_thread(
-    void (*func)(CDTPClient*),
-    CDTPClient* client
+    void (*func)(CDTPClient *),
+    CDTPClient *client
 );
 #endif
 

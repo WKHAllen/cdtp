@@ -7,8 +7,8 @@ int CDTP_ERROR = CDTP_SUCCESS;
 int CDTP_ERROR_UNDER = 0;
 
 int CDTP_ON_ERROR_REGISTERED = CDTP_FALSE;
-void (*CDTP_ON_ERROR)(int, int, void*);
-void* CDTP_ON_ERROR_ARG;
+void (*CDTP_ON_ERROR)(int, int, void *);
+void *CDTP_ON_ERROR_ARG;
 
 int _cdtp_init(void)
 {
@@ -84,8 +84,8 @@ void _cdtp_set_err(int cdtp_err)
 }
 
 CDTP_EXPORT void cdtp_on_error(
-    void (*on_error)(int, int, void*),
-    void* arg
+    void (*on_error)(int, int, void *),
+    void *arg
 )
 {
     CDTP_ON_ERROR_REGISTERED = CDTP_TRUE;
@@ -98,9 +98,9 @@ CDTP_EXPORT void cdtp_on_error_clear(void)
     CDTP_ON_ERROR_REGISTERED = CDTP_FALSE;
 }
 
-CDTP_TEST_EXPORT unsigned char* _cdtp_encode_message_size(size_t size)
+CDTP_TEST_EXPORT unsigned char *_cdtp_encode_message_size(size_t size)
 {
-    unsigned char* encoded_size = (unsigned char*) malloc(CDTP_LENSIZE * sizeof(unsigned char));
+    unsigned char *encoded_size = (unsigned char*) malloc(CDTP_LENSIZE * sizeof(unsigned char));
 
     for (int i = CDTP_LENSIZE - 1; i >= 0; i--) {
         encoded_size[i] = size % 256;
@@ -110,7 +110,7 @@ CDTP_TEST_EXPORT unsigned char* _cdtp_encode_message_size(size_t size)
     return encoded_size;
 }
 
-CDTP_TEST_EXPORT size_t _cdtp_decode_message_size(unsigned char* encoded_size)
+CDTP_TEST_EXPORT size_t _cdtp_decode_message_size(unsigned char *encoded_size)
 {
     size_t size = 0;
 
@@ -122,11 +122,11 @@ CDTP_TEST_EXPORT size_t _cdtp_decode_message_size(unsigned char* encoded_size)
     return size;
 }
 
-char* _cdtp_construct_message(void* data, size_t data_size)
+char *_cdtp_construct_message(void *data, size_t data_size)
 {
-    char* data_str = (char*) data;
-    char* message = (char*) malloc((CDTP_LENSIZE + data_size) * sizeof(char));
-    unsigned char* size = _cdtp_encode_message_size(data_size);
+    char *data_str = (char *) data;
+    char *message = (char *) malloc((CDTP_LENSIZE + data_size) * sizeof(char));
+    unsigned char *size = _cdtp_encode_message_size(data_size);
 
     for (int i = 0; i < CDTP_LENSIZE; i++) {
         message[i] = size[i];
@@ -140,17 +140,17 @@ char* _cdtp_construct_message(void* data, size_t data_size)
     return message;
 }
 
-void* _cdtp_deconstruct_message(char* message, size_t* data_size)
+void *_cdtp_deconstruct_message(char *message, size_t *data_size)
 {
     // only the first CDTP_LENSIZE bytes of message will be read as the size
-    *data_size = _cdtp_decode_message_size((unsigned char*)message);
-    char* data = (char*) malloc(*data_size * sizeof(char));
+    *data_size = _cdtp_decode_message_size((unsigned char *) message);
+    char *data = (char *) malloc(*data_size * sizeof(char));
 
     for (size_t i = 0; i < *data_size; i++) {
         data[i] = message[i + CDTP_LENSIZE];
     }
 
-    return (void*)data;
+    return (void *) data;
 }
 
 CDTP_EXPORT void cdtp_sleep(double seconds)

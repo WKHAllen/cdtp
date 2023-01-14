@@ -1,5 +1,5 @@
-/*
- * Server types and functions for cdtp.
+/**
+ * CDTP server implementation.
  */
 
 #pragma once
@@ -11,111 +11,133 @@
 #include "threading.h"
 #include "map.h"
 
-/*
- * Server creation/initialization
+/**
+ * Instantiate a socket server.
  *
- * on_recv:           pointer to a function that will be called when a message is received
- * on_connect:        pointer to a function that will be called when a client connects
- * on_disconnect:     pointer to a function that will be called when a client disconnects
- * on_recv_arg:       a value that will be passed to the on_recv function
- * on_connect_arg:    a value that will be passed to the on_connect function
- * on_disconnect_arg: a value that will be passed to the on_disconnect function
+ * @param on_recv A pointer to a function that will be called when a message is received from a client.
+ * @param on_connect A pointer to a function that will be called when a client connects.
+ * @param on_disconnect A pointer to a function that will be called when a client disconnects.
+ * @param on_recv_arg A value that will be passed to the `on_recv` event function.
+ * @param on_connect_arg A value that will be passed to the `on_connect` event function.
+ * @param on_disconnect_arg A value that will be passed to the `on_disconnect` event function.
+ * @return The new socket server.
+ *
+ * The `on_recv` function should take four parameters:
+ *   - a `size_t` representing the ID of the client that sent the message
+ *   - a `void *` representing the received data
+ *   - a `size_t` representing the size of the received data, in bytes
+ *   - a `void *` containing the `on_recv_arg`
+ * Note that the data (the second parameter) is allocated on the heap by CDTP. Users are responsible for calling `free`
+ * on the data at some point, whether that be at the end of the `on_recv` function or at a later time.
+ *
+ * The `on_connect` and `on_disconnect` functions should each take two parameters:
+ *   - a `size_t` representing the ID of the client that connected/disconnected
+ *   - a `void *` containing the `on_connect_arg`/`on_disconnect_arg`
+ *
+ * All event functions are executed in their own threads to prevent halting the server's event loop.
  */
-CDTP_EXPORT CDTPServer* cdtp_server(
+CDTP_EXPORT CDTPServer *cdtp_server(
   ServerOnRecvCallback on_recv,
   ServerOnConnectCallback on_connect,
   ServerOnDisconnectCallback on_disconnect,
-  void* on_recv_arg,
-  void* on_connect_arg,
-  void* on_disconnect_arg
+  void *on_recv_arg,
+  void *on_connect_arg,
+  void *on_disconnect_arg
 );
 
-/*
- * Start a server
+/**
+ * Start the socket server.
  *
- * server: the server object
- * host:   the host as a string
- * port:   the port as an integer
+ * @param server The socket server.
+ * @param host The address to host the server on.
+ * @param port The port to host the server on.
  */
-CDTP_EXPORT void cdtp_server_start(CDTPServer* server, char* host, unsigned short port);
+CDTP_EXPORT void cdtp_server_start(CDTPServer *server, char *host, unsigned short port);
 
-/*
- * Stop the server, disconnect all clients, and free up memory
+/**
+ * Stop the server.
  *
- * server: the server object
+ * @param server The socket server.
  */
-CDTP_EXPORT void cdtp_server_stop(CDTPServer* server);
+CDTP_EXPORT void cdtp_server_stop(CDTPServer *server);
 
-/*
- * Check if the server is serving
+/**
+ * Check if the server is serving.
  *
- * server: the server object
+ * @param server The socket server.
+ * @return If the server is serving.
  */
-CDTP_EXPORT int cdtp_server_is_serving(CDTPServer* server);
+CDTP_EXPORT int cdtp_server_is_serving(CDTPServer *server);
 
-/*
- * Get the server host address.
+/**
+ * Get the host of the server.
  *
- * server: the server object
+ * @param server The socket server.
+ * @return The host address of the server.
  *
- * The returned value's memory will need to be freed after use
+ * Note that the returned value is allocated on the heap, and `free` will need to be called on it.
  */
-CDTP_EXPORT char* cdtp_server_get_host(CDTPServer* server);
+CDTP_EXPORT char *cdtp_server_get_host(CDTPServer *server);
 
-/*
- * Get the server port.
+/**
+ * Get the port of the server.
  *
- * server: the server object
+ * @param server The socket server.
+ * @return The port of the server.
  */
-CDTP_EXPORT unsigned short cdtp_server_get_port(CDTPServer* server);
+CDTP_EXPORT unsigned short cdtp_server_get_port(CDTPServer *server);
 
-/*
+/**
  * Get the host of a client.
  *
- * server: the server object
- * client_id: the ID of the client
+ * @param server The socket server.
+ * @param client_id The ID of the client.
+ * @return The host address of the client.
  *
- * The returned value's memory will need to be freed after use
+ * Note that the returned value is allocated on the heap, and `free` will need to be called on it.
  */
-CDTP_EXPORT char* cdtp_server_get_client_host(CDTPServer* server, size_t client_id);
+CDTP_EXPORT char *cdtp_server_get_client_host(CDTPServer *server, size_t client_id);
 
-/*
+/**
  * Get the port of a client.
  *
- * server: the server object
- * client_id: the ID of the client
+ * @param server The socket server.
+ * @param client_id The ID of the client.
+ * @return The port of the client.
  */
-CDTP_EXPORT unsigned short cdtp_server_get_client_port(CDTPServer* server, size_t client_id);
+CDTP_EXPORT unsigned short cdtp_server_get_client_port(CDTPServer *server, size_t client_id);
 
-/*
- * Remove a client by ID
+/**
+ * Disconnect a client from the server.
  *
- * server:    the server object
- * client_id: the ID of the client to be removed
+ * @param server The socket server.
+ * @param client_id The ID of the client to disconnect.
  */
-CDTP_EXPORT void cdtp_server_remove_client(CDTPServer* server, size_t client_id);
+CDTP_EXPORT void cdtp_server_remove_client(CDTPServer *server, size_t client_id);
 
-/*
- * Send data to a client
+/**
+ * Send data to a client.
  *
- * server:    the server object
- * client_id: the ID of the client to send the data to
- * data:      the data to send
- * data_size: the size of the data
+ * @param server The socket server.
+ * @param client_id The ID of the client to send the data to.
+ * @param data The data to send.
+ * @param data_size The size of the data, in bytes.
  */
-CDTP_EXPORT void cdtp_server_send(CDTPServer* server, size_t client_id, void* data, size_t data_size);
+CDTP_EXPORT void cdtp_server_send(CDTPServer *server, size_t client_id, void *data, size_t data_size);
 
-/*
- * Send data to all clients
+/**
+ * Send data to all clients.
  *
- * server:    the server object
- * data:      the data to send
- * data_size: the size of the data
+ * @param server The socket server.
+ * @param data The data to send.
+ * @param data_size The size of the data, in bytes.
  */
-CDTP_EXPORT void cdtp_server_send_all(CDTPServer* server, void* data, size_t data_size);
+CDTP_EXPORT void cdtp_server_send_all(CDTPServer *server, void *data, size_t data_size);
 
-/*
+/**
  * Free the memory used by the server.
+ *
+ * @param server The socket server.
  */
 CDTP_EXPORT void cdtp_server_free(CDTPServer *server);
 

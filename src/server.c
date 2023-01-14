@@ -1,13 +1,23 @@
 #include "server.h"
 
-// Get the first available client ID
-size_t _cdtp_server_new_client_id(CDTPServer* server)
+/**
+ * Get a new client ID.
+ *
+ * @param server The socket server.
+ * @return The next available client ID.
+ */
+size_t _cdtp_server_new_client_id(CDTPServer *server)
 {
     return server->next_client_id++;
 }
 
-// Disconnect a socket
-void _cdtp_server_disconnect_sock(CDTPServer* server, size_t client_id)
+/**
+ * Disconnect a client from the server.
+ *
+ * @param server The socket server.
+ * @param client_id The ID of the client to disconnect.
+ */
+void _cdtp_server_disconnect_sock(CDTPServer *server, size_t client_id)
 {
     CDTPSocket *client = _cdtp_client_map_pop(server->clients, client_id);
 
@@ -22,31 +32,54 @@ void _cdtp_server_disconnect_sock(CDTPServer* server, size_t client_id)
     }
 }
 
-// Call the on_recv function
-void _cdtp_server_call_on_recv(CDTPServer* server, size_t client_id, void* data, size_t data_size)
+/**
+ * Call the `on_recv` event function.
+ *
+ * @param server The socket server.
+ * @param client_id The ID of the client who sent the data.
+ * @param data The received data.
+ * @param data_size The size of the received data, in bytes.
+ */
+void _cdtp_server_call_on_recv(CDTPServer *server, size_t client_id, void *data, size_t data_size)
 {
     if (server->on_recv != NULL) {
         _cdtp_start_thread_on_recv_server(server->on_recv, client_id, data, data_size, server->on_recv_arg);
     }
 }
 
-// Call the on_connect function
-void _cdtp_server_call_on_connect(CDTPServer* server, size_t client_id)
+/**
+ * Call the `on_connect` event function.
+ *
+ * @param server The socket server.
+ * @param client_id The ID of the connecting client.
+ */
+void _cdtp_server_call_on_connect(CDTPServer *server, size_t client_id)
 {
     if (server->on_connect != NULL) {
         _cdtp_start_thread_on_connect(server->on_connect, client_id, server->on_connect_arg);
     }
 }
 
-// Call the on_disconnect function
-void _cdtp_server_call_on_disconnect(CDTPServer* server, size_t client_id)
+/**
+ * Call the `on_disconnect` event function.
+ *
+ * @param server The socket server.
+ * @param client_id The ID of the disconnecting client.
+ */
+void _cdtp_server_call_on_disconnect(CDTPServer *server, size_t client_id)
 {
     if (server->on_disconnect != NULL) {
         _cdtp_start_thread_on_disconnect(server->on_disconnect, client_id, server->on_disconnect_arg);
     }
 }
 
-// Exchange crypto keys with a client
+/**
+ * Exchange crypto keys with a client.
+ *
+ * @param server The socket server.
+ * @param client_id The ID of the new client.
+ * @param client_sock The client socket.
+ */
 #ifdef _WIN32
 void _cdtp_server_exchange_keys(CDTPServer *server, size_t client_id, SOCKET client_sock)
 #else
@@ -59,8 +92,12 @@ void _cdtp_server_exchange_keys(CDTPServer *server, size_t client_id, int client
     (void) client_sock;
 }
 
-// Server serve function
-void _cdtp_server_serve(CDTPServer* server)
+/**
+ * Serve clients.
+ *
+ * @param server The socket server.
+ */
+void _cdtp_server_serve(CDTPServer *server)
 {
     struct sockaddr_in address;
     int addrlen = sizeof(address);
@@ -328,22 +365,26 @@ void _cdtp_server_serve(CDTPServer* server)
     }
 }
 
-// Call the serve function
-void _cdtp_server_call_serve(CDTPServer* server)
+/**
+ * Call the serve function.
+ *
+ * @param server The socket server.
+ */
+void _cdtp_server_call_serve(CDTPServer *server)
 {
     server->serve_thread = _cdtp_start_serve_thread(_cdtp_server_serve, server);
 }
 
-CDTP_EXPORT CDTPServer* cdtp_server(
+CDTP_EXPORT CDTPServer *cdtp_server(
     ServerOnRecvCallback on_recv,
     ServerOnConnectCallback on_connect,
     ServerOnDisconnectCallback on_disconnect,
-    void* on_recv_arg,
-    void* on_connect_arg,
-    void* on_disconnect_arg
+    void *on_recv_arg,
+    void *on_connect_arg,
+    void *on_disconnect_arg
 )
 {
-    CDTPServer* server = (CDTPServer*) malloc(sizeof(CDTPServer));
+    CDTPServer *server = (CDTPServer *) malloc(sizeof(CDTPServer));
 
     // Initialize the server object
     server->on_recv = on_recv;
@@ -368,7 +409,7 @@ CDTP_EXPORT CDTPServer* cdtp_server(
     }
 
     // Initialize the server socket
-    server->sock = (CDTPSocket*) malloc(sizeof(CDTPSocket));
+    server->sock = (CDTPSocket *) malloc(sizeof(CDTPSocket));
 
     // Initialize the socket info
     int opt = 1;
@@ -379,7 +420,7 @@ CDTP_EXPORT CDTPServer* cdtp_server(
         _cdtp_set_err(CDTP_SERVER_SOCK_INIT_FAILED);
         return NULL;
     }
-    if (setsockopt(server->sock->sock, SOL_SOCKET, SO_REUSEADDR, (char*)&opt, sizeof(opt)) == SOCKET_ERROR) {
+    if (setsockopt(server->sock->sock, SOL_SOCKET, SO_REUSEADDR, (char *) (&opt), sizeof(opt)) == SOCKET_ERROR) {
         _cdtp_set_err(CDTP_SERVER_SETSOCKOPT_FAILED);
         return NULL;
     }
@@ -398,13 +439,8 @@ CDTP_EXPORT CDTPServer* cdtp_server(
     return server;
 }
 
-CDTP_EXPORT void cdtp_server_start(CDTPServer* server, char* host, unsigned short port)
+CDTP_EXPORT void cdtp_server_start(CDTPServer *server, char *host, unsigned short port)
 {
-    // Change 'localhost' to '127.0.0.1'
-    if (strcmp(host, "localhost") == 0) {
-        host = "127.0.0.1";
-    }
-
     // Make sure the server has not been run before
     if (server->done == CDTP_TRUE) {
         _cdtp_set_error(CDTP_SERVER_CANNOT_RESTART, 0);
@@ -417,13 +453,18 @@ CDTP_EXPORT void cdtp_server_start(CDTPServer* server, char* host, unsigned shor
         return;
     }
 
+    // Change 'localhost' to '127.0.0.1'
+    if (strcmp(host, "localhost") == 0) {
+        host = "127.0.0.1";
+    }
+
     // Set the server address
 #ifdef _WIN32
     int addrlen = CDTP_ADDRSTRLEN;
 
     wchar_t *host_wc = _str_to_wchar(host);
 
-    if (WSAStringToAddressW(host_wc, CDTP_ADDRESS_FAMILY, NULL, (LPSOCKADDR) & (server->sock->address), &addrlen) != 0) {
+    if (WSAStringToAddressW(host_wc, CDTP_ADDRESS_FAMILY, NULL, (LPSOCKADDR) (&(server->sock->address)), &addrlen) != 0) {
         _cdtp_set_err(CDTP_SERVER_ADDRESS_FAILED);
         return;
     }
@@ -440,7 +481,7 @@ CDTP_EXPORT void cdtp_server_start(CDTPServer* server, char* host, unsigned shor
     server->sock->address.sin_port = htons(port);
 
     // Bind the address to the server
-    if (bind(server->sock->sock, (struct sockaddr*)&(server->sock->address), sizeof(server->sock->address)) < 0) {
+    if (bind(server->sock->sock, (struct sockaddr *) (&(server->sock->address)), sizeof(server->sock->address)) < 0) {
         _cdtp_set_err(CDTP_SERVER_BIND_FAILED);
         return;
     }
@@ -456,7 +497,7 @@ CDTP_EXPORT void cdtp_server_start(CDTPServer* server, char* host, unsigned shor
     _cdtp_server_call_serve(server);
 }
 
-CDTP_EXPORT void cdtp_server_stop(CDTPServer* server)
+CDTP_EXPORT void cdtp_server_stop(CDTPServer *server)
 {
     // Make sure the server is running
     if (server->serving != CDTP_TRUE) {
@@ -476,6 +517,8 @@ CDTP_EXPORT void cdtp_server_stop(CDTPServer* server)
             _cdtp_set_err(CDTP_SERVER_STOP_FAILED);
             return;
         }
+
+        _cdtp_client_map_pop(server->clients, iter->clients[i]->client_id);
     }
 
     _cdtp_client_map_iter_free(iter);
@@ -506,6 +549,8 @@ CDTP_EXPORT void cdtp_server_stop(CDTPServer* server)
             _cdtp_set_err(CDTP_SERVER_STOP_FAILED);
             return;
         }
+
+        _cdtp_client_map_pop(server->clients, iter->clients[i]->client_id);
     }
 
     _cdtp_client_map_iter_free(iter);
@@ -534,12 +579,12 @@ CDTP_EXPORT void cdtp_server_stop(CDTPServer* server)
 #endif
 }
 
-CDTP_EXPORT int cdtp_server_is_serving(CDTPServer* server)
+CDTP_EXPORT int cdtp_server_is_serving(CDTPServer *server)
 {
     return server->serving;
 }
 
-CDTP_EXPORT char* cdtp_server_get_host(CDTPServer* server)
+CDTP_EXPORT char *cdtp_server_get_host(CDTPServer *server)
 {
     // Make sure the server is running
     if (server->serving != CDTP_TRUE) {
@@ -588,7 +633,7 @@ CDTP_EXPORT char* cdtp_server_get_host(CDTPServer* server)
     return addr_str;
 }
 
-CDTP_EXPORT unsigned short cdtp_server_get_port(CDTPServer* server)
+CDTP_EXPORT unsigned short cdtp_server_get_port(CDTPServer *server)
 {
     // Make sure the server is running
     if (server->serving != CDTP_TRUE) {
@@ -610,7 +655,7 @@ CDTP_EXPORT unsigned short cdtp_server_get_port(CDTPServer* server)
     return port;
 }
 
-CDTP_EXPORT char* cdtp_server_get_client_host(CDTPServer* server, size_t client_id)
+CDTP_EXPORT char *cdtp_server_get_client_host(CDTPServer *server, size_t client_id)
 {
     // Make sure the server is running
     if (server->serving != CDTP_TRUE) {
@@ -667,7 +712,7 @@ CDTP_EXPORT char* cdtp_server_get_client_host(CDTPServer* server, size_t client_
     return addr_str;
 }
 
-CDTP_EXPORT unsigned short cdtp_server_get_client_port(CDTPServer* server, size_t client_id)
+CDTP_EXPORT unsigned short cdtp_server_get_client_port(CDTPServer *server, size_t client_id)
 {
     // Make sure the server is running
     if (server->serving != CDTP_TRUE) {
@@ -697,7 +742,7 @@ CDTP_EXPORT unsigned short cdtp_server_get_client_port(CDTPServer* server, size_
     return port;
 }
 
-CDTP_EXPORT void cdtp_server_remove_client(CDTPServer* server, size_t client_id)
+CDTP_EXPORT void cdtp_server_remove_client(CDTPServer *server, size_t client_id)
 {
     // Make sure the server is running
     if (server->serving != CDTP_TRUE) {
@@ -728,7 +773,7 @@ CDTP_EXPORT void cdtp_server_remove_client(CDTPServer* server, size_t client_id)
     free(client);
 }
 
-CDTP_EXPORT void cdtp_server_send(CDTPServer* server, size_t client_id, void* data, size_t data_size)
+CDTP_EXPORT void cdtp_server_send(CDTPServer *server, size_t client_id, void *data, size_t data_size)
 {
     // Make sure the server is running
     if (server->serving != CDTP_TRUE) {
@@ -744,7 +789,7 @@ CDTP_EXPORT void cdtp_server_send(CDTPServer* server, size_t client_id, void* da
         return;
     }
 
-    char* message = _cdtp_construct_message(data, data_size);
+    char *message = _cdtp_construct_message(data, data_size);
 
     if (send(client->sock, message, CDTP_LENSIZE + data_size, 0) < 0) {
         _cdtp_set_err(CDTP_SERVER_SEND_FAILED);
@@ -753,7 +798,7 @@ CDTP_EXPORT void cdtp_server_send(CDTPServer* server, size_t client_id, void* da
     free(message);
 }
 
-CDTP_EXPORT void cdtp_server_send_all(CDTPServer* server, void* data, size_t data_size)
+CDTP_EXPORT void cdtp_server_send_all(CDTPServer *server, void *data, size_t data_size)
 {
     // Make sure the server is running
     if (server->serving != CDTP_TRUE) {
@@ -761,7 +806,7 @@ CDTP_EXPORT void cdtp_server_send_all(CDTPServer* server, void* data, size_t dat
         return;
     }
 
-    char* message = _cdtp_construct_message(data, data_size);
+    char *message = _cdtp_construct_message(data, data_size);
 
     CDTPClientMapIter *iter = _cdtp_client_map_iter(server->clients);
 

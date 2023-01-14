@@ -1,5 +1,13 @@
 #include "map.h"
 
+#define CDTP_MAP_MIN_CAPACITY 16
+#define CDTP_MAP_START_CAPACITY CDTP_MAP_MIN_CAPACITY
+
+/**
+ * Allocate a new empty node for the client map.
+ *
+ * @return The new node.
+ */
 CDTPClientMapNode *_cdtp_client_map_node(void)
 {
     CDTPClientMapNode *node = (CDTPClientMapNode *) malloc(sizeof(CDTPClientMapNode));
@@ -11,6 +19,11 @@ CDTPClientMapNode *_cdtp_client_map_node(void)
     return node;
 }
 
+/**
+ * Free the memory used by a client map node.
+ *
+ * @param node The node.
+ */
 void _cdtp_client_map_node_free(CDTPClientMapNode *node)
 {
     free(node);
@@ -31,11 +44,24 @@ CDTP_TEST_EXPORT CDTPClientMap *_cdtp_client_map(void)
     return map;
 }
 
+/**
+ * Get the hash for a given key.
+ *
+ * @param map The client map.
+ * @param key The key.
+ * @return The key's hash.
+ */
 size_t _cdtp_client_map_hash(CDTPClientMap *map, size_t key)
 {
     return key % (map->capacity);
 }
 
+/**
+ * Resize a map and rehash its contents.
+ *
+ * @param map The client map.
+ * @param new_capacity The new capacity of the map.
+ */
 void _cdtp_client_map_resize(CDTPClientMap *map, size_t new_capacity)
 {
     size_t old_capacity = map->capacity;
@@ -64,16 +90,32 @@ void _cdtp_client_map_resize(CDTPClientMap *map, size_t new_capacity)
     free(old_nodes);
 }
 
+/**
+ * Increase the capacity of a client map.
+ *
+ * @param map The client map.
+ */
 void _cdtp_client_map_resize_up(CDTPClientMap *map)
 {
     _cdtp_client_map_resize(map, map->capacity * 2);
 }
 
+/**
+ * Decrease the capacity of a client map.
+ *
+ * @param map The client map.
+ */
 void _cdtp_client_map_resize_down(CDTPClientMap *map)
 {
     _cdtp_client_map_resize(map, map->capacity / 2);
 }
 
+/**
+ * Attempt to increase or decrease the capacity of the map, depending on its current size and capacity.
+ *
+ * @param map The client map.
+ * @return -1 if the capacity decreased, 1 if the capacity increased, or 0 if nothing changed.
+ */
 int _cdtp_client_map_try_resize(CDTPClientMap *map)
 {
     if (map->size >= map->capacity) {

@@ -1,12 +1,52 @@
 #include "threading.h"
 
+/**
+ * A representation of all possible event functions.
+ */
+typedef struct _CDTPEventFunc {
+    char *name;
+    union func {
+        ServerOnRecvCallback func_server_on_recv;                 // on_recv         (server)
+        ServerOnConnectCallback func_server_on_connect;           // on_connect      (server)
+        ServerOnDisconnectCallback func_server_on_disconnect;     // on_disconnect   (server)
+        ClientOnRecvCallback func_client_on_recv;                 // on_recv         (client)
+        ClientOnDisconnectedCallback func_client_on_disconnected; // on_disconnected (client)
+    } func;
+    size_t size_t1;
+    void *voidp1;
+    size_t size_t2;
+    void *voidp2;
+} CDTPEventFunc;
+
+/**
+ * A representation of a server's serve function, which can be passed to a thread.
+ */
+typedef struct _CDTPServeFunc {
+    void (*func)(CDTPServer *);
+    CDTPServer *server;
+} CDTPServeFunc;
+
+/**
+ * A representation of a client's handle function, which can be passed to a thread.
+ */
+typedef struct _CDTPHandleFunc {
+    void (*func)(CDTPClient *);
+    CDTPClient *client;
+} CDTPHandleFunc;
+
+/**
+ * Call the relevant event function from within the current thread.
+ *
+ * @param func_info Information on the function being called.
+ * @return This always returns 0 or NULL, depending on the thread API being used.
+ */
 #ifdef _WIN32
 DWORD WINAPI _cdtp_event_thread(LPVOID func_info)
 #else
-void* _cdtp_event_thread(void* func_info)
+void *_cdtp_event_thread(void *func_info)
 #endif
 {
-    CDTPEventFunc* event_func_info = (CDTPEventFunc*)func_info;
+    CDTPEventFunc *event_func_info = (CDTPEventFunc *) func_info;
 
     // Determine which function to call
     if (strcmp(event_func_info->name, "on_recv_server") == 0) {
@@ -35,7 +75,12 @@ void* _cdtp_event_thread(void* func_info)
 #endif
 }
 
-void _cdtp_start_event_thread(CDTPEventFunc* func_info)
+/**
+ * Call an event function in a separate thread.
+ *
+ * @param func_info Information on the function being called.
+ */
+void _cdtp_start_event_thread(CDTPEventFunc *func_info)
 {
 #ifdef _WIN32
     HANDLE thread = CreateThread(NULL, 0, _cdtp_event_thread, func_info, 0, NULL);
@@ -58,12 +103,12 @@ void _cdtp_start_event_thread(CDTPEventFunc* func_info)
 void _cdtp_start_thread_on_recv_server(
     ServerOnRecvCallback func,
     size_t client_id,
-    void* data,
+    void *data,
     size_t data_size,
-    void* arg
+    void *arg
 )
 {
-    CDTPEventFunc* func_info = (CDTPEventFunc*) malloc(sizeof(CDTPEventFunc));
+    CDTPEventFunc *func_info = (CDTPEventFunc *) malloc(sizeof(CDTPEventFunc));
     func_info->name = "on_recv_server";
     func_info->func.func_server_on_recv = func;
     func_info->size_t1 = client_id;
@@ -76,10 +121,10 @@ void _cdtp_start_thread_on_recv_server(
 void _cdtp_start_thread_on_connect(
     ServerOnConnectCallback func,
     size_t client_id,
-    void* arg
+    void *arg
 )
 {
-    CDTPEventFunc* func_info = (CDTPEventFunc*) malloc(sizeof(CDTPEventFunc));
+    CDTPEventFunc *func_info = (CDTPEventFunc *) malloc(sizeof(CDTPEventFunc));
     func_info->name = "on_connect";
     func_info->func.func_server_on_connect = func;
     func_info->size_t1 = client_id;
@@ -90,10 +135,10 @@ void _cdtp_start_thread_on_connect(
 void _cdtp_start_thread_on_disconnect(
     ServerOnDisconnectCallback func,
     size_t client_id,
-    void* arg
+    void *arg
 )
 {
-    CDTPEventFunc* func_info = (CDTPEventFunc*) malloc(sizeof(CDTPEventFunc));
+    CDTPEventFunc *func_info = (CDTPEventFunc *) malloc(sizeof(CDTPEventFunc));
     func_info->name = "on_disconnect";
     func_info->func.func_server_on_disconnect = func;
     func_info->size_t1 = client_id;
@@ -103,12 +148,12 @@ void _cdtp_start_thread_on_disconnect(
 
 void _cdtp_start_thread_on_recv_client(
     ClientOnRecvCallback func,
-    void* data,
+    void *data,
     size_t data_size,
-    void* arg
+    void *arg
 )
 {
-    CDTPEventFunc* func_info = (CDTPEventFunc*) malloc(sizeof(CDTPEventFunc));
+    CDTPEventFunc *func_info = (CDTPEventFunc *) malloc(sizeof(CDTPEventFunc));
     func_info->name = "on_recv_client";
     func_info->func.func_client_on_recv = func;
     func_info->voidp1 = data;
@@ -119,23 +164,29 @@ void _cdtp_start_thread_on_recv_client(
 
 void _cdtp_start_thread_on_disconnected(
     ClientOnDisconnectedCallback func,
-    void* arg
+    void *arg
 )
 {
-    CDTPEventFunc* func_info = (CDTPEventFunc*) malloc(sizeof(CDTPEventFunc));
+    CDTPEventFunc *func_info = (CDTPEventFunc *) malloc(sizeof(CDTPEventFunc));
     func_info->name = "on_disconnected";
     func_info->func.func_client_on_disconnected = func;
     func_info->voidp1 = arg;
     _cdtp_start_event_thread(func_info);
 }
 
+/**
+ * Call the server's serve function from the current thread.
+ *
+ * @param func_info Information on the function being called.
+ * @return This always returns 0 or NULL, depending on the thread API being used.
+ */
 #ifdef _WIN32
 DWORD WINAPI _cdtp_serve_thread(LPVOID func_info)
 #else
-void* _cdtp_serve_thread(void* func_info)
+void *_cdtp_serve_thread(void *func_info)
 #endif
 {
-    CDTPServeFunc* serve_func_info = (CDTPServeFunc*)func_info;
+    CDTPServeFunc *serve_func_info = (CDTPServeFunc *) func_info;
 
     // Call the function
     (*serve_func_info->func)(serve_func_info->server);
@@ -152,18 +203,18 @@ void* _cdtp_serve_thread(void* func_info)
 
 #ifdef _WIN32
 HANDLE _cdtp_start_serve_thread(
-    void (*func)(CDTPServer*),
-    CDTPServer* server
+    void (*func)(CDTPServer *),
+    CDTPServer *server
 )
 #else
 pthread_t _cdtp_start_serve_thread(
-    void (*func)(CDTPServer*),
-    CDTPServer* server
+    void (*func)(CDTPServer *),
+    CDTPServer *server
 )
 #endif
 {
     // Set function information
-    CDTPServeFunc* func_info = (CDTPServeFunc*) malloc(sizeof(CDTPServeFunc));
+    CDTPServeFunc *func_info = (CDTPServeFunc *) malloc(sizeof(CDTPServeFunc));
     func_info->func = func;
     func_info->server = server;
 
@@ -189,13 +240,19 @@ pthread_t _cdtp_start_serve_thread(
     return thread;
 }
 
+/**
+ * Call the client's handle function from the current thread.
+ *
+ * @param func_info Information on the function being called.
+ * @return This always returns 0 or NULL, depending on the thread API being used.
+ */
 #ifdef _WIN32
 DWORD WINAPI _cdtp_handle_thread(LPVOID func_info)
 #else
-void* _cdtp_handle_thread(void* func_info)
+void *_cdtp_handle_thread(void *func_info)
 #endif
 {
-    CDTPHandleFunc* handle_func_info = (CDTPHandleFunc*)func_info;
+    CDTPHandleFunc *handle_func_info = (CDTPHandleFunc *) func_info;
 
     // Call the function
     (*handle_func_info->func)(handle_func_info->client);
@@ -212,18 +269,18 @@ void* _cdtp_handle_thread(void* func_info)
 
 #ifdef _WIN32
 HANDLE _cdtp_start_handle_thread(
-    void (*func)(CDTPClient*),
-    CDTPClient* client
+    void (*func)(CDTPClient *),
+    CDTPClient *client
 )
 #else
 pthread_t _cdtp_start_handle_thread(
-    void (*func)(CDTPClient*),
-    CDTPClient* client
+    void (*func)(CDTPClient *),
+    CDTPClient *client
 )
 #endif
 {
     // Set function information
-    CDTPHandleFunc* func_info = (CDTPHandleFunc*) malloc(sizeof(CDTPHandleFunc));
+    CDTPHandleFunc *func_info = (CDTPHandleFunc *) malloc(sizeof(CDTPHandleFunc));
     func_info->func = func;
     func_info->client = client;
 

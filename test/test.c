@@ -1,3 +1,7 @@
+/**
+ * CDTP tests.
+ */
+
 #include "../src/cdtp.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -337,9 +341,9 @@ int rand_int(int min, int max)
     return min + (rand() % (max - min));
 }
 
-char* rand_bytes(size_t size)
+char *rand_bytes(size_t size)
 {
-    char* bytes = (char*) malloc(size * sizeof(char));
+    char *bytes = (char *) malloc(size * sizeof(char));
 
     for (size_t i = 0; i < size; i++) {
         bytes[i] = (char) rand_int(0, 256);
@@ -348,9 +352,9 @@ char* rand_bytes(size_t size)
     return bytes;
 }
 
-char* voidp_to_str(void* data, size_t data_size)
+char *voidp_to_str(void *data, size_t data_size)
 {
-    char* message = (char*) malloc((data_size + 1) * sizeof(char));
+    char *message = (char *) malloc((data_size + 1) * sizeof(char));
     memcpy(message, data, data_size);
     message[data_size] = '\0';
     return message;
@@ -384,14 +388,14 @@ void client_on_recv(void *data, size_t data_size, void *arg)
     test_state_client_received(state, data, data_size);
 }
 
-void client_on_disconnected(void* arg)
+void client_on_disconnected(void *arg)
 {
     TestState *state = (TestState *) arg;
 
     test_state_client_disconnected(state);
 }
 
-void on_err(int cdtp_err, int underlying_err, void* arg)
+void on_err(int cdtp_err, int underlying_err, void *arg)
 {
     printf("CDTP error:               %d\n", cdtp_err);
     printf("Underlying error:         %d\n", underlying_err);
@@ -484,7 +488,7 @@ void test_client_map(void)
     // Create map
     CDTPClientMap *map = _cdtp_client_map();
     TEST_ASSERT_EQ(map->size, (size_t) 0)
-    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+    TEST_ASSERT_EQ(map->capacity, (size_t) 16)
 
     // Create test sockets
     CDTPSocket *sock1 = (CDTPSocket *) malloc(sizeof(CDTPSocket));
@@ -496,19 +500,19 @@ void test_client_map(void)
     int false_contains = _cdtp_client_map_contains(map, 234);
     TEST_ASSERT_EQ((size_t) false_contains, (size_t) CDTP_FALSE)
     TEST_ASSERT_EQ(map->size, (size_t) 0)
-    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+    TEST_ASSERT_EQ(map->capacity, (size_t) 16)
 
     // Test null get
     CDTPSocket *null_get = _cdtp_client_map_get(map, 234);
     TEST_ASSERT(null_get == NULL)
     TEST_ASSERT_EQ(map->size, (size_t) 0)
-    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+    TEST_ASSERT_EQ(map->capacity, (size_t) 16)
 
     // Test null pop
     CDTPSocket *null_pop = _cdtp_client_map_pop(map, 234);
     TEST_ASSERT(null_pop == NULL)
     TEST_ASSERT_EQ(map->size, (size_t) 0)
-    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+    TEST_ASSERT_EQ(map->capacity, (size_t) 16)
 
     // Test zero-size iterator
     CDTPClientMapIter *zero_size_iter = _cdtp_client_map_iter(map);
@@ -519,25 +523,25 @@ void test_client_map(void)
     int set1 = _cdtp_client_map_set(map, 234, sock1);
     TEST_ASSERT_EQ((size_t) set1, (size_t) CDTP_TRUE)
     TEST_ASSERT_EQ(map->size, (size_t) 1)
-    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+    TEST_ASSERT_EQ(map->capacity, (size_t) 16)
 
     // Test double set
     int double_set = _cdtp_client_map_set(map, 234, sock2);
     TEST_ASSERT_EQ((size_t) double_set, (size_t) CDTP_FALSE)
     TEST_ASSERT_EQ(map->size, (size_t) 1)
-    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+    TEST_ASSERT_EQ(map->capacity, (size_t) 16)
 
     // Test true contains
     int contains1 = _cdtp_client_map_contains(map, 234);
     TEST_ASSERT_EQ((size_t) contains1, (size_t) CDTP_TRUE)
     TEST_ASSERT_EQ(map->size, (size_t) 1)
-    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+    TEST_ASSERT_EQ(map->capacity, (size_t) 16)
 
     // Test get
     CDTPSocket *get1 = _cdtp_client_map_get(map, 234);
     TEST_ASSERT_EQ((size_t) (get1->sock), (size_t) 123)
     TEST_ASSERT_EQ(map->size, (size_t) 1)
-    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+    TEST_ASSERT_EQ(map->capacity, (size_t) 16)
 
     // Test one-size iterator
     CDTPClientMapIter *one_size_iter = _cdtp_client_map_iter(map);
@@ -554,7 +558,7 @@ void test_client_map(void)
     int set2 = _cdtp_client_map_set(map, 456, sock2);
     TEST_ASSERT_EQ((size_t) set2, (size_t) CDTP_TRUE)
     TEST_ASSERT_EQ(map->size, (size_t) 2)
-    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+    TEST_ASSERT_EQ(map->capacity, (size_t) 16)
     int contains3 = _cdtp_client_map_contains(map, 456);
     TEST_ASSERT_EQ((size_t) contains3, (size_t) CDTP_TRUE)
     CDTPSocket *get3 = _cdtp_client_map_get(map, 456);
@@ -573,42 +577,42 @@ void test_client_map(void)
     CDTPSocket *pop1 = _cdtp_client_map_pop(map, 234);
     TEST_ASSERT_EQ((size_t) (pop1->sock), (size_t) 123)
     TEST_ASSERT_EQ(map->size, (size_t) 1)
-    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+    TEST_ASSERT_EQ(map->capacity, (size_t) 16)
     CDTPSocket *pop2 = _cdtp_client_map_pop(map, 456);
     TEST_ASSERT_EQ((size_t) (pop2->sock), (size_t) 345)
     TEST_ASSERT_EQ(map->size, (size_t) 0)
-    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+    TEST_ASSERT_EQ(map->capacity, (size_t) 16)
 
     // Test hash collisions
     int set3 = _cdtp_client_map_set(map, 3, sock1);
-    int set4 = _cdtp_client_map_set(map, 3 + CDTP_MAP_START_CAPACITY, sock2);
+    int set4 = _cdtp_client_map_set(map, 19, sock2);
     TEST_ASSERT_EQ((size_t) set3, (size_t) CDTP_TRUE)
     TEST_ASSERT_EQ((size_t) set4, (size_t) CDTP_TRUE)
     TEST_ASSERT_EQ(map->size, (size_t) 2)
-    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+    TEST_ASSERT_EQ(map->capacity, (size_t) 16)
     int contains4 = _cdtp_client_map_contains(map, 3);
     TEST_ASSERT_EQ((size_t) contains4, (size_t) CDTP_TRUE)
-    int contains5 = _cdtp_client_map_contains(map, 3 + CDTP_MAP_START_CAPACITY);
+    int contains5 = _cdtp_client_map_contains(map, 19);
     TEST_ASSERT_EQ((size_t) contains5, (size_t) CDTP_TRUE)
     CDTPSocket *get4 = _cdtp_client_map_get(map, 3);
     TEST_ASSERT_EQ((size_t) (get4->sock), (size_t) 123)
-    CDTPSocket *get5 = _cdtp_client_map_get(map, 3 + CDTP_MAP_START_CAPACITY);
+    CDTPSocket *get5 = _cdtp_client_map_get(map, 19);
     TEST_ASSERT_EQ((size_t) (get5->sock), (size_t) 345)
     CDTPClientMapIter *iter1 = _cdtp_client_map_iter(map);
     TEST_ASSERT_EQ(iter1->size, (size_t) 2)
     TEST_ASSERT_EQ(iter1->clients[0]->client_id, (size_t) 3)
     TEST_ASSERT_EQ((size_t) (iter1->clients[0]->sock->sock), (size_t) 123)
-    TEST_ASSERT_EQ(iter1->clients[1]->client_id, (size_t) 3 + CDTP_MAP_START_CAPACITY)
+    TEST_ASSERT_EQ(iter1->clients[1]->client_id, (size_t) 19)
     TEST_ASSERT_EQ((size_t) (iter1->clients[1]->sock->sock), (size_t) 345)
     _cdtp_client_map_iter_free(iter1);
     CDTPSocket *pop3 = _cdtp_client_map_pop(map, 3);
     TEST_ASSERT_EQ((size_t) (pop3->sock), (size_t) 123)
     TEST_ASSERT_EQ(map->size, (size_t) 1)
-    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
-    CDTPSocket *pop4 = _cdtp_client_map_pop(map, 3 + CDTP_MAP_START_CAPACITY);
+    TEST_ASSERT_EQ(map->capacity, (size_t) 16)
+    CDTPSocket *pop4 = _cdtp_client_map_pop(map, 19);
     TEST_ASSERT_EQ((size_t) (pop4->sock), (size_t) 345)
     TEST_ASSERT_EQ(map->size, (size_t) 0)
-    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+    TEST_ASSERT_EQ(map->capacity, (size_t) 16)
 
     // Test resize up
     for (size_t i = 0; i < 16; i++) {
@@ -618,13 +622,13 @@ void test_client_map(void)
         TEST_ASSERT_EQ((size_t) set5, (size_t) CDTP_TRUE)
     }
     TEST_ASSERT_EQ(map->size, (size_t) 16)
-    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+    TEST_ASSERT_EQ(map->capacity, (size_t) 16)
     CDTPSocket *sock3 = (CDTPSocket *) malloc(sizeof(CDTPSocket));
     sock3->sock = 1016;
     int set6 = _cdtp_client_map_set(map, 32, sock3);
     TEST_ASSERT_EQ((size_t) set6, (size_t) CDTP_TRUE)
     TEST_ASSERT_EQ(map->size, (size_t) 17)
-    TEST_ASSERT_EQ(map->capacity, (size_t) (CDTP_MAP_START_CAPACITY * 2))
+    TEST_ASSERT_EQ(map->capacity, (size_t) 32)
     size_t client_id_total = 0;
     size_t sock_total = 0;
     CDTPClientMapIter *iter2 = _cdtp_client_map_iter(map);
@@ -643,11 +647,11 @@ void test_client_map(void)
         free(sock);
     }
     TEST_ASSERT_EQ(map->size, (size_t) 8)
-    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY * 2)
+    TEST_ASSERT_EQ(map->capacity, (size_t) 32)
     CDTPSocket *sock4 = _cdtp_client_map_pop(map, 14);
     TEST_ASSERT(sock4 != NULL)
     TEST_ASSERT_EQ(map->size, (size_t) 7)
-    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+    TEST_ASSERT_EQ(map->capacity, (size_t) 16)
     free(sock4);
     for (int i = 6; i >= 0; i--) {
         CDTPSocket *sock = _cdtp_client_map_pop(map, ((size_t) i) * 2);
@@ -655,7 +659,7 @@ void test_client_map(void)
         free(sock);
     }
     TEST_ASSERT_EQ(map->size, (size_t) 0)
-    TEST_ASSERT_EQ(map->capacity, (size_t) CDTP_MAP_START_CAPACITY)
+    TEST_ASSERT_EQ(map->capacity, (size_t) 16)
 
     // Clean up
     free(sock1);
@@ -1158,7 +1162,7 @@ void test_multiple_clients(void)
     cdtp_sleep(WAIT_TIME);
 
     // Connect other clients
-    TEST_ASSERT_EQ(s->clients->capacity, (size_t) CDTP_MAP_MIN_CAPACITY)
+    TEST_ASSERT_EQ(s->clients->capacity, (size_t) 16)
     CDTPClient *other_clients[15];
     for (size_t i = 0; i < 15; i++) {
         other_clients[i] = cdtp_client(client_on_recv, client_on_disconnected,
@@ -1166,7 +1170,7 @@ void test_multiple_clients(void)
         cdtp_client_connect(other_clients[i], CLIENT_HOST, CLIENT_PORT);
         cdtp_sleep(WAIT_TIME);
     }
-    TEST_ASSERT_EQ(s->clients->capacity, (size_t) (CDTP_MAP_MIN_CAPACITY * 2))
+    TEST_ASSERT_EQ(s->clients->capacity, (size_t) 32)
 
     // Send messages from other clients
     for (int i = 14; i >= 0; i--) {
@@ -1179,7 +1183,7 @@ void test_multiple_clients(void)
         cdtp_client_disconnect(other_clients[i]);
         cdtp_sleep(WAIT_TIME);
     }
-    TEST_ASSERT_EQ(s->clients->capacity, (size_t) CDTP_MAP_MIN_CAPACITY)
+    TEST_ASSERT_EQ(s->clients->capacity, (size_t) 16)
 
     // Disconnect client 1
     cdtp_client_disconnect(c1);
