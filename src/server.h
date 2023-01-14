@@ -22,7 +22,8 @@
  * @param on_disconnect_arg A value that will be passed to the `on_disconnect` event function.
  * @return The new socket server.
  *
- * The `on_recv` function should take four parameters:
+ * The `on_recv` function should take five parameters:
+ *   - a `CDTPServer *` representing the server itself
  *   - a `size_t` representing the ID of the client that sent the message
  *   - a `void *` representing the received data
  *   - a `size_t` representing the size of the received data, in bytes

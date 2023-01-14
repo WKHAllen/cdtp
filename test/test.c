@@ -362,7 +362,7 @@ char *voidp_to_str(void *data, size_t data_size)
 
 void server_on_recv(CDTPServer *server, size_t client_id, void *data, size_t data_size, void *arg)
 {
-    (void) server;
+    TEST_ASSERT(cdtp_server_is_serving(server))
 
     TestState *state = (TestState *) arg;
 
@@ -371,7 +371,7 @@ void server_on_recv(CDTPServer *server, size_t client_id, void *data, size_t dat
 
 void server_on_connect(CDTPServer *server, size_t client_id, void *arg)
 {
-    (void) server;
+    TEST_ASSERT(cdtp_server_is_serving(server))
 
     TestState *state = (TestState *) arg;
 
@@ -380,7 +380,7 @@ void server_on_connect(CDTPServer *server, size_t client_id, void *arg)
 
 void server_on_disconnect(CDTPServer *server, size_t client_id, void *arg)
 {
-    (void) server;
+    TEST_ASSERT(cdtp_server_is_serving(server))
 
     TestState *state = (TestState *) arg;
 
@@ -389,7 +389,7 @@ void server_on_disconnect(CDTPServer *server, size_t client_id, void *arg)
 
 void client_on_recv(CDTPClient *client, void *data, size_t data_size, void *arg)
 {
-    (void) client;
+    TEST_ASSERT(cdtp_client_is_connected(client))
 
     TestState *state = (TestState *) arg;
 
@@ -398,7 +398,7 @@ void client_on_recv(CDTPClient *client, void *data, size_t data_size, void *arg)
 
 void client_on_disconnected(CDTPClient *client, void *arg)
 {
-    (void) client;
+    TEST_ASSERT(!cdtp_client_is_connected(client))
 
     TestState *state = (TestState *) arg;
 

@@ -20,7 +20,8 @@
  * @param on_disconnected_arg A value that will be passed to the `on_disconnected` event function.
  * @return The new socket client.
  *
- * The `on_recv` function should take three parameters:
+ * The `on_recv` function should take four parameters:
+ *   - a `CDTPClient *` representing the client itself
  *   - a `void *` representing the received data
  *   - a `size_t` representing the size of the received data, in bytes
  *   - a `void *` containing the `on_recv_arg`
