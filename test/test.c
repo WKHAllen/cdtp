@@ -360,36 +360,46 @@ char *voidp_to_str(void *data, size_t data_size)
     return message;
 }
 
-void server_on_recv(size_t client_id, void *data, size_t data_size, void *arg)
+void server_on_recv(CDTPServer *server, size_t client_id, void *data, size_t data_size, void *arg)
 {
+    (void) server;
+
     TestState *state = (TestState *) arg;
 
     test_state_server_received(state, client_id, data, data_size);
 }
 
-void server_on_connect(size_t client_id, void *arg)
+void server_on_connect(CDTPServer *server, size_t client_id, void *arg)
 {
+    (void) server;
+
     TestState *state = (TestState *) arg;
 
     test_state_server_connect(state, client_id);
 }
 
-void server_on_disconnect(size_t client_id, void *arg)
+void server_on_disconnect(CDTPServer *server, size_t client_id, void *arg)
 {
+    (void) server;
+
     TestState *state = (TestState *) arg;
 
     test_state_server_disconnect(state, client_id);
 }
 
-void client_on_recv(void *data, size_t data_size, void *arg)
+void client_on_recv(CDTPClient *client, void *data, size_t data_size, void *arg)
 {
+    (void) client;
+
     TestState *state = (TestState *) arg;
 
     test_state_client_received(state, data, data_size);
 }
 
-void client_on_disconnected(void *arg)
+void client_on_disconnected(CDTPClient *client, void *arg)
 {
+    (void) client;
+
     TestState *state = (TestState *) arg;
 
     test_state_client_disconnected(state);

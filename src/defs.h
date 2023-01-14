@@ -9,29 +9,39 @@
 #include "util.h"
 
 /**
+ * Socket server type.
+ */
+typedef struct _CDTPServer CDTPServer;
+
+/**
+ * Socket client type.
+ */
+typedef struct _CDTPClient CDTPClient;
+
+/**
  * Server receive event callback function.
  */
-typedef void (*ServerOnRecvCallback)(size_t, void *, size_t, void *);
+typedef void (*ServerOnRecvCallback)(CDTPServer *, size_t, void *, size_t, void *);
 
 /**
  * Server connect event callback function.
  */
-typedef void (*ServerOnConnectCallback)(size_t, void *);
+typedef void (*ServerOnConnectCallback)(CDTPServer *, size_t, void *);
 
 /**
  * Server disconnect event callback function.
  */
-typedef void (*ServerOnDisconnectCallback)(size_t, void *);
+typedef void (*ServerOnDisconnectCallback)(CDTPServer *, size_t, void *);
 
 /**
  * Client receive event callback function.
  */
-typedef void (*ClientOnRecvCallback)(void *, size_t, void *);
+typedef void (*ClientOnRecvCallback)(CDTPClient *, void *, size_t, void *);
 
 /**
  * Client disconnect event callback function.
  */
-typedef void (*ClientOnDisconnectedCallback)(void *);
+typedef void (*ClientOnDisconnectedCallback)(CDTPClient *, void *);
 
 /**
  * Generic socket type.
@@ -80,9 +90,9 @@ typedef struct _CDTPClientMapIter {
 } CDTPClientMapIter;
 
 /**
- * Socket server type.
+ * Socket server type struct.
  */
-typedef struct _CDTPServer {
+struct _CDTPServer {
     ServerOnRecvCallback on_recv;
     ServerOnConnectCallback on_connect;
     ServerOnDisconnectCallback on_disconnect;
@@ -99,12 +109,12 @@ typedef struct _CDTPServer {
 #else
     pthread_t serve_thread;
 #endif
-} CDTPServer;
+};
 
 /**
- * Socket client type.
+ * Socket client type struct.
  */
-typedef struct _CDTPClient {
+struct _CDTPClient {
     ClientOnRecvCallback on_recv;
     ClientOnDisconnectedCallback on_disconnected;
     void *on_recv_arg;
@@ -117,6 +127,6 @@ typedef struct _CDTPClient {
 #else
     pthread_t handle_thread;
 #endif
-} CDTPClient;
+};
 
 #endif // CDTP_DEFS_H

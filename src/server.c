@@ -43,7 +43,12 @@ void _cdtp_server_disconnect_sock(CDTPServer *server, size_t client_id)
 void _cdtp_server_call_on_recv(CDTPServer *server, size_t client_id, void *data, size_t data_size)
 {
     if (server->on_recv != NULL) {
-        _cdtp_start_thread_on_recv_server(server->on_recv, client_id, data, data_size, server->on_recv_arg);
+        _cdtp_start_thread_on_recv_server(server->on_recv,
+                                          server,
+                                          client_id,
+                                          data,
+                                          data_size,
+                                          server->on_recv_arg);
     }
 }
 
@@ -56,7 +61,10 @@ void _cdtp_server_call_on_recv(CDTPServer *server, size_t client_id, void *data,
 void _cdtp_server_call_on_connect(CDTPServer *server, size_t client_id)
 {
     if (server->on_connect != NULL) {
-        _cdtp_start_thread_on_connect(server->on_connect, client_id, server->on_connect_arg);
+        _cdtp_start_thread_on_connect(server->on_connect,
+                                      server,
+                                      client_id,
+                                      server->on_connect_arg);
     }
 }
 
@@ -69,7 +77,10 @@ void _cdtp_server_call_on_connect(CDTPServer *server, size_t client_id)
 void _cdtp_server_call_on_disconnect(CDTPServer *server, size_t client_id)
 {
     if (server->on_disconnect != NULL) {
-        _cdtp_start_thread_on_disconnect(server->on_disconnect, client_id, server->on_disconnect_arg);
+        _cdtp_start_thread_on_disconnect(server->on_disconnect,
+                                         server,
+                                         client_id,
+                                         server->on_disconnect_arg);
     }
 }
 

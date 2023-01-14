@@ -10,7 +10,11 @@
 void _cdtp_client_call_on_recv(CDTPClient *client, void *data, size_t data_size)
 {
     if (client->on_recv != NULL) {
-        _cdtp_start_thread_on_recv_client(client->on_recv, data, data_size, client->on_recv_arg);
+        _cdtp_start_thread_on_recv_client(client->on_recv,
+                                          client,
+                                          data,
+                                          data_size,
+                                          client->on_recv_arg);
     }
 }
 
@@ -22,7 +26,9 @@ void _cdtp_client_call_on_recv(CDTPClient *client, void *data, size_t data_size)
 void _cdtp_client_call_on_disconnected(CDTPClient *client)
 {
     if (client->on_disconnected != NULL) {
-        _cdtp_start_thread_on_disconnected(client->on_disconnected, client->on_disconnected_arg);
+        _cdtp_start_thread_on_disconnected(client->on_disconnected,
+                                           client,
+                                           client->on_disconnected_arg);
     }
 }
 
