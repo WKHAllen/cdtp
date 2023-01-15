@@ -221,6 +221,7 @@ typedef struct _TestState {
     size_t client_disconnected_count;
     TestReceivedMessage **client_received_expected;
     TestReceivedMessage **client_received;
+    int reply_with_string_length;
 } TestState;
 
 TestState *test_state(
@@ -258,6 +259,7 @@ TestState *test_state(
     state->client_disconnected_count = 0;
     state->client_received_expected = client_received;
     state->client_received = (TestReceivedMessage **) malloc(client_receive_count * sizeof(TestReceivedMessage *));
+    state->reply_with_string_length = CDTP_FALSE;
 
     return state;
 }
@@ -308,7 +310,7 @@ void test_state_finish(TestState *state)
     free(state);
 }
 
-void test_state_server_received(TestState *state, size_t client_id, void *data, size_t data_size)
+void test_state_server_received(TestState *state, CDTPServer *server, size_t client_id, void *data, size_t data_size)
 {
     TEST_ASSERT(state->server_receive_count < state->server_receive_count_expected)
 
@@ -316,24 +318,37 @@ void test_state_server_received(TestState *state, size_t client_id, void *data, 
     state->server_received[state->server_receive_count]->data = data;
     state->server_received[state->server_receive_count]->data_size = data_size;
     state->server_receive_client_ids[state->server_receive_count++] = client_id;
+
+    if (state->reply_with_string_length == CDTP_TRUE) {
+        char *str_data = (char *) data;
+        TEST_ASSERT_EQ(STR_SIZE(str_data), data_size)
+        size_t str_len = strlen(str_data) + 1;
+        cdtp_server_send(server, client_id, &str_len, sizeof(size_t));
+    }
 }
 
-void test_state_server_connect(TestState *state, size_t client_id)
+void test_state_server_connect(TestState *state, CDTPServer *server, size_t client_id)
 {
+    (void) server;
+
     TEST_ASSERT(state->server_connect_count < state->server_connect_count_expected)
 
     state->server_connect_client_ids[state->server_connect_count++] = client_id;
 }
 
-void test_state_server_disconnect(TestState *state, size_t client_id)
+void test_state_server_disconnect(TestState *state, CDTPServer *server, size_t client_id)
 {
+    (void) server;
+
     TEST_ASSERT(state->server_disconnect_count < state->server_disconnect_count_expected)
 
     state->server_disconnect_client_ids[state->server_disconnect_count++] = client_id;
 }
 
-void test_state_client_received(TestState *state, void *data, size_t data_size)
+void test_state_client_received(TestState *state, CDTPClient *client, void *data, size_t data_size)
 {
+    (void) client;
+
     TEST_ASSERT(state->client_receive_count < state->client_receive_count_expected)
 
     state->client_received[state->client_receive_count] = (TestReceivedMessage *) malloc(sizeof(TestReceivedMessage));
@@ -342,8 +357,10 @@ void test_state_client_received(TestState *state, void *data, size_t data_size)
     state->client_receive_count++;
 }
 
-void test_state_client_disconnected(TestState *state)
+void test_state_client_disconnected(TestState *state, CDTPClient *client)
 {
+    (void) client;
+
     TEST_ASSERT(state->client_disconnected_count < state->client_disconnected_count_expected)
 
     state->client_disconnected_count++;
@@ -379,7 +396,7 @@ void server_on_recv(CDTPServer *server, size_t client_id, void *data, size_t dat
 
     TestState *state = (TestState *) arg;
 
-    test_state_server_received(state, client_id, data, data_size);
+    test_state_server_received(state, server, client_id, data, data_size);
 }
 
 void server_on_connect(CDTPServer *server, size_t client_id, void *arg)
@@ -388,7 +405,7 @@ void server_on_connect(CDTPServer *server, size_t client_id, void *arg)
 
     TestState *state = (TestState *) arg;
 
-    test_state_server_connect(state, client_id);
+    test_state_server_connect(state, server, client_id);
 }
 
 void server_on_disconnect(CDTPServer *server, size_t client_id, void *arg)
@@ -397,7 +414,7 @@ void server_on_disconnect(CDTPServer *server, size_t client_id, void *arg)
 
     TestState *state = (TestState *) arg;
 
-    test_state_server_disconnect(state, client_id);
+    test_state_server_disconnect(state, server, client_id);
 }
 
 void client_on_recv(CDTPClient *client, void *data, size_t data_size, void *arg)
@@ -406,7 +423,7 @@ void client_on_recv(CDTPClient *client, void *data, size_t data_size, void *arg)
 
     TestState *state = (TestState *) arg;
 
-    test_state_client_received(state, data, data_size);
+    test_state_client_received(state, client, data, data_size);
 }
 
 void client_on_disconnected(CDTPClient *client, void *arg)
@@ -415,7 +432,7 @@ void client_on_disconnected(CDTPClient *client, void *arg)
 
     TestState *state = (TestState *) arg;
 
-    test_state_client_disconnected(state);
+    test_state_client_disconnected(state, client);
 }
 
 void on_err(int cdtp_err, int underlying_err, void *arg)
@@ -1154,6 +1171,8 @@ void test_multiple_clients(void)
     size_t connect_clients[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
     size_t disconnect_clients[] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 0, 1};
     TestReceivedMessage *client_received[] = {
+            size_t_message(strlen(message_from_client1) + 1),
+            size_t_message(strlen(message_from_client2) + 1),
             size_t_message(message_from_server),
             size_t_message(message_from_server),
             size_t_message(message_to_client1),
@@ -1161,8 +1180,9 @@ void test_multiple_clients(void)
     };
     TestState *state = test_state(17, 17, 17,
                                   server_received, receive_clients, connect_clients, disconnect_clients,
-                                  4, 0,
+                                  6, 0,
                                   client_received);
+    state->reply_with_string_length = CDTP_TRUE;
 
     // Create server
     CDTPServer *s = cdtp_server(server_on_recv, server_on_connect, server_on_disconnect,
@@ -1226,6 +1246,7 @@ void test_multiple_clients(void)
     cdtp_sleep(WAIT_TIME);
 
     // Connect other clients
+    state->reply_with_string_length = CDTP_FALSE;
     TEST_ASSERT_EQ(s->clients->capacity, (size_t) 16)
     CDTPClient *other_clients[15];
     for (size_t i = 0; i < 15; i++) {
