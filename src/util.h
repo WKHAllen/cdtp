@@ -75,6 +75,7 @@
 #define CDTP_CLIENT_NOT_CONNECTED       27
 #define CDTP_CLIENT_SEND_FAILED         28
 #define CDTP_CLIENT_RECV_FAILED         29
+#define CDTP_OPENSSL_ERROR              30
 
 // Global address family to use.
 #ifndef CDTP_ADDRESS_FAMILY

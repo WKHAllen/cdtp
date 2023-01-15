@@ -1,6 +1,9 @@
 #include "map.h"
 
+// Minimum capacity of a client map.
 #define CDTP_MAP_MIN_CAPACITY 16
+
+// Starting capacity of a client map.
 #define CDTP_MAP_START_CAPACITY CDTP_MAP_MIN_CAPACITY
 
 /**

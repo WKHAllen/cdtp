@@ -25,6 +25,9 @@
 
 #define STR_SIZE(s) ((strlen(s) + 1) * sizeof(char))
 
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+
 #define TEST_ASSERT(condition) { \
     if (!(condition)) { \
         fprintf( \
@@ -112,6 +115,16 @@
         fprintf( \
             stderr, \
             "test memory equality assertion failed (%s:%d): %s != %s, with size = %" PRI_SIZE_T "\n", \
+            __FILE__, __LINE__, #a, #b, size); \
+        exit(1); \
+    } \
+}
+
+#define TEST_ASSERT_MEM_NE(a, b, size) { \
+    if (memcmp(a, b, size) == 0) { \
+        fprintf( \
+            stderr, \
+            "test memory inequality assertion failed (%s:%d): %s == %s, with size = %" PRI_SIZE_T "\n", \
             __FILE__, __LINE__, #a, #b, size); \
         exit(1); \
     } \
@@ -682,7 +695,48 @@ void test_client_map(void)
  */
 void test_crypto(void)
 {
-    // TODO
+    // Test RSA
+    char *rsa_message = "Hello, RSA!";
+    CDTPRSAKeyPair *keys = _cdtp_crypto_rsa_key_pair();
+    CDTPCryptoData *rsa_encrypted = _cdtp_crypto_rsa_encrypt(keys->public_key, rsa_message, STR_SIZE(rsa_message));
+    CDTPCryptoData *rsa_decrypted = _cdtp_crypto_rsa_decrypt(keys->private_key, rsa_encrypted->data, rsa_encrypted->data_size);
+    TEST_ASSERT_INT_EQ(strcmp((char *) (rsa_decrypted->data), rsa_message), 0)
+    TEST_ASSERT_INT_NE(strcmp((char *) (rsa_encrypted->data), rsa_message), 0)
+    _cdtp_crypto_rsa_key_pair_free(keys);
+    _cdtp_crypto_data_free(rsa_encrypted);
+    _cdtp_crypto_data_free(rsa_decrypted);
+
+    // Test AES
+    char *aes_message = "Hello, AES!";
+    CDTPAESKeyIV *key_iv = _cdtp_crypto_aes_key_iv();
+    CDTPCryptoData *aes_encrypted = _cdtp_crypto_aes_encrypt(key_iv, aes_message, STR_SIZE(aes_message));
+    CDTPCryptoData *aes_decrypted = _cdtp_crypto_aes_decrypt(key_iv, aes_encrypted->data, aes_encrypted->data_size);
+    TEST_ASSERT_INT_EQ(strcmp((char *) (aes_decrypted->data), aes_message), 0)
+    TEST_ASSERT_INT_NE(strcmp((char *) (aes_encrypted->data), aes_message), 0)
+    _cdtp_crypto_aes_key_iv_free(key_iv);
+    _cdtp_crypto_data_free(aes_encrypted);
+    _cdtp_crypto_data_free(aes_decrypted);
+
+    // Test encrypting/decrypting AES key with RSA
+    CDTPRSAKeyPair *keys2 = _cdtp_crypto_rsa_key_pair();
+    CDTPAESKeyIV *key_iv2 = _cdtp_crypto_aes_key_iv();
+    CDTPCryptoData *key_iv_data = _cdtp_crypto_aes_key_iv_to_data(key_iv2);
+    CDTPCryptoData *encrypted_key = _cdtp_crypto_rsa_encrypt(keys2->public_key, key_iv_data->data, key_iv_data->data_size);
+    CDTPCryptoData *decrypted_key = _cdtp_crypto_rsa_decrypt(keys2->private_key, encrypted_key->data, encrypted_key->data_size);
+    CDTPAESKeyIV *key_iv3 = _cdtp_crypto_aes_key_iv_from_data(decrypted_key);
+    TEST_ASSERT_EQ(key_iv2->key_size, key_iv3->key_size)
+    TEST_ASSERT_EQ(key_iv2->iv_size, key_iv3->iv_size)
+    TEST_ASSERT_MEM_EQ(key_iv2->key, key_iv3->key, key_iv2->key_size)
+    TEST_ASSERT_MEM_EQ(key_iv2->iv, key_iv3->iv, key_iv2->iv_size)
+    TEST_ASSERT_EQ(decrypted_key->data_size, key_iv_data->data_size)
+    TEST_ASSERT_MEM_EQ(decrypted_key->data, key_iv_data->data, decrypted_key->data_size)
+    TEST_ASSERT_MEM_NE(encrypted_key->data, key_iv_data->data, key_iv_data->data_size)
+    _cdtp_crypto_rsa_key_pair_free(keys2);
+    _cdtp_crypto_aes_key_iv_free(key_iv2);
+    _cdtp_crypto_data_free(key_iv_data);
+    _cdtp_crypto_data_free(encrypted_key);
+    _cdtp_crypto_data_free(decrypted_key);
+    _cdtp_crypto_aes_key_iv_free(key_iv3);
 }
 
 /**

@@ -8,6 +8,7 @@
 
 #include "defs.h"
 #include "util.h"
+#include "crypto.h"
 #include "threading.h"
 #include "map.h"
 
