@@ -154,6 +154,16 @@ void _cdtp_crypto_openssl_rsa_private_key_free(EVP_PKEY *private_key)
     EVP_PKEY_free(private_key);
 }
 
+CDTPCryptoData *_cdtp_crypto_rsa_public_key_to_bytes(CDTPRSAPublicKey *public_key)
+{
+    return _cdtp_crypto_data(public_key->key, public_key->key_size);
+}
+
+CDTPCryptoData *_cdtp_crypto_rsa_private_key_to_bytes(CDTPRSAPrivateKey *private_key)
+{
+    return _cdtp_crypto_data(private_key->key, private_key->key_size);
+}
+
 CDTPRSAPublicKey *_cdtp_crypto_rsa_public_key_from_bytes(char *public_key_bytes, size_t public_key_size)
 {
     CDTPRSAPublicKey *public_key = (CDTPRSAPublicKey *) malloc(sizeof(CDTPRSAPublicKey));

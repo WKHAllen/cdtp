@@ -10,12 +10,18 @@
 void _cdtp_client_call_on_recv(CDTPClient *client, void *data, size_t data_size)
 {
     if (client->on_recv != NULL) {
+        CDTPCryptoData *data_decrypted = _cdtp_crypto_aes_decrypt(client->sock->key, data, data_size);
+        size_t decrypted_data_size = data_decrypted->data_size;
+        void *decrypted_data = _cdtp_crypto_data_unwrap(data_decrypted);
+
         _cdtp_start_thread_on_recv_client(client->on_recv,
                                           client,
-                                          data,
-                                          data_size,
+                                          decrypted_data,
+                                          decrypted_data_size,
                                           client->on_recv_arg);
     }
+
+    free(data);
 }
 
 /**
@@ -36,11 +42,73 @@ void _cdtp_client_call_on_disconnected(CDTPClient *client)
  * Exchange crypto keys with the server.
  *
  * @param client The socket client.
+ * @return If the exchange succeeded.
  */
-void _cdtp_client_exchange_keys(CDTPClient *client)
+int _cdtp_client_exchange_keys(CDTPClient *client)
 {
-    // TODO
-    (void) client;
+    char size_buffer[CDTP_LENSIZE];
+    size_t msg_size;
+    char *buffer;
+    int recv_code;
+
+#ifdef _WIN32
+    recv_code = recv(client->sock->sock, size_buffer, CDTP_LENSIZE, 0);
+
+    if (recv_code == SOCKET_ERROR || recv_code == 0) {
+        _cdtp_set_err(CDTP_CLIENT_KEY_EXCHANGE_FAILED);
+        return CDTP_FALSE;
+    }
+    else {
+        msg_size = _cdtp_decode_message_size((unsigned char *) size_buffer);
+        buffer = (char *) malloc(msg_size * sizeof(char));
+
+        recv_code = recv(client->sock->sock, buffer, msg_size, 0);
+
+        if (recv_code == SOCKET_ERROR || recv_code == 0 || (size_t) recv_code != msg_size) {
+            _cdtp_set_err(CDTP_CLIENT_KEY_EXCHANGE_FAILED);
+            return CDTP_FALSE;
+        }
+    }
+#else
+    recv_code = read(client->sock->sock, size_buffer, CDTP_LENSIZE);
+
+    if (recv_code == 0 || recv_code == -1) {
+        _cdtp_set_err(CDTP_CLIENT_KEY_EXCHANGE_FAILED);
+        return CDTP_FALSE;
+    }
+    else {
+        msg_size = _cdtp_decode_message_size((unsigned char *) size_buffer);
+        buffer = (char *) malloc(msg_size * sizeof(char));
+
+        recv_code = read(client->sock->sock, buffer, msg_size);
+
+        if (recv_code == 0 || recv_code == -1 || (size_t) recv_code != msg_size) {
+            _cdtp_set_err(CDTP_CLIENT_KEY_EXCHANGE_FAILED);
+            return CDTP_FALSE;
+        }
+    }
+#endif
+
+    CDTPRSAPublicKey *public_key = _cdtp_crypto_rsa_public_key_from_bytes(buffer, msg_size);
+    CDTPAESKeyIV *key = _cdtp_crypto_aes_key_iv();
+    CDTPCryptoData *key_data = _cdtp_crypto_aes_key_iv_to_data(key);
+    CDTPCryptoData *key_encrypted = _cdtp_crypto_rsa_encrypt(public_key, key_data->data, key_data->data_size);
+    char *key_encoded = _cdtp_construct_message(key_encrypted->data, key_encrypted->data_size);
+
+    if (send(client->sock->sock, key_encoded, CDTP_LENSIZE + key_encrypted->data_size, 0) < 0) {
+        _cdtp_set_err(CDTP_CLIENT_SEND_FAILED);
+        return CDTP_FALSE;
+    }
+
+    client->sock->key = key;
+
+    free(buffer);
+    _cdtp_crypto_rsa_public_key_free(public_key);
+    _cdtp_crypto_data_free(key_data);
+    _cdtp_crypto_data_free(key_encrypted);
+    free(key_encoded);
+
+    return CDTP_TRUE;
 }
 
 /**
@@ -317,7 +385,10 @@ CDTP_EXPORT void cdtp_client_connect(CDTPClient *client, char *host, unsigned sh
     }
 #endif
 
-    _cdtp_client_exchange_keys(client);
+    // Exchange keys
+    if (_cdtp_client_exchange_keys(client) != CDTP_TRUE) {
+        return;
+    }
 
     _cdtp_client_call_handle(client);
 }
@@ -533,17 +604,21 @@ CDTP_EXPORT void cdtp_client_send(CDTPClient *client, void *data, size_t data_si
         return;
     }
 
-    char *message = _cdtp_construct_message(data, data_size);
+    CDTPCryptoData *data_encrypted = _cdtp_crypto_aes_encrypt(client->sock->key, data, data_size);
+    char *message = _cdtp_construct_message(data_encrypted->data, data_encrypted->data_size);
 
-    if (send(client->sock->sock, message, CDTP_LENSIZE + data_size, 0) < 0) {
+    if (send(client->sock->sock, message, CDTP_LENSIZE + data_encrypted->data_size, 0) < 0) {
         _cdtp_set_err(CDTP_CLIENT_SEND_FAILED);
+        return;
     }
 
+    _cdtp_crypto_data_free(data_encrypted);
     free(message);
 }
 
 CDTP_EXPORT void cdtp_client_free(CDTPClient *client)
 {
+    _cdtp_crypto_aes_key_iv_free(client->sock->key);
     free(client->sock);
     free(client);
 }

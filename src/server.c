@@ -28,6 +28,7 @@ void _cdtp_server_disconnect_sock(CDTPServer *server, size_t client_id)
         close(client->sock);
 #endif
 
+        _cdtp_crypto_aes_key_iv_free(client->key);
         free(client);
     }
 }
@@ -43,13 +44,20 @@ void _cdtp_server_disconnect_sock(CDTPServer *server, size_t client_id)
 void _cdtp_server_call_on_recv(CDTPServer *server, size_t client_id, void *data, size_t data_size)
 {
     if (server->on_recv != NULL) {
+        CDTPSocket *client = _cdtp_client_map_get(server->clients, client_id);
+        CDTPCryptoData *data_decrypted = _cdtp_crypto_aes_decrypt(client->key, data, data_size);
+        size_t decrypted_data_size = data_decrypted->data_size;
+        void *decrypted_data = _cdtp_crypto_data_unwrap(data_decrypted);
+
         _cdtp_start_thread_on_recv_server(server->on_recv,
                                           server,
                                           client_id,
-                                          data,
-                                          data_size,
+                                          decrypted_data,
+                                          decrypted_data_size,
                                           server->on_recv_arg);
     }
+
+    free(data);
 }
 
 /**
@@ -87,20 +95,75 @@ void _cdtp_server_call_on_disconnect(CDTPServer *server, size_t client_id)
 /**
  * Exchange crypto keys with a client.
  *
- * @param server The socket server.
- * @param client_id The ID of the new client.
- * @param client_sock The client socket.
+ * @param client The client socket.
+ * @return If the exchange succeeded.
  */
-#ifdef _WIN32
-void _cdtp_server_exchange_keys(CDTPServer *server, size_t client_id, SOCKET client_sock)
-#else
-void _cdtp_server_exchange_keys(CDTPServer *server, size_t client_id, int client_sock)
-#endif
+int _cdtp_server_exchange_keys(CDTPSocket *client)
 {
-    // TODO
-    (void) server;
-    (void) client_id;
-    (void) client_sock;
+    CDTPRSAKeyPair *rsa_keys = _cdtp_crypto_rsa_key_pair();
+    CDTPRSAPublicKey *public_key = rsa_keys->public_key;
+    CDTPRSAPrivateKey *private_key = rsa_keys->private_key;
+    CDTPCryptoData *public_key_data = _cdtp_crypto_rsa_public_key_to_bytes(public_key);
+    char *public_key_encoded = _cdtp_construct_message(public_key_data->data, public_key_data->data_size);
+
+    if (send(client->sock, public_key_encoded, CDTP_LENSIZE + public_key_data->data_size, 0) < 0) {
+        _cdtp_set_err(CDTP_SERVER_KEY_EXCHANGE_FAILED);
+        return CDTP_FALSE;
+    }
+
+    char size_buffer[CDTP_LENSIZE];
+    size_t msg_size;
+    char *buffer;
+    int recv_code;
+
+#ifdef _WIN32
+    recv_code = recv(client->sock, size_buffer, CDTP_LENSIZE, 0);
+
+    if (recv_code == SOCKET_ERROR || recv_code == 0) {
+        _cdtp_set_err(CDTP_SERVER_KEY_EXCHANGE_FAILED);
+        return CDTP_FALSE;
+    }
+    else {
+        msg_size = _cdtp_decode_message_size((unsigned char *) size_buffer);
+        buffer = (char *) malloc(msg_size * sizeof(char));
+
+        recv_code = recv(client->sock, buffer, msg_size, 0);
+
+        if (recv_code == SOCKET_ERROR || recv_code == 0 || (size_t) recv_code != msg_size) {
+            _cdtp_set_err(CDTP_SERVER_KEY_EXCHANGE_FAILED);
+            return CDTP_FALSE;
+        }
+    }
+#else
+    recv_code = read(client->sock, size_buffer, CDTP_LENSIZE);
+
+    if (recv_code == 0 || recv_code == -1) {
+        _cdtp_set_err(CDTP_SERVER_KEY_EXCHANGE_FAILED);
+        return CDTP_FALSE;
+    }
+    else {
+        msg_size = _cdtp_decode_message_size((unsigned char *) size_buffer);
+        buffer = (char *) malloc(msg_size * sizeof(char));
+
+        recv_code = read(client->sock, buffer, msg_size);
+
+        if (recv_code == 0 || recv_code == -1 || (size_t) recv_code != msg_size) {
+            _cdtp_set_err(CDTP_SERVER_KEY_EXCHANGE_FAILED);
+            return CDTP_FALSE;
+        }
+    }
+#endif
+
+    CDTPCryptoData *key_data = _cdtp_crypto_rsa_decrypt(private_key, buffer, msg_size);
+    client->key = _cdtp_crypto_aes_key_iv_from_data(key_data);
+
+    _cdtp_crypto_rsa_key_pair_free(rsa_keys);
+    _cdtp_crypto_data_free(public_key_data);
+    free(public_key_encoded);
+    free(buffer);
+    _cdtp_crypto_data_free(key_data);
+
+    return CDTP_TRUE;
 }
 
 /**
@@ -175,8 +238,15 @@ void _cdtp_server_serve(CDTPServer *server)
                 return;
             }
 
+            // Create the new client object
+            CDTPSocket *new_client = (CDTPSocket *) malloc(sizeof(CDTPSocket));
+            new_client->sock = new_sock;
+            memcpy(&(new_client->address), &address, sizeof(address));
+
             // Exchange keys
-            _cdtp_server_exchange_keys(server, client_id, new_sock);
+            if (_cdtp_server_exchange_keys(new_client) != CDTP_TRUE) {
+                return;
+            }
 
             // Set non-blocking
             mode = 1;
@@ -187,9 +257,6 @@ void _cdtp_server_serve(CDTPServer *server)
             }
 
             // Add the new socket to the client map
-            CDTPSocket *new_client = (CDTPSocket *) malloc(sizeof(CDTPSocket));
-            new_client->sock = new_sock;
-            memcpy(&(new_client->address), &address, sizeof(address));
             _cdtp_client_map_set(server->clients, client_id, new_client);
             _cdtp_server_call_on_connect(server, client_id);
         }
@@ -217,8 +284,15 @@ void _cdtp_server_serve(CDTPServer *server)
                 return;
             }
 
+            // Create the new client object
+            CDTPSocket *new_client = (CDTPSocket *) malloc(sizeof(CDTPSocket));
+            new_client->sock = new_sock;
+            memcpy(&(new_client->address), &address, sizeof(address));
+
             // Exchange keys
-            _cdtp_server_exchange_keys(server, client_id, new_sock);
+            if (_cdtp_server_exchange_keys(new_client) != CDTP_TRUE) {
+                return;
+            }
 
             // Set non-blocking
             if (fcntl(new_sock, F_SETFL, fcntl(new_sock, F_GETFL, 0) | O_NONBLOCK) == -1) {
@@ -226,10 +300,7 @@ void _cdtp_server_serve(CDTPServer *server)
                 return;
             }
 
-            // Add the new socket to the client array
-            CDTPSocket *new_client = (CDTPSocket *) malloc(sizeof(CDTPSocket));
-            new_client->sock = new_sock;
-            memcpy(&(new_client->address), &address, sizeof(address));
+            // Add the new socket to the client map
             _cdtp_client_map_set(server->clients, client_id, new_client);
             _cdtp_server_call_on_connect(server, client_id);
         }
@@ -447,6 +518,8 @@ CDTP_EXPORT CDTPServer *cdtp_server(
     }
 #endif
 
+    server->sock->key = NULL;
+
     return server;
 }
 
@@ -529,7 +602,9 @@ CDTP_EXPORT void cdtp_server_stop(CDTPServer *server)
             return;
         }
 
-        _cdtp_client_map_pop(server->clients, iter->clients[i]->client_id);
+        CDTPSocket *client = _cdtp_client_map_pop(server->clients, iter->clients[i]->client_id);
+        _cdtp_crypto_aes_key_iv_free(client->key);
+        free(client);
     }
 
     _cdtp_client_map_iter_free(iter);
@@ -561,7 +636,9 @@ CDTP_EXPORT void cdtp_server_stop(CDTPServer *server)
             return;
         }
 
-        _cdtp_client_map_pop(server->clients, iter->clients[i]->client_id);
+        CDTPSocket *client = _cdtp_client_map_pop(server->clients, iter->clients[i]->client_id);
+        _cdtp_crypto_aes_key_iv_free(client->key);
+        free(client);
     }
 
     _cdtp_client_map_iter_free(iter);
@@ -781,6 +858,7 @@ CDTP_EXPORT void cdtp_server_remove_client(CDTPServer *server, size_t client_id)
     }
 #endif
 
+    _cdtp_crypto_aes_key_iv_free(client->key);
     free(client);
 }
 
@@ -800,12 +878,15 @@ CDTP_EXPORT void cdtp_server_send(CDTPServer *server, size_t client_id, void *da
         return;
     }
 
-    char *message = _cdtp_construct_message(data, data_size);
+    CDTPCryptoData *data_encrypted = _cdtp_crypto_aes_encrypt(client->key, data, data_size);
+    char *message = _cdtp_construct_message(data_encrypted->data, data_encrypted->data_size);
 
-    if (send(client->sock, message, CDTP_LENSIZE + data_size, 0) < 0) {
+    if (send(client->sock, message, CDTP_LENSIZE + data_encrypted->data_size, 0) < 0) {
         _cdtp_set_err(CDTP_SERVER_SEND_FAILED);
+        return;
     }
 
+    _cdtp_crypto_data_free(data_encrypted);
     free(message);
 }
 
@@ -817,18 +898,13 @@ CDTP_EXPORT void cdtp_server_send_all(CDTPServer *server, void *data, size_t dat
         return;
     }
 
-    char *message = _cdtp_construct_message(data, data_size);
-
     CDTPClientMapIter *iter = _cdtp_client_map_iter(server->clients);
 
     for (size_t i = 0; i < iter->size; i++) {
-        if (send(iter->clients[i]->sock->sock, message, CDTP_LENSIZE + data_size, 0) < 0) {
-            _cdtp_set_err(CDTP_SERVER_SEND_FAILED);
-        }
+        cdtp_server_send(server, iter->clients[i]->client_id, data, data_size);
     }
 
     _cdtp_client_map_iter_free(iter);
-    free(message);
 }
 
 CDTP_EXPORT void cdtp_server_free(CDTPServer *server)

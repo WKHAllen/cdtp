@@ -7,6 +7,7 @@
 #define CDTP_DEFS_H
 
 #include "util.h"
+#include "crypto.h"
 
 /**
  * Socket server type.
@@ -53,6 +54,7 @@ typedef struct _CDTPSocket {
     int sock;
 #endif
     struct sockaddr_in address;
+    CDTPAESKeyIV *key;
 } CDTPSocket;
 
 /**

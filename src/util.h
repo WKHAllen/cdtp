@@ -76,6 +76,8 @@
 #define CDTP_CLIENT_SEND_FAILED         28
 #define CDTP_CLIENT_RECV_FAILED         29
 #define CDTP_OPENSSL_ERROR              30
+#define CDTP_SERVER_KEY_EXCHANGE_FAILED 31
+#define CDTP_CLIENT_KEY_EXCHANGE_FAILED 32
 
 // Global address family to use.
 #ifndef CDTP_ADDRESS_FAMILY
@@ -225,7 +227,7 @@ CDTP_TEST_EXPORT unsigned char *_cdtp_encode_message_size(size_t size);
 CDTP_TEST_EXPORT size_t _cdtp_decode_message_size(unsigned char *encoded_size);
 
 /**
- * Construct a message.
+ * Construct a message. The message size will always be `data_size + CDTP_LENSIZE` bytes.
  *
  * @param data The message data.
  * @param data_size The size of the message, in bytes.

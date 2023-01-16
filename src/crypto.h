@@ -97,6 +97,22 @@ CDTP_TEST_EXPORT void _cdtp_crypto_data_free(CDTPCryptoData *crypto_data);
 CDTP_TEST_EXPORT void *_cdtp_crypto_data_unwrap(CDTPCryptoData *crypto_data);
 
 /**
+ * Get a byte representation of an RSA public key.
+ *
+ * @param public_key The RSA public key.
+ * @return The byte representation of the public key.
+ */
+CDTPCryptoData *_cdtp_crypto_rsa_public_key_to_bytes(CDTPRSAPublicKey *public_key);
+
+/**
+ * Get a byte representation of an RSA private key.
+ *
+ * @param private_key The RSA private key.
+ * @return The byte representation of the private key.
+ */
+CDTPCryptoData *_cdtp_crypto_rsa_private_key_to_bytes(CDTPRSAPrivateKey *private_key);
+
+/**
  * Get a representation of a public key from the public key bytes.
  *
  * @param public_key_bytes The public key bytes.
