@@ -15,7 +15,7 @@ CDTPClientMapNode *_cdtp_client_map_node(void)
 {
     CDTPClientMapNode *node = (CDTPClientMapNode *) malloc(sizeof(CDTPClientMapNode));
 
-    node->allocated = CDTP_FALSE;
+    node->allocated = false;
     node->client_id = SIZE_MAX;
     node->sock = NULL;
 
@@ -77,14 +77,14 @@ void _cdtp_client_map_resize(CDTPClientMap *map, size_t new_capacity)
     }
 
     for (size_t i = 0; i < old_capacity; i++) {
-        if (old_nodes[i]->allocated == CDTP_TRUE) {
+        if (old_nodes[i]->allocated) {
             size_t hash = _cdtp_client_map_hash(map, old_nodes[i]->client_id);
 
-            while (map->nodes[hash]->allocated == CDTP_TRUE) {
+            while (map->nodes[hash]->allocated) {
                 hash = (hash + 1) % (map->capacity);
             }
 
-            map->nodes[hash]->allocated = CDTP_TRUE;
+            map->nodes[hash]->allocated = true;
             map->nodes[hash]->client_id = old_nodes[i]->client_id;
             map->nodes[hash]->sock = old_nodes[i]->sock;
         }
@@ -132,20 +132,20 @@ int _cdtp_client_map_try_resize(CDTPClientMap *map)
     }
 }
 
-CDTP_TEST_EXPORT int _cdtp_client_map_contains(CDTPClientMap *map, size_t client_id)
+CDTP_TEST_EXPORT bool _cdtp_client_map_contains(CDTPClientMap *map, size_t client_id)
 {
     size_t hash = _cdtp_client_map_hash(map, client_id);
     size_t original_hash = hash;
 
     do {
-        if (map->nodes[hash]->allocated == CDTP_TRUE && map->nodes[hash]->client_id == client_id) {
-            return CDTP_TRUE;
+        if (map->nodes[hash]->allocated && map->nodes[hash]->client_id == client_id) {
+            return true;
         }
 
         hash = (hash + 1) % (map->capacity);
     } while (hash != original_hash);
 
-    return CDTP_FALSE;
+    return false;
 }
 
 CDTP_TEST_EXPORT CDTPSocket *_cdtp_client_map_get(CDTPClientMap *map, size_t client_id)
@@ -154,7 +154,7 @@ CDTP_TEST_EXPORT CDTPSocket *_cdtp_client_map_get(CDTPClientMap *map, size_t cli
     size_t original_hash = hash;
 
     do {
-        if (map->nodes[hash]->allocated == CDTP_TRUE && map->nodes[hash]->client_id == client_id) {
+        if (map->nodes[hash]->allocated && map->nodes[hash]->client_id == client_id) {
             return map->nodes[hash]->sock;
         }
 
@@ -164,27 +164,27 @@ CDTP_TEST_EXPORT CDTPSocket *_cdtp_client_map_get(CDTPClientMap *map, size_t cli
     return NULL;
 }
 
-CDTP_TEST_EXPORT int _cdtp_client_map_set(CDTPClientMap *map, size_t client_id, CDTPSocket *sock)
+CDTP_TEST_EXPORT bool _cdtp_client_map_set(CDTPClientMap *map, size_t client_id, CDTPSocket *sock)
 {
-    if (_cdtp_client_map_contains(map, client_id) == CDTP_TRUE) {
-        return CDTP_FALSE;
+    if (_cdtp_client_map_contains(map, client_id)) {
+        return false;
     }
 
     _cdtp_client_map_try_resize(map);
 
     size_t hash = _cdtp_client_map_hash(map, client_id);
 
-    while (map->nodes[hash]->allocated == CDTP_TRUE) {
+    while (map->nodes[hash]->allocated) {
         hash = (hash + 1) % (map->capacity);
     }
 
-    map->nodes[hash]->allocated = CDTP_TRUE;
+    map->nodes[hash]->allocated = true;
     map->nodes[hash]->client_id = client_id;
     map->nodes[hash]->sock = sock;
 
     map->size++;
 
-    return CDTP_TRUE;
+    return true;
 }
 
 CDTP_TEST_EXPORT CDTPSocket *_cdtp_client_map_pop(CDTPClientMap *map, size_t client_id)
@@ -195,10 +195,10 @@ CDTP_TEST_EXPORT CDTPSocket *_cdtp_client_map_pop(CDTPClientMap *map, size_t cli
     size_t original_hash = hash;
 
     do {
-        if (map->nodes[hash]->allocated == CDTP_TRUE && map->nodes[hash]->client_id == client_id) {
+        if (map->nodes[hash]->allocated && map->nodes[hash]->client_id == client_id) {
             CDTPSocket *sock = map->nodes[hash]->sock;
 
-            map->nodes[hash]->allocated = CDTP_FALSE;
+            map->nodes[hash]->allocated = false;
             map->nodes[hash]->client_id = SIZE_MAX;
             map->nodes[hash]->sock = NULL;
 
@@ -223,7 +223,7 @@ CDTP_TEST_EXPORT CDTPClientMapIter *_cdtp_client_map_iter(CDTPClientMap *map)
     size_t iter_index = 0;
 
     for (size_t i = 0; i < map->capacity; i++) {
-        if (map->nodes[i]->allocated == CDTP_TRUE) {
+        if (map->nodes[i]->allocated) {
             CDTPClientMapIterNode *iter_node = (CDTPClientMapIterNode *) malloc(sizeof(CDTPClientMapIterNode));
 
             iter_node->client_id = map->nodes[i]->client_id;

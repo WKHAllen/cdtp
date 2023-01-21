@@ -69,7 +69,7 @@ CDTP_EXPORT void cdtp_server_stop(CDTPServer *server);
  * @param server The socket server.
  * @return If the server is serving.
  */
-CDTP_EXPORT int cdtp_server_is_serving(CDTPServer *server);
+CDTP_EXPORT bool cdtp_server_is_serving(CDTPServer *server);
 
 /**
  * Get the host of the server.

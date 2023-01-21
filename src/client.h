@@ -63,7 +63,7 @@ CDTP_EXPORT void cdtp_client_disconnect(CDTPClient *client);
  * @param client The socket client.
  * @return If the client is connected to a server.
  */
-CDTP_EXPORT int cdtp_client_is_connected(CDTPClient *client);
+CDTP_EXPORT bool cdtp_client_is_connected(CDTPClient *client);
 
 /**
  * Get the host of the client.

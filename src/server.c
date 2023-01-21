@@ -98,7 +98,7 @@ void _cdtp_server_call_on_disconnect(CDTPServer *server, size_t client_id)
  * @param client The client socket.
  * @return If the exchange succeeded.
  */
-int _cdtp_server_exchange_keys(CDTPSocket *client)
+bool _cdtp_server_exchange_keys(CDTPSocket *client)
 {
     CDTPRSAKeyPair *rsa_keys = _cdtp_crypto_rsa_key_pair();
     CDTPRSAPublicKey *public_key = rsa_keys->public_key;
@@ -108,7 +108,7 @@ int _cdtp_server_exchange_keys(CDTPSocket *client)
 
     if (send(client->sock, public_key_encoded, CDTP_LENSIZE + public_key_data->data_size, 0) < 0) {
         _cdtp_set_err(CDTP_SERVER_KEY_EXCHANGE_FAILED);
-        return CDTP_FALSE;
+        return false;
     }
 
     char size_buffer[CDTP_LENSIZE];
@@ -121,7 +121,7 @@ int _cdtp_server_exchange_keys(CDTPSocket *client)
 
     if (recv_code == SOCKET_ERROR || recv_code == 0) {
         _cdtp_set_err(CDTP_SERVER_KEY_EXCHANGE_FAILED);
-        return CDTP_FALSE;
+        return false;
     }
     else {
         msg_size = _cdtp_decode_message_size((unsigned char *) size_buffer);
@@ -131,7 +131,7 @@ int _cdtp_server_exchange_keys(CDTPSocket *client)
 
         if (recv_code == SOCKET_ERROR || recv_code == 0 || (size_t) recv_code != msg_size) {
             _cdtp_set_err(CDTP_SERVER_KEY_EXCHANGE_FAILED);
-            return CDTP_FALSE;
+            return false;
         }
     }
 #else
@@ -139,7 +139,7 @@ int _cdtp_server_exchange_keys(CDTPSocket *client)
 
     if (recv_code == 0 || recv_code == -1) {
         _cdtp_set_err(CDTP_SERVER_KEY_EXCHANGE_FAILED);
-        return CDTP_FALSE;
+        return false;
     }
     else {
         msg_size = _cdtp_decode_message_size((unsigned char *) size_buffer);
@@ -149,7 +149,7 @@ int _cdtp_server_exchange_keys(CDTPSocket *client)
 
         if (recv_code == 0 || recv_code == -1 || (size_t) recv_code != msg_size) {
             _cdtp_set_err(CDTP_SERVER_KEY_EXCHANGE_FAILED);
-            return CDTP_FALSE;
+            return false;
         }
     }
 #endif
@@ -163,7 +163,7 @@ int _cdtp_server_exchange_keys(CDTPSocket *client)
     free(buffer);
     _cdtp_crypto_data_free(key_data);
 
-    return CDTP_TRUE;
+    return true;
 }
 
 /**
@@ -199,7 +199,7 @@ void _cdtp_server_serve(CDTPServer *server)
     unsigned char size_buffer[CDTP_LENSIZE];
     int recv_code;
 
-    while (server->serving == CDTP_TRUE) {
+    while (server->serving) {
         // Accept incoming connections
 #ifdef _WIN32
         new_sock = accept(server->sock->sock, (struct sockaddr *) (&address), (int *) (&addrlen));
@@ -208,7 +208,7 @@ void _cdtp_server_serve(CDTPServer *server)
 #endif
 
         // Check if the server has been stopped
-        if (server->serving != CDTP_TRUE) {
+        if (!server->serving) {
             return;
         }
 
@@ -219,7 +219,7 @@ void _cdtp_server_serve(CDTPServer *server)
             if (err_code == WSAEWOULDBLOCK) {
                 // No new connections, do nothing
             }
-            else if (err_code != WSAENOTSOCK || server->serving == CDTP_TRUE) {
+            else if (err_code != WSAENOTSOCK || server->serving) {
                 _cdtp_set_error(CDTP_SOCKET_ACCEPT_FAILED, err_code);
                 return;
             }
@@ -244,7 +244,7 @@ void _cdtp_server_serve(CDTPServer *server)
             memcpy(&(new_client->address), &address, sizeof(address));
 
             // Exchange keys
-            if (_cdtp_server_exchange_keys(new_client) != CDTP_TRUE) {
+            if (!_cdtp_server_exchange_keys(new_client)) {
                 return;
             }
 
@@ -267,7 +267,7 @@ void _cdtp_server_serve(CDTPServer *server)
             if (CDTP_EAGAIN_OR_WOULDBLOCK(err_code)) {
                 // No new connections, do nothing
             }
-            else if (err_code != ENOTSOCK || server->serving == CDTP_TRUE) {
+            else if (err_code != ENOTSOCK || server->serving) {
                 _cdtp_set_error(CDTP_SOCKET_ACCEPT_FAILED, err_code);
                 return;
             }
@@ -290,7 +290,7 @@ void _cdtp_server_serve(CDTPServer *server)
             memcpy(&(new_client->address), &address, sizeof(address));
 
             // Exchange keys
-            if (_cdtp_server_exchange_keys(new_client) != CDTP_TRUE) {
+            if (!_cdtp_server_exchange_keys(new_client)) {
                 return;
             }
 
@@ -320,7 +320,7 @@ void _cdtp_server_serve(CDTPServer *server)
                 int err_code = WSAGetLastError();
 
                 if (err_code == WSAECONNRESET || err_code == WSAENOTSOCK) {
-                    if (_cdtp_client_map_contains(server->clients, client_id) == CDTP_TRUE) {
+                    if (_cdtp_client_map_contains(server->clients, client_id)) {
                         _cdtp_server_disconnect_sock(server, client_id);
                         _cdtp_server_call_on_disconnect(server, client_id);
                     }
@@ -334,7 +334,7 @@ void _cdtp_server_serve(CDTPServer *server)
                 }
             }
             else if (recv_code == 0) {
-                if (_cdtp_client_map_contains(server->clients, client_id) == CDTP_TRUE) {
+                if (_cdtp_client_map_contains(server->clients, client_id)) {
                     _cdtp_server_disconnect_sock(server, client_id);
                     _cdtp_server_call_on_disconnect(server, client_id);
                 }
@@ -352,7 +352,7 @@ void _cdtp_server_serve(CDTPServer *server)
                     int err_code = WSAGetLastError();
 
                     if (err_code == WSAECONNRESET || err_code == WSAENOTSOCK) {
-                        if (_cdtp_client_map_contains(server->clients, client_id) == CDTP_TRUE) {
+                        if (_cdtp_client_map_contains(server->clients, client_id)) {
                             _cdtp_server_disconnect_sock(server, client_id);
                             _cdtp_server_call_on_disconnect(server, client_id);
                         }
@@ -363,7 +363,7 @@ void _cdtp_server_serve(CDTPServer *server)
                     }
                 }
                 else if (recv_code == 0) {
-                    if (_cdtp_client_map_contains(server->clients, client_id) == CDTP_TRUE) {
+                    if (_cdtp_client_map_contains(server->clients, client_id)) {
                         _cdtp_server_disconnect_sock(server, client_id);
                         _cdtp_server_call_on_disconnect(server, client_id);
                     }
@@ -380,7 +380,7 @@ void _cdtp_server_serve(CDTPServer *server)
             recv_code = read(client_sock->sock, (char *) size_buffer, CDTP_LENSIZE);
 
             if (recv_code == 0) {
-                if (_cdtp_client_map_contains(server->clients, client_id) == CDTP_TRUE) {
+                if (_cdtp_client_map_contains(server->clients, client_id)) {
                     _cdtp_server_disconnect_sock(server, client_id);
                     _cdtp_server_call_on_disconnect(server, client_id);
                 }
@@ -389,7 +389,7 @@ void _cdtp_server_serve(CDTPServer *server)
                 int err_code = errno;
 
                 if (err_code == EBADF) {
-                    if (_cdtp_client_map_contains(server->clients, client_id) == CDTP_TRUE) {
+                    if (_cdtp_client_map_contains(server->clients, client_id)) {
                         _cdtp_server_disconnect_sock(server, client_id);
                         _cdtp_server_call_on_disconnect(server, client_id);
                     }
@@ -415,7 +415,7 @@ void _cdtp_server_serve(CDTPServer *server)
                     int err_code = errno;
 
                     if (err_code == EBADF) {
-                        if (_cdtp_client_map_contains(server->clients, client_id) == CDTP_TRUE) {
+                        if (_cdtp_client_map_contains(server->clients, client_id)) {
                             _cdtp_server_disconnect_sock(server, client_id);
                             _cdtp_server_call_on_disconnect(server, client_id);
                         }
@@ -425,7 +425,7 @@ void _cdtp_server_serve(CDTPServer *server)
                     }
                 }
                 else if (recv_code == 0) {
-                    if (_cdtp_client_map_contains(server->clients, client_id) == CDTP_TRUE) {
+                    if (_cdtp_client_map_contains(server->clients, client_id)) {
                         _cdtp_server_disconnect_sock(server, client_id);
                         _cdtp_server_call_on_disconnect(server, client_id);
                     }
@@ -475,13 +475,13 @@ CDTP_EXPORT CDTPServer *cdtp_server(
     server->on_recv_arg = on_recv_arg;
     server->on_connect_arg = on_connect_arg;
     server->on_disconnect_arg = on_disconnect_arg;
-    server->serving = CDTP_FALSE;
-    server->done = CDTP_FALSE;
+    server->serving = false;
+    server->done = false;
     server->clients = _cdtp_client_map();
     server->next_client_id = 0;
 
     // Initialize the library
-    if (CDTP_INIT != CDTP_TRUE) {
+    if (!CDTP_INIT) {
         int return_code = _cdtp_init();
 
         if (return_code != 0) {
@@ -526,13 +526,13 @@ CDTP_EXPORT CDTPServer *cdtp_server(
 CDTP_EXPORT void cdtp_server_start(CDTPServer *server, char *host, unsigned short port)
 {
     // Make sure the server has not been run before
-    if (server->done == CDTP_TRUE) {
+    if (server->done) {
         _cdtp_set_error(CDTP_SERVER_CANNOT_RESTART, 0);
         return;
     }
 
     // Make sure the server is not already serving
-    if (server->serving == CDTP_TRUE) {
+    if (server->serving) {
         _cdtp_set_error(CDTP_SERVER_ALREADY_SERVING, 0);
         return;
     }
@@ -577,20 +577,20 @@ CDTP_EXPORT void cdtp_server_start(CDTPServer *server, char *host, unsigned shor
     }
 
     // Serve
-    server->serving = CDTP_TRUE;
+    server->serving = true;
     _cdtp_server_call_serve(server);
 }
 
 CDTP_EXPORT void cdtp_server_stop(CDTPServer *server)
 {
     // Make sure the server is running
-    if (server->serving != CDTP_TRUE) {
+    if (!server->serving) {
         _cdtp_set_error(CDTP_SERVER_NOT_SERVING, 0);
         return;
     }
 
-    server->serving = CDTP_FALSE;
-    server->done = CDTP_TRUE;
+    server->serving = false;
+    server->done = true;
 
 #ifdef _WIN32
     // Close sockets
@@ -667,7 +667,7 @@ CDTP_EXPORT void cdtp_server_stop(CDTPServer *server)
 #endif
 }
 
-CDTP_EXPORT int cdtp_server_is_serving(CDTPServer *server)
+CDTP_EXPORT bool cdtp_server_is_serving(CDTPServer *server)
 {
     return server->serving;
 }
@@ -675,7 +675,7 @@ CDTP_EXPORT int cdtp_server_is_serving(CDTPServer *server)
 CDTP_EXPORT char *cdtp_server_get_host(CDTPServer *server)
 {
     // Make sure the server is running
-    if (server->serving != CDTP_TRUE) {
+    if (!server->serving) {
         _cdtp_set_error(CDTP_SERVER_NOT_SERVING, 0);
         return NULL;
     }
@@ -724,7 +724,7 @@ CDTP_EXPORT char *cdtp_server_get_host(CDTPServer *server)
 CDTP_EXPORT unsigned short cdtp_server_get_port(CDTPServer *server)
 {
     // Make sure the server is running
-    if (server->serving != CDTP_TRUE) {
+    if (!server->serving) {
         _cdtp_set_error(CDTP_SERVER_NOT_SERVING, 0);
         return 0;
     }
@@ -746,7 +746,7 @@ CDTP_EXPORT unsigned short cdtp_server_get_port(CDTPServer *server)
 CDTP_EXPORT char *cdtp_server_get_client_host(CDTPServer *server, size_t client_id)
 {
     // Make sure the server is running
-    if (server->serving != CDTP_TRUE) {
+    if (!server->serving) {
         _cdtp_set_error(CDTP_SERVER_NOT_SERVING, 0);
         return NULL;
     }
@@ -803,7 +803,7 @@ CDTP_EXPORT char *cdtp_server_get_client_host(CDTPServer *server, size_t client_
 CDTP_EXPORT unsigned short cdtp_server_get_client_port(CDTPServer *server, size_t client_id)
 {
     // Make sure the server is running
-    if (server->serving != CDTP_TRUE) {
+    if (!server->serving) {
         _cdtp_set_error(CDTP_SERVER_NOT_SERVING, 0);
         return 0;
     }
@@ -833,7 +833,7 @@ CDTP_EXPORT unsigned short cdtp_server_get_client_port(CDTPServer *server, size_
 CDTP_EXPORT void cdtp_server_remove_client(CDTPServer *server, size_t client_id)
 {
     // Make sure the server is running
-    if (server->serving != CDTP_TRUE) {
+    if (!server->serving) {
         _cdtp_set_error(CDTP_SERVER_NOT_SERVING, 0);
         return;
     }
@@ -865,7 +865,7 @@ CDTP_EXPORT void cdtp_server_remove_client(CDTPServer *server, size_t client_id)
 CDTP_EXPORT void cdtp_server_send(CDTPServer *server, size_t client_id, void *data, size_t data_size)
 {
     // Make sure the server is running
-    if (server->serving != CDTP_TRUE) {
+    if (!server->serving) {
         _cdtp_set_error(CDTP_SERVER_NOT_SERVING, 0);
         return;
     }
@@ -893,7 +893,7 @@ CDTP_EXPORT void cdtp_server_send(CDTPServer *server, size_t client_id, void *da
 CDTP_EXPORT void cdtp_server_send_all(CDTPServer *server, void *data, size_t data_size)
 {
     // Make sure the server is running
-    if (server->serving != CDTP_TRUE) {
+    if (!server->serving) {
         _cdtp_set_error(CDTP_SERVER_NOT_SERVING, 0);
         return;
     }
@@ -909,6 +909,12 @@ CDTP_EXPORT void cdtp_server_send_all(CDTPServer *server, void *data, size_t dat
 
 CDTP_EXPORT void cdtp_server_free(CDTPServer *server)
 {
+    // Make sure the client is done
+    if (!server->done) {
+        _cdtp_set_error(CDTP_SERVER_NOT_DONE, 0);
+        return;
+    }
+
     free(server->sock);
     _cdtp_client_map_free(server->clients);
     free(server);

@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
+#include <stdbool.h>
 
 #ifdef _WIN32
 #  include <WinSock2.h>
@@ -78,6 +79,8 @@
 #define CDTP_OPENSSL_ERROR              30
 #define CDTP_SERVER_KEY_EXCHANGE_FAILED 31
 #define CDTP_CLIENT_KEY_EXCHANGE_FAILED 32
+#define CDTP_SERVER_NOT_DONE            33
+#define CDTP_CLIENT_NOT_DONE            34
 
 // Global address family to use.
 #ifndef CDTP_ADDRESS_FAMILY
@@ -123,9 +126,9 @@
 #endif
 
 // Track whether the library has been initialized.
-extern int CDTP_INIT;
+extern bool CDTP_INIT;
 // Track whether the library has exited.
-extern int CDTP_EXIT;
+extern bool CDTP_EXIT;
 
 // Error code for CDTP.
 extern int CDTP_ERROR;
@@ -133,7 +136,7 @@ extern int CDTP_ERROR;
 extern int CDTP_ERROR_UNDER;
 
 // Whether an error function has been registered.
-extern int CDTP_ON_ERROR_REGISTERED;
+extern bool CDTP_ON_ERROR_REGISTERED;
 // Registered function to handle errors.
 extern void (*CDTP_ON_ERROR)(int, int, void *);
 // Pointer to a value to pass to the registered error function.
@@ -156,7 +159,7 @@ void _cdtp_exit(void);
  *
  * @return If an error code is set.
  */
-CDTP_EXPORT int cdtp_error(void);
+CDTP_EXPORT bool cdtp_error(void);
 
 /**
  * Get the CDTP error code.

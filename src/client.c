@@ -44,7 +44,7 @@ void _cdtp_client_call_on_disconnected(CDTPClient *client)
  * @param client The socket client.
  * @return If the exchange succeeded.
  */
-int _cdtp_client_exchange_keys(CDTPClient *client)
+bool _cdtp_client_exchange_keys(CDTPClient *client)
 {
     char size_buffer[CDTP_LENSIZE];
     size_t msg_size;
@@ -56,7 +56,7 @@ int _cdtp_client_exchange_keys(CDTPClient *client)
 
     if (recv_code == SOCKET_ERROR || recv_code == 0) {
         _cdtp_set_err(CDTP_CLIENT_KEY_EXCHANGE_FAILED);
-        return CDTP_FALSE;
+        return false;
     }
     else {
         msg_size = _cdtp_decode_message_size((unsigned char *) size_buffer);
@@ -66,7 +66,7 @@ int _cdtp_client_exchange_keys(CDTPClient *client)
 
         if (recv_code == SOCKET_ERROR || recv_code == 0 || (size_t) recv_code != msg_size) {
             _cdtp_set_err(CDTP_CLIENT_KEY_EXCHANGE_FAILED);
-            return CDTP_FALSE;
+            return false;
         }
     }
 #else
@@ -74,7 +74,7 @@ int _cdtp_client_exchange_keys(CDTPClient *client)
 
     if (recv_code == 0 || recv_code == -1) {
         _cdtp_set_err(CDTP_CLIENT_KEY_EXCHANGE_FAILED);
-        return CDTP_FALSE;
+        return false;
     }
     else {
         msg_size = _cdtp_decode_message_size((unsigned char *) size_buffer);
@@ -84,7 +84,7 @@ int _cdtp_client_exchange_keys(CDTPClient *client)
 
         if (recv_code == 0 || recv_code == -1 || (size_t) recv_code != msg_size) {
             _cdtp_set_err(CDTP_CLIENT_KEY_EXCHANGE_FAILED);
-            return CDTP_FALSE;
+            return false;
         }
     }
 #endif
@@ -97,7 +97,7 @@ int _cdtp_client_exchange_keys(CDTPClient *client)
 
     if (send(client->sock->sock, key_encoded, CDTP_LENSIZE + key_encrypted->data_size, 0) < 0) {
         _cdtp_set_err(CDTP_CLIENT_SEND_FAILED);
-        return CDTP_FALSE;
+        return false;
     }
 
     client->sock->key = key;
@@ -108,7 +108,7 @@ int _cdtp_client_exchange_keys(CDTPClient *client)
     _cdtp_crypto_data_free(key_encrypted);
     free(key_encoded);
 
-    return CDTP_TRUE;
+    return true;
 }
 
 /**
@@ -130,11 +130,11 @@ void _cdtp_client_handle(CDTPClient *client)
     unsigned char size_buffer[CDTP_LENSIZE];
     int recv_code;
 
-    while (client->connected == CDTP_TRUE) {
+    while (client->connected) {
         recv_code = recv(client->sock->sock, (char *) size_buffer, CDTP_LENSIZE, 0);
 
         // Check if the client has disconnected
-        if (client->connected != CDTP_TRUE) {
+        if (!client->connected) {
             return;
         }
 
@@ -207,11 +207,11 @@ void _cdtp_client_handle(CDTPClient *client)
     unsigned char size_buffer[CDTP_LENSIZE];
     int recv_code;
 
-    while (client->connected == CDTP_TRUE) {
+    while (client->connected) {
         recv_code = read(client->sock->sock, (char *) size_buffer, CDTP_LENSIZE);
 
         // Check if the client has disconnected
-        if (client->connected != CDTP_TRUE) {
+        if (!client->connected) {
             return;
         }
 
@@ -287,11 +287,11 @@ CDTP_EXPORT CDTPClient *cdtp_client(
     client->on_disconnected = on_disconnected;
     client->on_recv_arg = on_recv_arg;
     client->on_disconnected_arg = on_disconnected_arg;
-    client->connected = CDTP_FALSE;
-    client->done = CDTP_FALSE;
+    client->connected = false;
+    client->done = false;
 
     // Initialize the library
-    if (CDTP_INIT != CDTP_TRUE) {
+    if (!CDTP_INIT) {
         int return_code = _cdtp_init();
 
         if (return_code != 0) {
@@ -324,13 +324,13 @@ CDTP_EXPORT CDTPClient *cdtp_client(
 CDTP_EXPORT void cdtp_client_connect(CDTPClient *client, char *host, unsigned short port)
 {
     // Make sure the client has not connected before
-    if (client->done == CDTP_TRUE) {
+    if (client->done) {
         _cdtp_set_error(CDTP_CLIENT_CANNOT_RECONNECT, 0);
         return;
     }
 
     // Make sure the client is not already connected
-    if (client->connected == CDTP_TRUE) {
+    if (client->connected) {
         _cdtp_set_error(CDTP_CLIENT_ALREADY_CONNECTED, 0);
         return;
     }
@@ -368,7 +368,7 @@ CDTP_EXPORT void cdtp_client_connect(CDTPClient *client, char *host, unsigned sh
     }
 
     // Handle received data
-    client->connected = CDTP_TRUE;
+    client->connected = true;
 
     // Set blocking for key exchange
 #ifdef _WIN32
@@ -386,7 +386,7 @@ CDTP_EXPORT void cdtp_client_connect(CDTPClient *client, char *host, unsigned sh
 #endif
 
     // Exchange keys
-    if (_cdtp_client_exchange_keys(client) != CDTP_TRUE) {
+    if (!_cdtp_client_exchange_keys(client)) {
         return;
     }
 
@@ -396,13 +396,13 @@ CDTP_EXPORT void cdtp_client_connect(CDTPClient *client, char *host, unsigned sh
 CDTP_EXPORT void cdtp_client_disconnect(CDTPClient *client)
 {
     // Make sure the client is connected
-    if (client->connected != CDTP_TRUE) {
+    if (!client->connected) {
         _cdtp_set_error(CDTP_CLIENT_NOT_CONNECTED, 0);
         return;
     }
 
-    client->connected = CDTP_FALSE;
-    client->done = CDTP_TRUE;
+    client->connected = false;
+    client->done = true;
 
 #ifdef _WIN32
     // Close the socket
@@ -449,7 +449,7 @@ CDTP_EXPORT void cdtp_client_disconnect(CDTPClient *client)
 #endif
 }
 
-CDTP_EXPORT int cdtp_client_is_connected(CDTPClient *client)
+CDTP_EXPORT bool cdtp_client_is_connected(CDTPClient *client)
 {
     return client->connected;
 }
@@ -457,7 +457,7 @@ CDTP_EXPORT int cdtp_client_is_connected(CDTPClient *client)
 CDTP_EXPORT char *cdtp_client_get_host(CDTPClient *client)
 {
     // Make sure the client is connected
-    if (client->connected != CDTP_TRUE) {
+    if (!client->connected) {
         _cdtp_set_error(CDTP_CLIENT_NOT_CONNECTED, 0);
         return NULL;
     }
@@ -506,7 +506,7 @@ CDTP_EXPORT char *cdtp_client_get_host(CDTPClient *client)
 CDTP_EXPORT unsigned short cdtp_client_get_port(CDTPClient *client)
 {
     // Make sure the server is running
-    if (client->connected != CDTP_TRUE) {
+    if (!client->connected) {
         _cdtp_set_error(CDTP_CLIENT_NOT_CONNECTED, 0);
         return 0;
     }
@@ -528,7 +528,7 @@ CDTP_EXPORT unsigned short cdtp_client_get_port(CDTPClient *client)
 CDTP_EXPORT char *cdtp_client_get_server_host(CDTPClient *client)
 {
     // Make sure the client is connected
-    if (client->connected != CDTP_TRUE) {
+    if (!client->connected) {
         _cdtp_set_error(CDTP_CLIENT_NOT_CONNECTED, 0);
         return NULL;
     }
@@ -577,7 +577,7 @@ CDTP_EXPORT char *cdtp_client_get_server_host(CDTPClient *client)
 CDTP_EXPORT unsigned short cdtp_client_get_server_port(CDTPClient *client)
 {
     // Make sure the server is running
-    if (client->connected != CDTP_TRUE) {
+    if (!client->connected) {
         _cdtp_set_error(CDTP_CLIENT_NOT_CONNECTED, 0);
         return 0;
     }
@@ -599,7 +599,7 @@ CDTP_EXPORT unsigned short cdtp_client_get_server_port(CDTPClient *client)
 CDTP_EXPORT void cdtp_client_send(CDTPClient *client, void *data, size_t data_size)
 {
     // Make sure the client is connected
-    if (client->connected != CDTP_TRUE) {
+    if (!client->connected) {
         _cdtp_set_error(CDTP_CLIENT_NOT_CONNECTED, 0);
         return;
     }
@@ -618,6 +618,12 @@ CDTP_EXPORT void cdtp_client_send(CDTPClient *client, void *data, size_t data_si
 
 CDTP_EXPORT void cdtp_client_free(CDTPClient *client)
 {
+    // Make sure the client is done
+    if (!client->done) {
+        _cdtp_set_error(CDTP_CLIENT_NOT_DONE, 0);
+        return;
+    }
+
     _cdtp_crypto_aes_key_iv_free(client->sock->key);
     free(client->sock);
     free(client);

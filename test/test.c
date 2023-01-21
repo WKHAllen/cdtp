@@ -8,6 +8,7 @@
 #include <string.h>
 #include <time.h>
 #include <inttypes.h>
+#include <stdbool.h>
 
 #ifdef _WIN32
 #  ifdef _WIN64
@@ -221,7 +222,7 @@ typedef struct _TestState {
     size_t client_disconnected_count;
     TestReceivedMessage **client_received_expected;
     TestReceivedMessage **client_received;
-    int reply_with_string_length;
+    bool reply_with_string_length;
 } TestState;
 
 TestState *test_state(
@@ -259,7 +260,7 @@ TestState *test_state(
     state->client_disconnected_count = 0;
     state->client_received_expected = client_received;
     state->client_received = (TestReceivedMessage **) malloc(client_receive_count * sizeof(TestReceivedMessage *));
-    state->reply_with_string_length = CDTP_FALSE;
+    state->reply_with_string_length = false;
 
     return state;
 }
@@ -319,7 +320,7 @@ void test_state_server_received(TestState *state, CDTPServer *server, size_t cli
     state->server_received[state->server_receive_count]->data_size = data_size;
     state->server_receive_client_ids[state->server_receive_count++] = client_id;
 
-    if (state->reply_with_string_length == CDTP_TRUE) {
+    if (state->reply_with_string_length) {
         char *str_data = (char *) data;
         TEST_ASSERT_EQ(STR_SIZE(str_data), data_size)
         size_t str_len = strlen(str_data) + 1;
@@ -537,8 +538,8 @@ void test_client_map(void)
     sock2->sock = 345;
 
     // Test false contains
-    int false_contains = _cdtp_client_map_contains(map, 234);
-    TEST_ASSERT_EQ((size_t) false_contains, (size_t) CDTP_FALSE)
+    bool false_contains = _cdtp_client_map_contains(map, 234);
+    TEST_ASSERT(!false_contains)
     TEST_ASSERT_EQ(map->size, (size_t) 0)
     TEST_ASSERT_EQ(map->capacity, (size_t) 16)
 
@@ -560,20 +561,20 @@ void test_client_map(void)
     _cdtp_client_map_iter_free(zero_size_iter);
 
     // Test set
-    int set1 = _cdtp_client_map_set(map, 234, sock1);
-    TEST_ASSERT_EQ((size_t) set1, (size_t) CDTP_TRUE)
+    bool set1 = _cdtp_client_map_set(map, 234, sock1);
+    TEST_ASSERT(set1)
     TEST_ASSERT_EQ(map->size, (size_t) 1)
     TEST_ASSERT_EQ(map->capacity, (size_t) 16)
 
     // Test double set
-    int double_set = _cdtp_client_map_set(map, 234, sock2);
-    TEST_ASSERT_EQ((size_t) double_set, (size_t) CDTP_FALSE)
+    bool double_set = _cdtp_client_map_set(map, 234, sock2);
+    TEST_ASSERT(!double_set)
     TEST_ASSERT_EQ(map->size, (size_t) 1)
     TEST_ASSERT_EQ(map->capacity, (size_t) 16)
 
     // Test true contains
-    int contains1 = _cdtp_client_map_contains(map, 234);
-    TEST_ASSERT_EQ((size_t) contains1, (size_t) CDTP_TRUE)
+    bool contains1 = _cdtp_client_map_contains(map, 234);
+    TEST_ASSERT(contains1)
     TEST_ASSERT_EQ(map->size, (size_t) 1)
     TEST_ASSERT_EQ(map->capacity, (size_t) 16)
 
@@ -591,16 +592,16 @@ void test_client_map(void)
     _cdtp_client_map_iter_free(one_size_iter);
 
     // Test second set, contains, get
-    int contains2 = _cdtp_client_map_contains(map, 456);
-    TEST_ASSERT_EQ((size_t) contains2, (size_t) CDTP_FALSE)
+    bool contains2 = _cdtp_client_map_contains(map, 456);
+    TEST_ASSERT(!contains2)
     CDTPSocket *get2 = _cdtp_client_map_get(map, 456);
     TEST_ASSERT(get2 == NULL)
-    int set2 = _cdtp_client_map_set(map, 456, sock2);
-    TEST_ASSERT_EQ((size_t) set2, (size_t) CDTP_TRUE)
+    bool set2 = _cdtp_client_map_set(map, 456, sock2);
+    TEST_ASSERT(set2)
     TEST_ASSERT_EQ(map->size, (size_t) 2)
     TEST_ASSERT_EQ(map->capacity, (size_t) 16)
-    int contains3 = _cdtp_client_map_contains(map, 456);
-    TEST_ASSERT_EQ((size_t) contains3, (size_t) CDTP_TRUE)
+    bool contains3 = _cdtp_client_map_contains(map, 456);
+    TEST_ASSERT(contains3)
     CDTPSocket *get3 = _cdtp_client_map_get(map, 456);
     TEST_ASSERT_EQ((size_t) (get3->sock), (size_t) 345)
 
@@ -624,16 +625,16 @@ void test_client_map(void)
     TEST_ASSERT_EQ(map->capacity, (size_t) 16)
 
     // Test hash collisions
-    int set3 = _cdtp_client_map_set(map, 3, sock1);
-    int set4 = _cdtp_client_map_set(map, 19, sock2);
-    TEST_ASSERT_EQ((size_t) set3, (size_t) CDTP_TRUE)
-    TEST_ASSERT_EQ((size_t) set4, (size_t) CDTP_TRUE)
+    bool set3 = _cdtp_client_map_set(map, 3, sock1);
+    bool set4 = _cdtp_client_map_set(map, 19, sock2);
+    TEST_ASSERT(set3)
+    TEST_ASSERT(set4)
     TEST_ASSERT_EQ(map->size, (size_t) 2)
     TEST_ASSERT_EQ(map->capacity, (size_t) 16)
-    int contains4 = _cdtp_client_map_contains(map, 3);
-    TEST_ASSERT_EQ((size_t) contains4, (size_t) CDTP_TRUE)
-    int contains5 = _cdtp_client_map_contains(map, 19);
-    TEST_ASSERT_EQ((size_t) contains5, (size_t) CDTP_TRUE)
+    bool contains4 = _cdtp_client_map_contains(map, 3);
+    TEST_ASSERT(contains4)
+    bool contains5 = _cdtp_client_map_contains(map, 19);
+    TEST_ASSERT(contains5)
     CDTPSocket *get4 = _cdtp_client_map_get(map, 3);
     TEST_ASSERT_EQ((size_t) (get4->sock), (size_t) 123)
     CDTPSocket *get5 = _cdtp_client_map_get(map, 19);
@@ -658,15 +659,15 @@ void test_client_map(void)
     for (size_t i = 0; i < 16; i++) {
         CDTPSocket *sock = (CDTPSocket *) malloc(sizeof(CDTPSocket));
         sock->sock = 1000 + i;
-        int set5 = _cdtp_client_map_set(map, i * 2, sock);
-        TEST_ASSERT_EQ((size_t) set5, (size_t) CDTP_TRUE)
+        bool set5 = _cdtp_client_map_set(map, i * 2, sock);
+        TEST_ASSERT(set5)
     }
     TEST_ASSERT_EQ(map->size, (size_t) 16)
     TEST_ASSERT_EQ(map->capacity, (size_t) 16)
     CDTPSocket *sock3 = (CDTPSocket *) malloc(sizeof(CDTPSocket));
     sock3->sock = 1016;
-    int set6 = _cdtp_client_map_set(map, 32, sock3);
-    TEST_ASSERT_EQ((size_t) set6, (size_t) CDTP_TRUE)
+    bool set6 = _cdtp_client_map_set(map, 32, sock3);
+    TEST_ASSERT(set6)
     TEST_ASSERT_EQ(map->size, (size_t) 17)
     TEST_ASSERT_EQ(map->capacity, (size_t) 32)
     size_t client_id_total = 0;
@@ -1182,7 +1183,7 @@ void test_multiple_clients(void)
                                   server_received, receive_clients, connect_clients, disconnect_clients,
                                   6, 0,
                                   client_received);
-    state->reply_with_string_length = CDTP_TRUE;
+    state->reply_with_string_length = true;
 
     // Create server
     CDTPServer *s = cdtp_server(server_on_recv, server_on_connect, server_on_disconnect,
@@ -1246,7 +1247,7 @@ void test_multiple_clients(void)
     cdtp_sleep(WAIT_TIME);
 
     // Connect other clients
-    state->reply_with_string_length = CDTP_FALSE;
+    state->reply_with_string_length = false;
     TEST_ASSERT_EQ(s->clients->capacity, (size_t) 16)
     CDTPClient *other_clients[15];
     for (size_t i = 0; i < 15; i++) {

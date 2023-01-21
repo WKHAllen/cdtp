@@ -1,19 +1,19 @@
 #include "util.h"
 
-int CDTP_INIT = CDTP_FALSE;
-int CDTP_EXIT = CDTP_FALSE;
+bool CDTP_INIT = false;
+bool CDTP_EXIT = false;
 
 int CDTP_ERROR = CDTP_SUCCESS;
 int CDTP_ERROR_UNDER = 0;
 
-int CDTP_ON_ERROR_REGISTERED = CDTP_FALSE;
+bool CDTP_ON_ERROR_REGISTERED = false;
 void (*CDTP_ON_ERROR)(int, int, void *);
 void *CDTP_ON_ERROR_ARG;
 
 int _cdtp_init(void)
 {
-    if (CDTP_INIT != CDTP_TRUE) {
-        CDTP_INIT = CDTP_TRUE;
+    if (!CDTP_INIT) {
+        CDTP_INIT = true;
         atexit(_cdtp_exit);
 
 #ifdef _WIN32
@@ -30,8 +30,8 @@ int _cdtp_init(void)
 
 void _cdtp_exit(void)
 {
-    if (CDTP_EXIT != CDTP_TRUE) {
-        CDTP_EXIT = CDTP_TRUE;
+    if (!CDTP_EXIT) {
+        CDTP_EXIT = true;
 
 #ifdef _WIN32
         WSACleanup();
@@ -40,13 +40,9 @@ void _cdtp_exit(void)
     }
 }
 
-CDTP_EXPORT int cdtp_error(void)
+CDTP_EXPORT bool cdtp_error(void)
 {
-    if (CDTP_ERROR == CDTP_SUCCESS) {
-        return CDTP_FALSE;
-    }
-
-    return CDTP_TRUE;
+    return CDTP_ERROR != CDTP_SUCCESS;
 }
 
 CDTP_EXPORT int cdtp_get_error(void)
@@ -65,7 +61,7 @@ CDTP_EXPORT int cdtp_get_underlying_error(void)
 
 void _cdtp_set_error(int cdtp_err, int underlying_err)
 {
-    if (CDTP_ON_ERROR_REGISTERED != CDTP_TRUE) {
+    if (!CDTP_ON_ERROR_REGISTERED) {
         CDTP_ERROR = cdtp_err;
         CDTP_ERROR_UNDER = underlying_err;
     }
@@ -88,19 +84,19 @@ CDTP_EXPORT void cdtp_on_error(
     void *arg
 )
 {
-    CDTP_ON_ERROR_REGISTERED = CDTP_TRUE;
+    CDTP_ON_ERROR_REGISTERED = true;
     CDTP_ON_ERROR = on_error;
     CDTP_ON_ERROR_ARG = arg;
 }
 
 CDTP_EXPORT void cdtp_on_error_clear(void)
 {
-    CDTP_ON_ERROR_REGISTERED = CDTP_FALSE;
+    CDTP_ON_ERROR_REGISTERED = false;
 }
 
 CDTP_TEST_EXPORT unsigned char *_cdtp_encode_message_size(size_t size)
 {
-    unsigned char *encoded_size = (unsigned char*) malloc(CDTP_LENSIZE * sizeof(unsigned char));
+    unsigned char *encoded_size = (unsigned char *) malloc(CDTP_LENSIZE * sizeof(unsigned char));
 
     for (int i = CDTP_LENSIZE - 1; i >= 0; i--) {
         encoded_size[i] = size % 256;

@@ -8,6 +8,7 @@
 
 #include "util.h"
 #include "crypto.h"
+#include <stdbool.h>
 
 /**
  * Socket server type.
@@ -61,7 +62,7 @@ typedef struct _CDTPSocket {
  * Client map node type.
  */
 typedef struct _CDTPClientMapNode {
-    int allocated;
+    bool allocated;
     size_t client_id;
     CDTPSocket *sock;
 } CDTPClientMapNode;
@@ -101,8 +102,8 @@ struct _CDTPServer {
     void *on_recv_arg;
     void *on_connect_arg;
     void *on_disconnect_arg;
-    int serving;
-    int done;
+    bool serving;
+    bool done;
     CDTPSocket *sock;
     CDTPClientMap *clients;
     size_t next_client_id;
@@ -121,8 +122,8 @@ struct _CDTPClient {
     ClientOnDisconnectedCallback on_disconnected;
     void *on_recv_arg;
     void *on_disconnected_arg;
-    int connected;
-    int done;
+    bool connected;
+    bool done;
     CDTPSocket *sock;
 #ifdef _WIN32
     HANDLE handle_thread;

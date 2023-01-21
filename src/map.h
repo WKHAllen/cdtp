@@ -7,6 +7,7 @@
 #define CDTP_MAP_H
 
 #include "defs.h"
+#include <stdbool.h>
 
 /**
  * Create a new client map.
@@ -22,7 +23,7 @@ CDTP_TEST_EXPORT CDTPClientMap *_cdtp_client_map(void);
  * @param client_id The client ID key.
  * @return If the map contains the given client ID key.
  */
-CDTP_TEST_EXPORT int _cdtp_client_map_contains(CDTPClientMap *map, size_t client_id);
+CDTP_TEST_EXPORT bool _cdtp_client_map_contains(CDTPClientMap *map, size_t client_id);
 
 /**
  * Get the client with a given key.
@@ -41,7 +42,7 @@ CDTP_TEST_EXPORT CDTPSocket *_cdtp_client_map_get(CDTPClientMap *map, size_t cli
  * @param sock The client socket.
  * @return If the value was successfully inserted. Returns false if the key already exists in the map.
  */
-CDTP_TEST_EXPORT int _cdtp_client_map_set(CDTPClientMap *map, size_t client_id, CDTPSocket *sock);
+CDTP_TEST_EXPORT bool _cdtp_client_map_set(CDTPClientMap *map, size_t client_id, CDTPSocket *sock);
 
 /**
  * Pop a client from the map by key.
