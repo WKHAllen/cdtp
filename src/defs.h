@@ -55,7 +55,7 @@ typedef struct _CDTPSocket {
     int sock;
 #endif
     struct sockaddr_in address;
-    CDTPAESKeyIV *key;
+    CDTPAESKey *key;
 } CDTPSocket;
 
 /**

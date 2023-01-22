@@ -23,8 +23,8 @@
 // The AES key size.
 #define CDTP_AES_KEY_SIZE 32
 
-// The AES IV size.
-#define CDTP_AES_IV_SIZE 16
+// The AES nonce size.
+#define CDTP_AES_NONCE_SIZE 16
 
 /**
  * Generic data to be encrypted/decrypted.
@@ -59,14 +59,12 @@ typedef struct _CDTPRSAKeyPair {
 } CDTPRSAKeyPair;
 
 /**
- * An AES key and IV.
+ * An AES key.
  */
-typedef struct _CDTPAESKeyIV {
+typedef struct _CDTPAESKey {
     char *key;
     size_t key_size;
-    char *iv;
-    size_t iv_size;
-} CDTPAESKeyIV;
+} CDTPAESKey;
 
 /**
  * Create a generic piece of crypto data.
@@ -183,53 +181,46 @@ CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_rsa_encrypt(CDTPRSAPublicKey *publ
 CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_rsa_decrypt(CDTPRSAPrivateKey *private_key, void *ciphertext, size_t ciphertext_size);
 
 /**
- * Generate an AES key and IV.
+ * Generate an AES key.
  *
- * @return The generated key and IV.
+ * @return The generated key.
  */
-CDTP_TEST_EXPORT CDTPAESKeyIV *_cdtp_crypto_aes_key_iv(void);
+CDTP_TEST_EXPORT CDTPAESKey *_cdtp_crypto_aes_key(void);
 
 /**
- * Free the memory used by an AES key and IV.
+ * Free the memory used by an AES key.
  *
- * @param key_iv The AES key and IV.
+ * @param key The AES key.
  */
-CDTP_TEST_EXPORT void _cdtp_crypto_aes_key_iv_free(CDTPAESKeyIV *key_iv);
+CDTP_TEST_EXPORT void _cdtp_crypto_aes_key_free(CDTPAESKey *key);
 
 /**
- * Combine the AES key and IV into a single piece of data. This does not free the memory used by the key and IV.
+ * Create an AES key from bytes.
  *
- * @param key_iv The AES key and IV.
- * @return The combined key and IV.
+ * @param bytes The key data.
+ * @param size The size of the key data, in bytes.
+ * @return The AES key.
  */
-CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_aes_key_iv_to_data(CDTPAESKeyIV *key_iv);
-
-/**
- * Get an AES key and IV from a single piece of data. This does not free the memory used by the data itself.
- *
- * @param key_iv_data The combined AES key and IV data.
- * @return The AES key and IV.
- */
-CDTP_TEST_EXPORT CDTPAESKeyIV *_cdtp_crypto_aes_key_iv_from_data(CDTPCryptoData *key_iv_data);
+CDTP_TEST_EXPORT CDTPAESKey *_cdtp_crypto_aes_key_from(char *bytes, size_t size);
 
 /**
  * Encrypt data with AES.
  *
- * @param key_iv The AES key and IV.
+ * @param key The AES key.
  * @param plaintext The data to encrypt.
  * @param plaintext_size The size of the data, in bytes.
  * @return A representation of the encrypted data.
  */
-CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_aes_encrypt(CDTPAESKeyIV *key_iv, void *plaintext, size_t plaintext_size);
+CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_aes_encrypt(CDTPAESKey *key, void *plaintext, size_t plaintext_size);
 
 /**
  * Decrypt data with AES.
  *
- * @param key_iv The AES key and IV.
+ * @param key The AES key.
  * @param ciphertext The data to decrypt.
  * @param ciphertext_size The size of the data, in bytes.
  * @return A representation of the decrypted data.
  */
-CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_aes_decrypt(CDTPAESKeyIV *key_iv, void *ciphertext, size_t ciphertext_size);
+CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_aes_decrypt(CDTPAESKey *key, void *ciphertext, size_t ciphertext_size);
 
 #endif // CDTP_CRYPTO_H

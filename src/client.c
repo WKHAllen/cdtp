@@ -90,9 +90,8 @@ bool _cdtp_client_exchange_keys(CDTPClient *client)
 #endif
 
     CDTPRSAPublicKey *public_key = _cdtp_crypto_rsa_public_key_from_bytes(buffer, msg_size);
-    CDTPAESKeyIV *key = _cdtp_crypto_aes_key_iv();
-    CDTPCryptoData *key_data = _cdtp_crypto_aes_key_iv_to_data(key);
-    CDTPCryptoData *key_encrypted = _cdtp_crypto_rsa_encrypt(public_key, key_data->data, key_data->data_size);
+    CDTPAESKey *key = _cdtp_crypto_aes_key();
+    CDTPCryptoData *key_encrypted = _cdtp_crypto_rsa_encrypt(public_key, key->key, key->key_size);
     char *key_encoded = _cdtp_construct_message(key_encrypted->data, key_encrypted->data_size);
 
     if (send(client->sock->sock, key_encoded, CDTP_LENSIZE + key_encrypted->data_size, 0) < 0) {
@@ -104,7 +103,6 @@ bool _cdtp_client_exchange_keys(CDTPClient *client)
 
     free(buffer);
     _cdtp_crypto_rsa_public_key_free(public_key);
-    _cdtp_crypto_data_free(key_data);
     _cdtp_crypto_data_free(key_encrypted);
     free(key_encoded);
 
@@ -624,7 +622,7 @@ CDTP_EXPORT void cdtp_client_free(CDTPClient *client)
         return;
     }
 
-    _cdtp_crypto_aes_key_iv_free(client->sock->key);
+    _cdtp_crypto_aes_key_free(client->sock->key);
     free(client->sock);
     free(client);
 }

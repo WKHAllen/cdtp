@@ -726,35 +726,31 @@ void test_crypto(void)
 
     // Test AES
     char *aes_message = "Hello, AES!";
-    CDTPAESKeyIV *key_iv = _cdtp_crypto_aes_key_iv();
-    CDTPCryptoData *aes_encrypted = _cdtp_crypto_aes_encrypt(key_iv, aes_message, STR_SIZE(aes_message));
-    CDTPCryptoData *aes_decrypted = _cdtp_crypto_aes_decrypt(key_iv, aes_encrypted->data, aes_encrypted->data_size);
+    CDTPAESKey *key = _cdtp_crypto_aes_key();
+    CDTPCryptoData *aes_encrypted = _cdtp_crypto_aes_encrypt(key, aes_message, STR_SIZE(aes_message));
+    CDTPCryptoData *aes_decrypted = _cdtp_crypto_aes_decrypt(key, aes_encrypted->data, aes_encrypted->data_size);
     TEST_ASSERT_INT_EQ(strcmp((char *) (aes_decrypted->data), aes_message), 0)
     TEST_ASSERT_INT_NE(strcmp((char *) (aes_encrypted->data), aes_message), 0)
-    _cdtp_crypto_aes_key_iv_free(key_iv);
+    _cdtp_crypto_aes_key_free(key);
     _cdtp_crypto_data_free(aes_encrypted);
     _cdtp_crypto_data_free(aes_decrypted);
 
     // Test encrypting/decrypting AES key with RSA
     CDTPRSAKeyPair *keys2 = _cdtp_crypto_rsa_key_pair();
-    CDTPAESKeyIV *key_iv2 = _cdtp_crypto_aes_key_iv();
-    CDTPCryptoData *key_iv_data = _cdtp_crypto_aes_key_iv_to_data(key_iv2);
-    CDTPCryptoData *encrypted_key = _cdtp_crypto_rsa_encrypt(keys2->public_key, key_iv_data->data, key_iv_data->data_size);
+    CDTPAESKey *key2 = _cdtp_crypto_aes_key();
+    CDTPCryptoData *encrypted_key = _cdtp_crypto_rsa_encrypt(keys2->public_key, key2->key, key2->key_size);
     CDTPCryptoData *decrypted_key = _cdtp_crypto_rsa_decrypt(keys2->private_key, encrypted_key->data, encrypted_key->data_size);
-    CDTPAESKeyIV *key_iv3 = _cdtp_crypto_aes_key_iv_from_data(decrypted_key);
-    TEST_ASSERT_EQ(key_iv2->key_size, key_iv3->key_size)
-    TEST_ASSERT_EQ(key_iv2->iv_size, key_iv3->iv_size)
-    TEST_ASSERT_MEM_EQ(key_iv2->key, key_iv3->key, key_iv2->key_size)
-    TEST_ASSERT_MEM_EQ(key_iv2->iv, key_iv3->iv, key_iv2->iv_size)
-    TEST_ASSERT_EQ(decrypted_key->data_size, key_iv_data->data_size)
-    TEST_ASSERT_MEM_EQ(decrypted_key->data, key_iv_data->data, decrypted_key->data_size)
-    TEST_ASSERT_MEM_NE(encrypted_key->data, key_iv_data->data, key_iv_data->data_size)
+    CDTPAESKey *key3 = _cdtp_crypto_aes_key_from(decrypted_key->data, decrypted_key->data_size);
+    TEST_ASSERT_EQ(key2->key_size, key3->key_size)
+    TEST_ASSERT_MEM_EQ(key2->key, key3->key, key2->key_size)
+    TEST_ASSERT_EQ(decrypted_key->data_size, key2->key_size)
+    TEST_ASSERT_MEM_EQ(decrypted_key->data, key2->key, decrypted_key->data_size)
+    TEST_ASSERT_MEM_NE(encrypted_key->data, key2->key, key2->key_size)
     _cdtp_crypto_rsa_key_pair_free(keys2);
-    _cdtp_crypto_aes_key_iv_free(key_iv2);
-    _cdtp_crypto_data_free(key_iv_data);
+    _cdtp_crypto_aes_key_free(key2);
     _cdtp_crypto_data_free(encrypted_key);
     _cdtp_crypto_data_free(decrypted_key);
-    _cdtp_crypto_aes_key_iv_free(key_iv3);
+    _cdtp_crypto_aes_key_free(key3);
 }
 
 /**

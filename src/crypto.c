@@ -278,8 +278,8 @@ CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_rsa_encrypt(CDTPRSAPublicKey *publ
 
     int encrypted_key_len;
 
-    int iv_len = EVP_CIPHER_iv_length(EVP_aes_256_cbc());
-    unsigned char *iv = (unsigned char *) malloc(iv_len * sizeof(unsigned char));
+    int nonce_len = EVP_CIPHER_iv_length(EVP_aes_256_cbc());
+    unsigned char *nonce = (unsigned char *) malloc(nonce_len * sizeof(unsigned char));
 
     if ((encrypted_key_len = EVP_PKEY_size(evp_public_key)) == 0) {
         _cdtp_set_error(CDTP_OPENSSL_ERROR, ERR_get_error());
@@ -297,7 +297,7 @@ CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_rsa_encrypt(CDTPRSAPublicKey *publ
         return NULL;
     }
 
-    if (EVP_SealInit(ctx, EVP_aes_256_cbc(), &encrypted_key, &encrypted_key_len, iv, &evp_public_key, 1) == 0) {
+    if (EVP_SealInit(ctx, EVP_aes_256_cbc(), &encrypted_key, &encrypted_key_len, nonce, &evp_public_key, 1) == 0) {
         _cdtp_set_error(CDTP_OPENSSL_ERROR, ERR_get_error());
         return NULL;
     }
@@ -322,20 +322,20 @@ CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_rsa_encrypt(CDTPRSAPublicKey *publ
     ciphertext_len += len;
     ciphertext_unsigned = realloc(ciphertext_unsigned, (size_t) ciphertext_len);
 
-    unsigned char *all_unsigned = (unsigned char *) malloc((CDTP_LENSIZE + encrypted_key_len + iv_len + ciphertext_len) * sizeof(unsigned char));
+    unsigned char *all_unsigned = (unsigned char *) malloc((CDTP_LENSIZE + encrypted_key_len + nonce_len + ciphertext_len) * sizeof(unsigned char));
     unsigned char *encoded_encrypted_key_len = _cdtp_encode_message_size((size_t) encrypted_key_len);
     memcpy(all_unsigned, encoded_encrypted_key_len, CDTP_LENSIZE);
     memcpy(all_unsigned + CDTP_LENSIZE, encrypted_key, encrypted_key_len);
-    memcpy(all_unsigned + CDTP_LENSIZE + encrypted_key_len, iv, iv_len);
-    memcpy(all_unsigned + CDTP_LENSIZE + encrypted_key_len + iv_len, ciphertext_unsigned, ciphertext_len);
+    memcpy(all_unsigned + CDTP_LENSIZE + encrypted_key_len, nonce, nonce_len);
+    memcpy(all_unsigned + CDTP_LENSIZE + encrypted_key_len + nonce_len, ciphertext_unsigned, ciphertext_len);
 
     EVP_CIPHER_CTX_free(ctx);
     _cdtp_crypto_openssl_rsa_public_key_free(evp_public_key);
 
-    CDTPCryptoData *ciphertext = _cdtp_crypto_data((void *) all_unsigned, CDTP_LENSIZE + encrypted_key_len + iv_len + ciphertext_len);
+    CDTPCryptoData *ciphertext = _cdtp_crypto_data((void *) all_unsigned, CDTP_LENSIZE + encrypted_key_len + nonce_len + ciphertext_len);
 
     _cdtp_crypto_data_free(plaintext_padded);
-    free(iv);
+    free(nonce);
     free(encrypted_key);
     free(ciphertext_unsigned);
     free(all_unsigned);
@@ -347,7 +347,7 @@ CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_rsa_encrypt(CDTPRSAPublicKey *publ
 CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_rsa_decrypt(CDTPRSAPrivateKey *private_key, void *ciphertext, size_t ciphertext_size)
 {
     EVP_PKEY *evp_private_key = _cdtp_crypto_openssl_rsa_private_key(private_key);
-    int iv_len = EVP_CIPHER_iv_length(EVP_aes_256_cbc());
+    int nonce_len = EVP_CIPHER_iv_length(EVP_aes_256_cbc());
 
     unsigned char *all_unsigned = (unsigned char *) ciphertext;
 
@@ -359,13 +359,13 @@ CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_rsa_decrypt(CDTPRSAPrivateKey *pri
     unsigned char *encrypted_key = (unsigned char *) malloc(encrypted_key_len * sizeof(unsigned char));
     memcpy(encrypted_key, all_unsigned + CDTP_LENSIZE, encrypted_key_len);
 
-    unsigned char *iv = (unsigned char *) malloc(iv_len * sizeof(unsigned char *));
-    memcpy(iv, all_unsigned + CDTP_LENSIZE + encrypted_key_len, iv_len);
+    unsigned char *nonce = (unsigned char *) malloc(nonce_len * sizeof(unsigned char *));
+    memcpy(nonce, all_unsigned + CDTP_LENSIZE + encrypted_key_len, nonce_len);
 
-    int ciphertext_len = ciphertext_size - (CDTP_LENSIZE + encrypted_key_len + iv_len);
+    int ciphertext_len = ciphertext_size - (CDTP_LENSIZE + encrypted_key_len + nonce_len);
 
     unsigned char *ciphertext_unsigned = (unsigned char *) malloc(ciphertext_len * sizeof(unsigned char));
-    memcpy(ciphertext_unsigned, all_unsigned + CDTP_LENSIZE + encrypted_key_len + iv_len, ciphertext_len);
+    memcpy(ciphertext_unsigned, all_unsigned + CDTP_LENSIZE + encrypted_key_len + nonce_len, ciphertext_len);
 
     EVP_CIPHER_CTX *ctx;
     int len;
@@ -376,7 +376,7 @@ CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_rsa_decrypt(CDTPRSAPrivateKey *pri
         return NULL;
     }
 
-    if (EVP_OpenInit(ctx, EVP_aes_256_cbc(), encrypted_key, encrypted_key_len, iv, evp_private_key) == 0) {
+    if (EVP_OpenInit(ctx, EVP_aes_256_cbc(), encrypted_key, encrypted_key_len, nonce, evp_private_key) == 0) {
         _cdtp_set_error(CDTP_OPENSSL_ERROR, ERR_get_error());
         return NULL;
     }
@@ -406,82 +406,58 @@ CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_rsa_decrypt(CDTPRSAPrivateKey *pri
 
     free(encoded_encrypted_key_len);
     free(encrypted_key);
-    free(iv);
+    free(nonce);
     free(ciphertext_unsigned);
     free(plaintext_unsigned);
 
     return plaintext;
 }
 
-CDTP_TEST_EXPORT CDTPAESKeyIV *_cdtp_crypto_aes_key_iv(void)
+CDTP_TEST_EXPORT CDTPAESKey *_cdtp_crypto_aes_key(void)
 {
-    int num_rounds = 5;
     unsigned char key_unsigned[CDTP_AES_KEY_SIZE];
-    unsigned char iv_unsigned[CDTP_AES_IV_SIZE];
-    unsigned char key_data[CDTP_AES_KEY_SIZE];
 
-    if (RAND_bytes(key_data, CDTP_AES_KEY_SIZE) == 0) {
+    if (RAND_bytes(key_unsigned, CDTP_AES_KEY_SIZE) == 0) {
         _cdtp_set_error(CDTP_OPENSSL_ERROR, ERR_get_error());
         return NULL;
     }
 
-    if (EVP_BytesToKey(EVP_aes_256_cbc(), EVP_sha1(), NULL, key_data, CDTP_AES_KEY_SIZE, num_rounds, key_unsigned, iv_unsigned) != CDTP_AES_KEY_SIZE) {
+    CDTPAESKey *key = (CDTPAESKey *) malloc(sizeof(CDTPAESKey));
+
+    key->key = (char *) malloc(CDTP_AES_KEY_SIZE * sizeof(char));
+    memcpy(key->key, key_unsigned, CDTP_AES_KEY_SIZE);
+    key->key_size = CDTP_AES_KEY_SIZE;
+
+    return key;
+}
+
+CDTP_TEST_EXPORT void _cdtp_crypto_aes_key_free(CDTPAESKey *key)
+{
+    free(key->key);
+    free(key);
+}
+
+CDTP_TEST_EXPORT CDTPAESKey *_cdtp_crypto_aes_key_from(char *bytes, size_t size)
+{
+    CDTPAESKey *key = (CDTPAESKey *) malloc(sizeof(CDTPAESKey));
+
+    key->key = (char *) malloc(size);
+    memcpy(key->key, bytes, size);
+    key->key_size = size;
+
+    return key;
+}
+
+CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_aes_encrypt(CDTPAESKey *key, void *plaintext, size_t plaintext_size)
+{
+    unsigned char *key_unsigned = (unsigned char *) key->key;
+    unsigned char nonce_unsigned[CDTP_AES_KEY_SIZE];
+
+    if (RAND_bytes(nonce_unsigned, CDTP_AES_KEY_SIZE) == 0) {
         _cdtp_set_error(CDTP_OPENSSL_ERROR, ERR_get_error());
         return NULL;
     }
 
-    CDTPAESKeyIV *key_iv = (CDTPAESKeyIV *) malloc(sizeof(CDTPAESKeyIV));
-
-    key_iv->key = (char *) malloc(CDTP_AES_KEY_SIZE * sizeof(char));
-    memcpy(key_iv->key, key_unsigned, CDTP_AES_KEY_SIZE);
-    key_iv->key_size = CDTP_AES_KEY_SIZE;
-
-    key_iv->iv = (char *) malloc(CDTP_AES_IV_SIZE * sizeof(char));
-    memcpy(key_iv->iv, iv_unsigned, CDTP_AES_IV_SIZE);
-    key_iv->iv_size = CDTP_AES_IV_SIZE;
-
-    return key_iv;
-}
-
-CDTP_TEST_EXPORT void _cdtp_crypto_aes_key_iv_free(CDTPAESKeyIV *key_iv)
-{
-    free(key_iv->key);
-    free(key_iv->iv);
-    free(key_iv);
-}
-
-CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_aes_key_iv_to_data(CDTPAESKeyIV *key_iv)
-{
-    char *combined_bytes = (char *) malloc((key_iv->key_size + key_iv->iv_size) * sizeof(char));
-    memcpy(combined_bytes, key_iv->key, key_iv->key_size);
-    memcpy(combined_bytes + key_iv->key_size, key_iv->iv, key_iv->iv_size);
-
-    CDTPCryptoData *combined = _cdtp_crypto_data(combined_bytes, key_iv->key_size + key_iv->iv_size);
-
-    free(combined_bytes);
-
-    return combined;
-}
-
-CDTP_TEST_EXPORT CDTPAESKeyIV *_cdtp_crypto_aes_key_iv_from_data(CDTPCryptoData *key_iv_data)
-{
-    CDTPAESKeyIV *key_iv = (CDTPAESKeyIV *) malloc(sizeof(CDTPAESKeyIV));
-
-    key_iv->key = (char *) malloc(CDTP_AES_KEY_SIZE * sizeof(char));
-    memcpy(key_iv->key, key_iv_data->data, CDTP_AES_KEY_SIZE);
-    key_iv->key_size = CDTP_AES_KEY_SIZE;
-
-    key_iv->iv = (char *) malloc(CDTP_AES_IV_SIZE * sizeof(char));
-    memcpy(key_iv->iv, ((char *) (key_iv_data->data)) + CDTP_AES_KEY_SIZE, CDTP_AES_IV_SIZE);
-    key_iv->iv_size = CDTP_AES_IV_SIZE;
-
-    return key_iv;
-}
-
-CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_aes_encrypt(CDTPAESKeyIV *key_iv, void *plaintext, size_t plaintext_size)
-{
-    unsigned char *key = (unsigned char *) key_iv->key;
-    unsigned char *iv = (unsigned char *) key_iv->iv;
     CDTPCryptoData *plaintext_padded = _cdtp_crypto_data(plaintext, plaintext_size);
     _cdtp_crypto_pad_data(plaintext_padded);
     unsigned char *plaintext_data = (unsigned char *) plaintext_padded->data;
@@ -496,7 +472,7 @@ CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_aes_encrypt(CDTPAESKeyIV *key_iv, 
         return NULL;
     }
 
-    if (EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv) == 0) {
+    if (EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key_unsigned, nonce_unsigned) == 0) {
         _cdtp_set_error(CDTP_OPENSSL_ERROR, ERR_get_error());
         return NULL;
     }
@@ -520,22 +496,28 @@ CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_aes_encrypt(CDTPAESKeyIV *key_iv, 
 
     ciphertext_len += len;
     ciphertext_unsigned = realloc(ciphertext_unsigned, ciphertext_len);
-    CDTPCryptoData *ciphertext = _cdtp_crypto_data((void *) ciphertext_unsigned, ciphertext_len);
+    unsigned char *ciphertext_with_nonce_unsigned = (unsigned char *) malloc((CDTP_AES_NONCE_SIZE + ciphertext_len) * sizeof(unsigned char));
+    memcpy(ciphertext_with_nonce_unsigned, nonce_unsigned, CDTP_AES_NONCE_SIZE);
+    memcpy(ciphertext_with_nonce_unsigned + CDTP_AES_NONCE_SIZE, ciphertext_unsigned, ciphertext_len);
+    CDTPCryptoData *ciphertext_with_nonce = _cdtp_crypto_data((void *) ciphertext_with_nonce_unsigned, CDTP_AES_NONCE_SIZE + ciphertext_len);
 
     EVP_CIPHER_CTX_free(ctx);
 
     _cdtp_crypto_data_free(plaintext_padded);
     free(ciphertext_unsigned);
+    free(ciphertext_with_nonce_unsigned);
 
-    return ciphertext;
+    return ciphertext_with_nonce;
 }
 
-CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_aes_decrypt(CDTPAESKeyIV *key_iv, void *ciphertext, size_t ciphertext_size)
+CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_aes_decrypt(CDTPAESKey *key, void *ciphertext, size_t ciphertext_size)
 {
-    unsigned char *key = (unsigned char *) key_iv->key;
-    unsigned char *iv = (unsigned char *) key_iv->iv;
-    unsigned char *ciphertext_data = (unsigned char *) ciphertext;
-    int ciphertext_len = (int) ciphertext_size;
+    unsigned char *key_unsigned = (unsigned char *) key->key;
+    unsigned char nonce_unsigned[CDTP_AES_NONCE_SIZE];
+    memcpy(nonce_unsigned, ciphertext, CDTP_AES_NONCE_SIZE);
+    unsigned char *ciphertext_data = (unsigned char *) malloc((ciphertext_size - CDTP_AES_NONCE_SIZE) * sizeof(unsigned char));
+    memcpy(ciphertext_data, ((char *) ciphertext) + CDTP_AES_NONCE_SIZE, ciphertext_size - CDTP_AES_NONCE_SIZE);
+    int ciphertext_len = (int) (ciphertext_size - CDTP_AES_NONCE_SIZE);
 
     EVP_CIPHER_CTX *ctx;
     int len;
@@ -546,7 +528,7 @@ CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_aes_decrypt(CDTPAESKeyIV *key_iv, 
         return NULL;
     }
 
-    if (EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv) == 0) {
+    if (EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key_unsigned, nonce_unsigned) == 0) {
         _cdtp_set_error(CDTP_OPENSSL_ERROR, ERR_get_error());
         return NULL;
     }
@@ -572,6 +554,7 @@ CDTP_TEST_EXPORT CDTPCryptoData *_cdtp_crypto_aes_decrypt(CDTPAESKeyIV *key_iv, 
 
     EVP_CIPHER_CTX_free(ctx);
 
+    free(ciphertext_data);
     free(plaintext_unsigned);
 
     return plaintext;

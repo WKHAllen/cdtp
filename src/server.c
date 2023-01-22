@@ -28,7 +28,7 @@ void _cdtp_server_disconnect_sock(CDTPServer *server, size_t client_id)
         close(client->sock);
 #endif
 
-        _cdtp_crypto_aes_key_iv_free(client->key);
+        _cdtp_crypto_aes_key_free(client->key);
         free(client);
     }
 }
@@ -155,7 +155,7 @@ bool _cdtp_server_exchange_keys(CDTPSocket *client)
 #endif
 
     CDTPCryptoData *key_data = _cdtp_crypto_rsa_decrypt(private_key, buffer, msg_size);
-    client->key = _cdtp_crypto_aes_key_iv_from_data(key_data);
+    client->key = _cdtp_crypto_aes_key_from(key_data->data, key_data->data_size);
 
     _cdtp_crypto_rsa_key_pair_free(rsa_keys);
     _cdtp_crypto_data_free(public_key_data);
@@ -603,7 +603,7 @@ CDTP_EXPORT void cdtp_server_stop(CDTPServer *server)
         }
 
         CDTPSocket *client = _cdtp_client_map_pop(server->clients, iter->clients[i]->client_id);
-        _cdtp_crypto_aes_key_iv_free(client->key);
+        _cdtp_crypto_aes_key_free(client->key);
         free(client);
     }
 
@@ -637,7 +637,7 @@ CDTP_EXPORT void cdtp_server_stop(CDTPServer *server)
         }
 
         CDTPSocket *client = _cdtp_client_map_pop(server->clients, iter->clients[i]->client_id);
-        _cdtp_crypto_aes_key_iv_free(client->key);
+        _cdtp_crypto_aes_key_free(client->key);
         free(client);
     }
 
@@ -858,7 +858,7 @@ CDTP_EXPORT void cdtp_server_remove_client(CDTPServer *server, size_t client_id)
     }
 #endif
 
-    _cdtp_crypto_aes_key_iv_free(client->key);
+    _cdtp_crypto_aes_key_free(client->key);
     free(client);
 }
 
