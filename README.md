@@ -121,12 +121,12 @@ The protocol has a few dependencies that must be included when compiling:
 ### Compiling on Windows
 
 - Link Winsock (`-lWs2_32`)
-- Link and provide headers for OpenSSL 3.0
+- Link OpenSSL 3.0
 
 ### Compiling on other platforms
 
 - Link pthread (`-lpthread`)
-- Link and provide headers for OpenSSL 3.0
+- Link OpenSSL 3.0
 
 For more information on the compilation process, see the [Makefile](Makefile).
 

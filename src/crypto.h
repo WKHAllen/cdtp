@@ -9,13 +9,75 @@
 #include "util.h"
 #include <stdlib.h>
 #include <string.h>
-#include <openssl/conf.h>
-#include <openssl/evp.h>
-#include <openssl/rsa.h>
-#include <openssl/aes.h>
-#include <openssl/pem.h>
-#include <openssl/rand.h>
-#include <openssl/err.h>
+
+#define BIO void
+#define BIO_METHOD void
+#define EVP_PKEY void
+#define pem_password_cb void
+#define OSSL_LIB_CTX void
+#define EVP_CIPHER_CTX void
+#define EVP_CIPHER void
+#define ENGINE void
+
+#define BIO_CTRL_PENDING 10
+
+extern BIO *BIO_new(const BIO_METHOD *type);
+extern BIO *BIO_new_mem_buf(const void *buf, int len);
+extern const BIO_METHOD *BIO_s_mem(void);
+extern long BIO_ctrl(BIO *bp, int cmd, long larg, void *parg);
+extern int BIO_read(BIO *b, void *data, int dlen);
+extern int BIO_free(BIO *a);
+extern void BIO_free_all(BIO *a);
+extern EVP_PKEY *PEM_read_bio_PUBKEY(BIO *bp, EVP_PKEY **x, pem_password_cb *cb,
+    void *u);
+extern EVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY **x,
+    pem_password_cb *cb, void *u);
+extern int PEM_write_bio_PUBKEY(BIO *bp, EVP_PKEY *x);
+extern int PEM_write_bio_PrivateKey(BIO *bp, const EVP_PKEY *x,
+    const EVP_CIPHER *enc, unsigned char *kstr,
+    int klen, pem_password_cb *cb, void *u);
+extern EVP_PKEY *EVP_PKEY_Q_keygen(OSSL_LIB_CTX *libctx, const char *propq,
+    const char *type, ...);
+extern int EVP_PKEY_get_size(const EVP_PKEY *pkey);
+extern void EVP_PKEY_free(EVP_PKEY *key);
+extern EVP_CIPHER_CTX *EVP_CIPHER_CTX_new(void);
+extern int EVP_CIPHER_CTX_get_block_size(const EVP_CIPHER_CTX *ctx);
+extern void EVP_CIPHER_CTX_free(EVP_CIPHER_CTX *ctx);
+extern EVP_CIPHER *EVP_aes_256_cbc(void);
+extern int EVP_CIPHER_get_iv_length(const EVP_CIPHER *e);
+extern int EVP_SealInit(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *type,
+    unsigned char **ek, int *ekl, unsigned char *iv,
+    EVP_PKEY **pubk, int npubk);
+extern int EVP_SealFinal(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl);
+extern int EVP_OpenInit(EVP_CIPHER_CTX *ctx, EVP_CIPHER *type,
+    unsigned char *ek, int ekl, unsigned char *iv,
+    EVP_PKEY *priv);
+extern int EVP_OpenFinal(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl);
+extern int EVP_EncryptInit_ex(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *type,
+    ENGINE *impl, const unsigned char *key,
+    const unsigned char *iv);
+extern int EVP_EncryptUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out,
+    int *outl, const unsigned char *in, int inl);
+extern int EVP_EncryptFinal_ex(EVP_CIPHER_CTX *ctx, unsigned char *out,
+    int *outl);
+extern int EVP_DecryptInit_ex(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *type,
+    ENGINE *impl, const unsigned char *key,
+    const unsigned char *iv);
+extern int EVP_DecryptUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl,
+    const unsigned char *in, int inl);
+extern int EVP_DecryptFinal_ex(EVP_CIPHER_CTX *ctx, unsigned char *outm,
+    int *outl);
+extern int RAND_bytes(unsigned char *buf, int num);
+extern unsigned long ERR_get_error(void);
+
+#define BIO_pending(b) (int)BIO_ctrl(b, BIO_CTRL_PENDING, 0, NULL)
+#define EVP_PKEY_size EVP_PKEY_get_size
+#define EVP_CIPHER_CTX_block_size EVP_CIPHER_CTX_get_block_size
+#define EVP_CIPHER_iv_length EVP_CIPHER_get_iv_length
+#define EVP_RSA_gen(bits) \
+    EVP_PKEY_Q_keygen(NULL, NULL, "RSA", (size_t)(0 + (bits)))
+#define EVP_SealUpdate(a, b, c, d, e) EVP_EncryptUpdate(a, b, c, d, e)
+#define EVP_OpenUpdate(a, b, c, d, e) EVP_DecryptUpdate(a, b, c, d, e)
 
 // The RSA key size.
 #define CDTP_RSA_KEY_SIZE 2048
