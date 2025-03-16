@@ -43,7 +43,7 @@ else
 	CLEAN_OBJECTS = rm -f bin/*.o
 	TEST_BINARY_STATIC = ./bin/test-static
 	TEST_BINARY_SHARED = ./bin/test-shared
-	POST_BUILD_CMD = chmod +x ./bin/test
+	POST_BUILD_CMD = chmod +x ./bin/test-static ./bin/test-shared
 	CLEAN_CMD = rm -f bin/*.a bin/*.so bin/*.lib bin/*.dll bin/test-* bin/test-*.exe bin/*.o *.o
 endif
 
