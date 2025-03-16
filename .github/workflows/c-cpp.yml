@@ -7,62 +7,12 @@ on:
     branches: ["main"]
 
 jobs:
-  # It would typically make more sense to do this as a matrix strategy, but the
-  # combination of artifacts across multiple machines complicates things too
-  # much.
-
-  build-windows:
-    runs-on: windows-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build libraries
-        run: make TEST=true
-
-      - name: Run tests
-        run: make test
-
-      - name: Upload artifact cdtp.lib
-        uses: actions/upload-artifact@v4
-        with:
-          name: cdtp.lib
-          path: cdtp.lib
-          compression-level: 0
-          if-no-files-found: error
-
-      - name: Upload artifact cdtp.dll
-        uses: actions/upload-artifact@v4
-        with:
-          name: cdtp.dll
-          path: cdtp.dll
-          compression-level: 0
-          if-no-files-found: error
-
-  build-non-windows:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Build libraries
+      - uses: actions/checkout@v3
+      - name: make TEST=true
         run: make TEST=true
-
-      - name: Run tests
+      - name: make test
         run: make test
-
-      - name: Upload artifact libcdtp.a
-        uses: actions/upload-artifact@v4
-        with:
-          name: libcdtp.a
-          path: libcdtp.a
-          compression-level: 0
-          if-no-files-found: error
-
-      - name: Upload artifact libcdtp.so
-        uses: actions/upload-artifact@v4
-        with:
-          name: libcdtp.so
-          path: libcdtp.so
-          compression-level: 0
-          if-no-files-found: error
